@@ -1,14 +1,11 @@
-import os
-import glob
 import hashlib
-import psycopg
-from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
-DB_URL = os.getenv("DATABASE_URL")
+from virtual_staff_engineer.database.connection import connect
 
-# Locate the folder containing your SQL scripts
-SQL_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "sql")
+
+MIGRATIONS_DIRECTORY = Path(__file__).with_name("sql")
+
 
 def compute_checksum(file_path):
     hasher = hashlib.sha256()
@@ -18,25 +15,18 @@ def compute_checksum(file_path):
     return hasher.hexdigest()
 
 
-def initialize_database():
-    if not DB_URL:
-        raise RuntimeError("DATABASE_URL is not configured.")
+def initialize_database(database_url=None):
+    """Apply all pending, checksum-verified SQL migrations atomically."""
+    print("🔄 Connecting to PostgreSQL...")
 
-    print("🔄 Connecting to PostgreSQL container...")
-    
-    # Use glob to find all files ending in .sql inside the folder
-    search_pattern = os.path.join(SQL_FOLDER_PATH, "*.sql")
-    sql_files = glob.glob(search_pattern)
-    
+    sql_files = sorted(MIGRATIONS_DIRECTORY.glob("*.sql"))
     if not sql_files:
-        print(f"⚠️ Warning: No .sql files discovered in {SQL_FOLDER_PATH}")
+        print(f"⚠️ No SQL migrations discovered in {MIGRATIONS_DIRECTORY}")
         return
 
-    # Sort files alphabetically to enforce consistent migration order
-    sql_files.sort()
-    print(f"🔍 Discovered {len(sql_files)} SQL script(s) via glob.")
+    print(f"🔍 Discovered {len(sql_files)} SQL migration(s).")
 
-    with psycopg.connect(DB_URL) as conn:
+    with connect(database_url) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -49,7 +39,7 @@ def initialize_database():
             )
 
             for file_path in sql_files:
-                filename = os.path.basename(file_path)
+                filename = file_path.name
                 checksum = compute_checksum(file_path)
 
                 cur.execute(
@@ -72,9 +62,7 @@ def initialize_database():
                     continue
 
                 print(f"⚙️ Applying migration: {filename}...")
-                with open(file_path, "r", encoding="utf-8") as sql_file:
-                    cur.execute(sql_file.read())
-
+                cur.execute(file_path.read_text(encoding="utf-8"))
                 cur.execute(
                     """
                     INSERT INTO schema_migrations (filename, checksum)
@@ -84,11 +72,5 @@ def initialize_database():
                 )
 
         conn.commit()
-        print("✅ All database migrations applied successfully!")
 
-if __name__ == "__main__":
-    try:
-        initialize_database()
-    except Exception as error:
-        print(f"❌ Database migration failed: {error}")
-        raise
+    print("✅ All database migrations applied successfully!")

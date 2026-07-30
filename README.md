@@ -52,13 +52,14 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-Install the current dependencies:
+Install the project and its dependencies in editable mode:
 
 ```bash
-pip install "psycopg[binary]" google-genai python-dotenv
+python -m pip install --upgrade pip setuptools
+pip install -e .
 ```
 
-Create `.env`:
+Copy `.env.example` to `.env`, then provide local credentials:
 
 ```dotenv
 GEMINI_API_KEY=your_api_key
@@ -68,13 +69,14 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/staff_engineer_db
 Start PostgreSQL with `pgvector`, then apply all pending migrations:
 
 ```bash
-python db_init/init_db.py
+python scripts/migrate.py
 ```
 
 Ingest the sample engineering playbook:
 
 ```bash
-python ingest.py
+python scripts/ingest_playbook.py playbooks/sample_playbook.md \
+    --category standards
 ```
 
 Run tests:
@@ -83,6 +85,9 @@ Run tests:
 python -m unittest discover -s tests -v
 ```
 
+See [tests/README.md](tests/README.md) for test coverage, database isolation,
+and commands for running individual test suites.
+
 ## Roadmap
 
 1. Build and benchmark hybrid playbook retrieval.
@@ -90,4 +95,20 @@ python -m unittest discover -s tests -v
 3. Add GitHub tools, patch validation, idempotency, and approval checkpoints.
 4. Build the Next.js/FastAPI product and optimize measured bottlenecks.
 
-See [db_init/README.md](db_init/README.md) for database migration details.
+## Project structure
+
+```text
+src/virtual_staff_engineer/
+├── database/       PostgreSQL connections, migrations, and SQL
+├── ingestion/      Markdown parsing, embeddings, and versioned ingestion
+├── retrieval/      Semantic, lexical, and hybrid retrieval
+└── evaluation/     Retrieval datasets, metrics, and benchmarks
+
+scripts/            Thin command-line entry points
+tests/unit/         Fast tests without infrastructure
+tests/integration/  PostgreSQL integration tests
+docs/               Architecture and subsystem documentation
+```
+
+See [docs/architecture.md](docs/architecture.md) for module boundaries and
+[docs/database.md](docs/database.md) for database migration details.

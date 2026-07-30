@@ -1,14 +1,15 @@
 # Database setup
 
-Run all pending migrations:
+Run all pending migrations from the project root:
 
 ```bash
-python db_init/init_db.py
+python scripts/migrate.py
 ```
 
 The initializer records each migration filename and SHA-256 checksum in
 `schema_migrations`. Applied migrations are skipped on later runs. Never edit an
-applied migration; add a new numbered SQL file under `db_init/sql/` instead.
+applied migration; add a new numbered SQL file under
+`src/virtual_staff_engineer/database/sql/` instead.
 
 ## Baseline migration
 
@@ -28,7 +29,8 @@ Playbook versions and chunks are immutable after insertion.
 After migrations are applied:
 
 ```bash
-python ingest.py
+python scripts/ingest_playbook.py playbooks/sample_playbook.md \
+    --category standards
 ```
 
 An unchanged checksum embedded by the same model and dimension is skipped.
