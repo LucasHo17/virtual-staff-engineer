@@ -18,10 +18,10 @@ Implemented:
 - HNSW vector index
 - PostgreSQL full-text and trigram indexes
 - Checksum-based duplicate detection
+- Semantic cosine retrieval with citable results
 
 Next:
 
-- Semantic vector retrieval
 - Lexical/full-text retrieval
 - Hybrid ranking
 - Retrieval evaluation and benchmarks
@@ -79,6 +79,15 @@ python scripts/ingest_playbook.py playbooks/sample_playbook.md \
     --category standards
 ```
 
+Search active playbooks semantically:
+
+```bash
+python scripts/search_semantic.py \
+    "Can an application write authentication tokens to logs?" \
+    --top-k 5 \
+    --category standards
+```
+
 Run tests:
 
 ```bash
@@ -110,5 +119,6 @@ tests/integration/  PostgreSQL integration tests
 docs/               Architecture and subsystem documentation
 ```
 
-See [docs/architecture.md](docs/architecture.md) for module boundaries and
-[docs/database.md](docs/database.md) for database migration details.
+See [docs/architecture.md](docs/architecture.md) for module boundaries,
+[docs/database.md](docs/database.md) for database migration details, and
+[docs/retrieval.md](docs/retrieval.md) for semantic retrieval behavior.

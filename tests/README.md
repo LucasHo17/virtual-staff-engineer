@@ -1,7 +1,7 @@
 # Tests
 
 The test suite contains fast unit tests and PostgreSQL integration tests for
-the Phase 1 playbook ingestion pipeline.
+Phase 1 ingestion and retrieval.
 
 ## Run all tests
 
@@ -23,8 +23,11 @@ python -m unittest discover -s tests -v
 Run only the unit tests:
 
 ```bash
-python -m unittest tests.unit.test_ingestion -v
+python -m unittest discover -s tests/unit -v
 ```
+
+`unit/test_semantic_retrieval.py` verifies query validation, embedding
+generation, vector validation, supported dimensions, and `top_k` boundaries.
 
 ## PostgreSQL integration tests
 
@@ -38,6 +41,15 @@ python -m unittest tests.unit.test_ingestion -v
 - Failed database writes roll back completely
 - Concurrent ingestion creates only one version
 
+`integration/test_semantic_retrieval.py` verifies:
+
+- Cosine similarity ordering
+- Structured citation metadata
+- `top_k` and category filtering
+- Archived-document exclusion
+- Latest-version selection
+- No fallback to stale versions from another embedding model
+
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project
 migrations applied.
@@ -49,14 +61,14 @@ made; deterministic fake embeddings are used.
 Run only the integration tests:
 
 ```bash
-python -m unittest tests.integration.test_ingestion -v
+python -m unittest discover -s tests/integration -v
 ```
 
 To target a dedicated test database:
 
 ```bash
 TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/staff_engineer_test \
-python -m unittest tests.integration.test_ingestion -v
+python -m unittest discover -s tests/integration -v
 ```
 
 If the database is unavailable or its schema has not been initialized, the

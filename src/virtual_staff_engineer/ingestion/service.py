@@ -1,7 +1,7 @@
 import os
 
 from virtual_staff_engineer.database.connection import connect
-from virtual_staff_engineer.ingestion.embeddings import (
+from virtual_staff_engineer.ingestion.chunk_embeddings import (
     DEFAULT_EMBEDDING_MODEL,
     EMBEDDING_DIMENSION,
     generate_embeddings,

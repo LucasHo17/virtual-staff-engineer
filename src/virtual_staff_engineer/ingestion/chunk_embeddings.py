@@ -1,16 +1,10 @@
-from google import genai
-from google.genai import types
-
+from virtual_staff_engineer.embeddings import (
+    DEFAULT_EMBEDDING_MODEL,
+    EMBEDDING_DIMENSION,
+    embed_text,
+    get_embedding_client,
+)
 from virtual_staff_engineer.ingestion.markdown import derive_rule_key
-
-
-DEFAULT_EMBEDDING_MODEL = "models/gemini-embedding-2"
-EMBEDDING_DIMENSION = 1536
-
-
-def get_embedding_client():
-    """Construct the external embedding client lazily."""
-    return genai.Client()
 
 
 def generate_embeddings(
@@ -24,20 +18,12 @@ def generate_embeddings(
 
     for chunk_index, (section, text_content) in enumerate(parsed_chunks):
         print(f"🧠 Generating embedding for section: {section}...")
-        response = ai_client.models.embed_content(
-            model=embedding_model,
-            contents=text_content,
-            config=types.EmbedContentConfig(
-                output_dimensionality=embedding_dimension
-            ),
+        embedding_vector = embed_text(
+            text_content,
+            ai_client,
+            embedding_model=embedding_model,
+            embedding_dimension=embedding_dimension,
         )
-        embedding_vector = response.embeddings[0].values
-
-        if len(embedding_vector) != embedding_dimension:
-            raise ValueError(
-                f"Expected {embedding_dimension} embedding dimensions, "
-                f"received {len(embedding_vector)}."
-            )
 
         embedded_chunks.append(
             {
