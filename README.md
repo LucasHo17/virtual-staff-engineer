@@ -19,10 +19,10 @@ Implemented:
 - PostgreSQL full-text and trigram indexes
 - Checksum-based duplicate detection
 - Semantic cosine retrieval with citable results
+- Lexical full-text and trigram retrieval
 
 Next:
 
-- Lexical/full-text retrieval
 - Hybrid ranking
 - Retrieval evaluation and benchmarks
 
@@ -84,6 +84,14 @@ Search active playbooks semantically:
 ```bash
 python scripts/search_semantic.py \
     "Can an application write authentication tokens to logs?" \
+    --top-k 5 \
+    --category standards
+```
+
+Search by exact terms, rule identifiers, or fuzzy text:
+
+```bash
+python scripts/search_lexical.py "SEC-01" \
     --top-k 5 \
     --category standards
 ```

@@ -29,6 +29,9 @@ python -m unittest discover -s tests/unit -v
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
 
+`unit/test_lexical_retrieval.py` verifies query, category, `top_k`, and fuzzy
+threshold validation without accessing PostgreSQL.
+
 ## PostgreSQL integration tests
 
 `integration/test_ingestion.py` verifies:
@@ -49,6 +52,14 @@ generation, vector validation, supported dimensions, and `top_k` boundaries.
 - Archived-document exclusion
 - Latest-version selection
 - No fallback to stale versions from another embedding model
+
+`integration/test_lexical_retrieval.py` verifies:
+
+- Exact rule-key boosting
+- PostgreSQL full-text ranking
+- Trigram typo recovery
+- Structured citation metadata
+- Active/latest/category filtering
 
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project

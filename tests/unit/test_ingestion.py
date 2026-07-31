@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
-from virtual_staff_engineer.ingestion.embeddings import (
+from virtual_staff_engineer.ingestion.chunk_embeddings import (
     DEFAULT_EMBEDDING_MODEL,
     EMBEDDING_DIMENSION,
     generate_embeddings,

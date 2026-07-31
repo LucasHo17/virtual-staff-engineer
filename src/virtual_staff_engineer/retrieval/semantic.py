@@ -9,9 +9,12 @@ from virtual_staff_engineer.embeddings import (
     validate_embedding,
 )
 from virtual_staff_engineer.retrieval.models import SemanticSearchResult
-
-
-MAX_TOP_K = 100
+from virtual_staff_engineer.retrieval.validation import (
+    validate_category,
+    validate_embedding_dimension,
+    validate_query,
+    validate_top_k,
+)
 
 
 def generate_query_embedding(
@@ -21,8 +24,8 @@ def generate_query_embedding(
     embedding_dimension=EMBEDDING_DIMENSION,
 ):
     """Validate and embed a natural-language retrieval query."""
-    normalized_query = _validate_query(query)
-    _validate_embedding_dimension(embedding_dimension)
+    normalized_query = validate_query(query)
+    validate_embedding_dimension(embedding_dimension)
     resolved_client = ai_client or get_embedding_client()
     return embed_text(
         normalized_query,
@@ -42,10 +45,10 @@ def semantic_search(
     embedding_dimension=EMBEDDING_DIMENSION,
 ):
     """Embed a query and return ranked chunks from active, latest playbooks."""
-    normalized_query = _validate_query(query)
-    normalized_category = _validate_category(category)
-    _validate_top_k(top_k)
-    _validate_embedding_dimension(embedding_dimension)
+    normalized_query = validate_query(query)
+    normalized_category = validate_category(category)
+    validate_top_k(top_k)
+    validate_embedding_dimension(embedding_dimension)
 
     query_embedding = generate_query_embedding(
         normalized_query,
@@ -73,9 +76,9 @@ def search_by_embedding(
     embedding_dimension=EMBEDDING_DIMENSION,
 ):
     """Search pgvector using a validated embedding without calling an API."""
-    normalized_category = _validate_category(category)
-    _validate_top_k(top_k)
-    _validate_embedding_dimension(embedding_dimension)
+    normalized_category = validate_category(category)
+    validate_top_k(top_k)
+    validate_embedding_dimension(embedding_dimension)
     validate_embedding(query_embedding, embedding_dimension)
     vector_literal = _to_vector_literal(query_embedding)
 
@@ -162,35 +165,6 @@ def search_by_embedding(
         )
         for row in rows
     ]
-
-
-def _validate_query(query):
-    if not isinstance(query, str) or not query.strip():
-        raise ValueError("Query must be a non-empty string.")
-    return query.strip()
-
-
-def _validate_top_k(top_k):
-    if isinstance(top_k, bool) or not isinstance(top_k, int):
-        raise ValueError("top_k must be an integer.")
-    if top_k < 1 or top_k > MAX_TOP_K:
-        raise ValueError(f"top_k must be between 1 and {MAX_TOP_K}.")
-
-
-def _validate_category(category):
-    if category is None:
-        return None
-    if not isinstance(category, str) or not category.strip():
-        raise ValueError("category must be a non-empty string when provided.")
-    return category.strip()
-
-
-def _validate_embedding_dimension(embedding_dimension):
-    if embedding_dimension != EMBEDDING_DIMENSION:
-        raise ValueError(
-            f"The current pgvector schema requires {EMBEDDING_DIMENSION} "
-            f"dimensions, received {embedding_dimension}."
-        )
 
 
 def _to_vector_literal(embedding_vector):

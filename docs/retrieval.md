@@ -37,12 +37,40 @@ python scripts/search_semantic.py \
 The result is JSON so the same entry point can be inspected manually or called
 from shell-based evaluation tooling.
 
+## Lexical retrieval
+
+Lexical search combines three PostgreSQL signals:
+
+1. Exact, case-insensitive rule-key matching
+2. `ts_rank_cd` full-text ranking over rule key, section, and content
+3. `pg_trgm` similarity for fuzzy wording and typographical errors
+
+Exact rule identifiers receive the strongest baseline boost. Full-text and
+trigram scores are then added with explicit weights. These weights are an
+initial ranking policy, not a measured optimum; the Phase 1 evaluation dataset
+will provide evidence for tuning them.
+
+Run a lexical search:
+
+```bash
+python scripts/search_lexical.py "SEC-01" \
+    --top-k 5 \
+    --category standards
+```
+
+Lexical search does not call an embedding API. Its result exposes the exact
+match flag, full-text rank, trigram score, combined lexical score, and the same
+source/version citation metadata as semantic retrieval.
+
+`pg_trgm` provides fuzzy string similarity. It is not BM25 and is not described
+as BM25 in this project.
+
 ## Current limitations
 
 - Category matching is exact.
 - The database vector column currently requires 1,536 dimensions.
-- Semantic similarity alone may miss exact identifiers or uncommon keywords.
+- Lexical scoring weights have not yet been tuned against measured relevance.
 - Retrieval quality has not yet been measured against an evaluation dataset.
 
-Lexical retrieval and hybrid fusion will address complementary recall failure
-modes in the next Phase 1 steps.
+Hybrid fusion will combine semantic and lexical rankings to address their
+complementary recall failure modes in the next Phase 1 step.
