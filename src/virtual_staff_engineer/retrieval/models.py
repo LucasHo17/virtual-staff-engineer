@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -33,3 +34,14 @@ class LexicalSearchResult(RetrievedChunk):
     full_text_rank: float
     trigram_score: float
     lexical_score: float
+
+
+@dataclass(frozen=True)
+class HybridSearchResult(RetrievedChunk):
+    """One playbook chunk ranked by reciprocal rank fusion."""
+
+    semantic_rank: Optional[int]
+    lexical_rank: Optional[int]
+    similarity_score: Optional[float]
+    lexical_score: Optional[float]
+    rrf_score: float

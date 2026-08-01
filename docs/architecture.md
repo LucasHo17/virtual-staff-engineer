@@ -19,7 +19,7 @@ query ─────────→ retrieval
 - `database` owns PostgreSQL connections, SQL migrations, and schema assets.
 - `ingestion` owns Markdown parsing, embedding generation, and immutable
   playbook version creation.
-- `retrieval` owns semantic and lexical ranking and will own hybrid fusion.
+- `retrieval` owns semantic, lexical, and hybrid ranking.
 - `evaluation` will own datasets, quality metrics, and benchmark execution.
 - `scripts` contains only command-line argument handling and calls into the
   application package.

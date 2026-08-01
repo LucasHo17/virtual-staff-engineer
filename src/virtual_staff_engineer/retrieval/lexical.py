@@ -26,7 +26,7 @@ def lexical_search(
     normalized_query = validate_query(query)
     normalized_category = validate_category(category)
     validate_top_k(top_k)
-    _validate_fuzzy_threshold(fuzzy_threshold)
+    validate_fuzzy_threshold(fuzzy_threshold)
 
     with connect(database_url, row_factory=dict_row) as conn:
         with conn.cursor() as cur:
@@ -157,7 +157,7 @@ def lexical_search(
     ]
 
 
-def _validate_fuzzy_threshold(fuzzy_threshold):
+def validate_fuzzy_threshold(fuzzy_threshold):
     if isinstance(fuzzy_threshold, bool) or not isinstance(
         fuzzy_threshold,
         (int, float),

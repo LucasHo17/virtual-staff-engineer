@@ -20,10 +20,10 @@ Implemented:
 - Checksum-based duplicate detection
 - Semantic cosine retrieval with citable results
 - Lexical full-text and trigram retrieval
+- Hybrid retrieval using Reciprocal Rank Fusion
 
 Next:
 
-- Hybrid ranking
 - Retrieval evaluation and benchmarks
 
 ## Architecture
@@ -93,6 +93,16 @@ Search by exact terms, rule identifiers, or fuzzy text:
 ```bash
 python scripts/search_lexical.py "SEC-01" \
     --top-k 5 \
+    --category standards
+```
+
+Search using semantic and lexical rank fusion:
+
+```bash
+python scripts/search_hybrid.py \
+    "Can an application write authentication tokens to logs?" \
+    --top-k 5 \
+    --candidate-k 20 \
     --category standards
 ```
 

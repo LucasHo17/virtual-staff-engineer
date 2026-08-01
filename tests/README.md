@@ -32,6 +32,10 @@ generation, vector validation, supported dimensions, and `top_k` boundaries.
 `unit/test_lexical_retrieval.py` verifies query, category, `top_k`, and fuzzy
 threshold validation without accessing PostgreSQL.
 
+`unit/test_hybrid_retrieval.py` verifies RRF overlap promotion, one-sided
+candidate provenance, weights, candidate-pool validation, and fusion parameter
+validation.
+
 ## PostgreSQL integration tests
 
 `integration/test_ingestion.py` verifies:
@@ -60,6 +64,10 @@ threshold validation without accessing PostgreSQL.
 - Trigram typo recovery
 - Structured citation metadata
 - Active/latest/category filtering
+
+`integration/test_hybrid_retrieval.py` verifies the complete semantic and
+lexical retrieval flow and confirms that a chunk found by both methods is
+promoted above a semantic-only candidate.
 
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project

@@ -65,12 +65,46 @@ source/version citation metadata as semantic retrieval.
 `pg_trgm` provides fuzzy string similarity. It is not BM25 and is not described
 as BM25 in this project.
 
+## Hybrid retrieval
+
+Hybrid search requests a candidate list from both retrievers and combines the
+lists with Reciprocal Rank Fusion (RRF):
+
+```text
+RRF(chunk) = semantic_weight / (rrf_k + semantic_rank)
+           + lexical_weight  / (rrf_k + lexical_rank)
+```
+
+The default is equal weighting with `rrf_k = 60`. A chunk returned by both
+retrievers receives both contributions, while a one-sided candidate remains
+eligible with one contribution. The output preserves semantic rank, lexical
+rank, cosine similarity, lexical score, and the fused RRF score.
+
+RRF uses rank positions rather than directly combining cosine similarity and
+lexical relevance. This avoids pretending that those raw scores share a common
+scale or probability interpretation.
+
+Run a hybrid search:
+
+```bash
+python scripts/search_hybrid.py \
+    "Can an application write authentication tokens to logs?" \
+    --top-k 5 \
+    --candidate-k 20 \
+    --category standards
+```
+
+`candidate_k` controls recall and cost: a larger pool gives fusion more
+opportunities to recover relevant chunks but increases database work. It must
+be at least as large as `top_k` and will be measured during evaluation.
+
 ## Current limitations
 
 - Category matching is exact.
 - The database vector column currently requires 1,536 dimensions.
 - Lexical scoring weights have not yet been tuned against measured relevance.
+- RRF weights and candidate-pool size are unoptimized baselines.
 - Retrieval quality has not yet been measured against an evaluation dataset.
 
-Hybrid fusion will combine semantic and lexical rankings to address their
-complementary recall failure modes in the next Phase 1 step.
+The remaining Phase 1 work is to build the evaluation dataset and compare
+semantic-only, lexical-only, and hybrid quality and latency.
