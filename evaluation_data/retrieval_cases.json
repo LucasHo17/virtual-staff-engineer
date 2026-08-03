@@ -1,0 +1,477 @@
+{
+  "dataset_id": "phase1-retrieval-v1",
+  "status": "frozen",
+  "review": {
+    "reviewed_on": "2026-08-04",
+    "reviewed_case_count": 65,
+    "resolution": "Added AUTH-02 to semantic-018 after cross-checking the equivalent multi-003 scenario. All remaining labels were approved."
+  },
+  "playbook": {
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "rule_count": 31
+  },
+  "labeling_guidelines": {
+    "expected_rule_keys": "All rules that directly answer the query, not merely rules with related vocabulary.",
+    "negative_cases": "Cases with no applicable rule use an empty expected_rule_keys array.",
+    "review_requirement": "Every label must be manually reviewed before changing status from draft to frozen."
+  },
+  "cases": [
+    {
+      "id": "exact-001",
+      "query_type": "exact",
+      "query": "SEC-02 secret manager",
+      "expected_rule_keys": ["SEC-02"],
+      "notes": "Exact rule identifier and secret-management term."
+    },
+    {
+      "id": "exact-002",
+      "query_type": "exact",
+      "query": "AUTH-02 resource ownership",
+      "expected_rule_keys": ["AUTH-02"],
+      "notes": "Exact authorization rule lookup."
+    },
+    {
+      "id": "exact-003",
+      "query_type": "exact",
+      "query": "API-02 idempotency key",
+      "expected_rule_keys": ["API-02"],
+      "notes": "Exact request-idempotency lookup."
+    },
+    {
+      "id": "exact-004",
+      "query_type": "exact",
+      "query": "DB-05 expand migrate contract",
+      "expected_rule_keys": ["DB-05"],
+      "notes": "Exact schema-migration terminology."
+    },
+    {
+      "id": "exact-005",
+      "query_type": "exact",
+      "query": "REL-01 exponential backoff Retry-After",
+      "expected_rule_keys": ["REL-01"],
+      "notes": "Exact retry-policy terminology."
+    },
+    {
+      "id": "exact-006",
+      "query_type": "exact",
+      "query": "REL-03 liveness readiness",
+      "expected_rule_keys": ["REL-03"],
+      "notes": "Exact health-check concepts."
+    },
+    {
+      "id": "exact-007",
+      "query_type": "exact",
+      "query": "OBS-02 metrics cardinality",
+      "expected_rule_keys": ["OBS-02"],
+      "notes": "Exact observability rule and key concept."
+    },
+    {
+      "id": "exact-008",
+      "query_type": "exact",
+      "query": "OBS-03 trace context propagation",
+      "expected_rule_keys": ["OBS-03"],
+      "notes": "Exact distributed-tracing terminology."
+    },
+    {
+      "id": "exact-009",
+      "query_type": "exact",
+      "query": "DEP-01 canary rollback",
+      "expected_rule_keys": ["DEP-01"],
+      "notes": "Exact progressive-delivery concepts."
+    },
+    {
+      "id": "exact-010",
+      "query_type": "exact",
+      "query": "DATA-01 retention deletion",
+      "expected_rule_keys": ["DATA-01"],
+      "notes": "Exact data-governance lookup."
+    },
+    {
+      "id": "semantic-001",
+      "query_type": "semantic",
+      "query": "A debug statement prints a customer's access token during an incident.",
+      "expected_rule_keys": ["SEC-01"],
+      "notes": "Sensitive credential value written to logs."
+    },
+    {
+      "id": "semantic-002",
+      "query_type": "semantic",
+      "query": "A developer deleted an exposed key from the newest commit but did not rotate it or clean repository history.",
+      "expected_rule_keys": ["SEC-02"],
+      "notes": "A committed secret remains exposed through history and must be rotated."
+    },
+    {
+      "id": "semantic-003",
+      "query_type": "semantic",
+      "query": "A filename supplied by a user is concatenated into a command executed by the server.",
+      "expected_rule_keys": ["SEC-03"],
+      "notes": "Untrusted input reaches shell execution without an argument array."
+    },
+    {
+      "id": "semantic-004",
+      "query_type": "semantic",
+      "query": "The HTTP client disables certificate verification because the staging certificate is misconfigured.",
+      "expected_rule_keys": ["SEC-04"],
+      "notes": "TLS verification must not be disabled as a workaround."
+    },
+    {
+      "id": "semantic-005",
+      "query_type": "semantic",
+      "query": "CI discovers a critical exploitable library vulnerability, but the release proceeds without an approved exception.",
+      "expected_rule_keys": ["SEC-05"],
+      "notes": "Critical dependency vulnerability should block release."
+    },
+    {
+      "id": "semantic-006",
+      "query_type": "semantic",
+      "query": "A service accepts a correctly signed token that was issued for a different audience.",
+      "expected_rule_keys": ["AUTH-01"],
+      "notes": "Signature validation alone is insufficient; audience must be checked."
+    },
+    {
+      "id": "semantic-007",
+      "query_type": "semantic",
+      "query": "An authenticated user changes the numeric ID in a URL and reads another tenant's invoice.",
+      "expected_rule_keys": ["AUTH-02"],
+      "notes": "Missing resource ownership and tenant authorization."
+    },
+    {
+      "id": "semantic-008",
+      "query_type": "semantic",
+      "query": "After logout, the old browser cookie can still be used to access the account.",
+      "expected_rule_keys": ["AUTH-03"],
+      "notes": "Session identifier was not invalidated at logout."
+    },
+    {
+      "id": "semantic-009",
+      "query_type": "semantic",
+      "query": "The users table stores unsalted SHA-256 password digests.",
+      "expected_rule_keys": ["AUTH-04"],
+      "notes": "Passwords require an adaptive password-hashing algorithm."
+    },
+    {
+      "id": "semantic-010",
+      "query_type": "semantic",
+      "query": "A response field keeps the same name but changes from cents to dollars without a new API version.",
+      "expected_rule_keys": ["API-01"],
+      "notes": "Changing field meaning is a breaking compatibility change."
+    },
+    {
+      "id": "semantic-011",
+      "query_type": "semantic",
+      "query": "A payment request times out, the client submits it again, and two charges are created.",
+      "expected_rule_keys": ["API-02"],
+      "notes": "Request replay creates duplicate non-repeatable state."
+    },
+    {
+      "id": "semantic-012",
+      "query_type": "semantic",
+      "query": "Anonymous clients can repeatedly call an expensive search endpoint until the service runs out of capacity.",
+      "expected_rule_keys": ["API-03"],
+      "notes": "Externally reachable expensive endpoint requires abuse controls."
+    },
+    {
+      "id": "semantic-013",
+      "query_type": "semantic",
+      "query": "A failed request returns a Python stack trace and the database hostname to the caller.",
+      "expected_rule_keys": ["API-04"],
+      "notes": "Internal diagnostics are exposed through the API error response."
+    },
+    {
+      "id": "semantic-014",
+      "query_type": "semantic",
+      "query": "The client disconnects, but the service continues an expensive downstream request for several minutes.",
+      "expected_rule_keys": ["API-05"],
+      "notes": "Cancellation and remaining deadlines are not propagated."
+    },
+    {
+      "id": "semantic-015",
+      "query_type": "semantic",
+      "query": "Creating an order writes the order row but fails before writing its required line items.",
+      "expected_rule_keys": ["DB-01"],
+      "notes": "One business action partially succeeds without a transaction."
+    },
+    {
+      "id": "semantic-016",
+      "query_type": "semantic",
+      "query": "Loading a page executes one additional database query for every item in the result list.",
+      "expected_rule_keys": ["DB-02"],
+      "notes": "Per-row N+1 query pattern."
+    },
+    {
+      "id": "semantic-017",
+      "query_type": "semantic",
+      "query": "Each of fifty service replicas opens one hundred database connections, exceeding the server budget.",
+      "expected_rule_keys": ["DB-03"],
+      "notes": "Pool sizing ignores replicas and total database capacity."
+    },
+    {
+      "id": "semantic-018",
+      "query_type": "semantic",
+      "query": "A cached account response omits the tenant from its key and is returned to a different organization.",
+      "expected_rule_keys": ["DB-04", "AUTH-02"],
+      "notes": "The cache key lacks tenant scope, and the resulting cross-tenant response violates resource authorization."
+    },
+    {
+      "id": "semantic-019",
+      "query_type": "semantic",
+      "query": "A deployment drops a column while older application instances still read it during the rolling release.",
+      "expected_rule_keys": ["DB-05"],
+      "notes": "Destructive migration is incompatible with the currently deployed version."
+    },
+    {
+      "id": "semantic-020",
+      "query_type": "semantic",
+      "query": "The client immediately retries a forbidden response ten times with no delay.",
+      "expected_rule_keys": ["REL-01"],
+      "notes": "Deterministic authorization failures must not be retried."
+    },
+    {
+      "id": "fuzzy-001",
+      "query_type": "fuzzy",
+      "query": "pasword and acces token in applicaiton loggs",
+      "expected_rule_keys": ["SEC-01"],
+      "notes": "Misspelled sensitive-data logging query."
+    },
+    {
+      "id": "fuzzy-002",
+      "query_type": "fuzzy",
+      "query": "secrt commited to reposotory histroy",
+      "expected_rule_keys": ["SEC-02"],
+      "notes": "Misspelled source-control secret query."
+    },
+    {
+      "id": "fuzzy-003",
+      "query_type": "fuzzy",
+      "query": "paramterized querry for untrsted imput",
+      "expected_rule_keys": ["SEC-03"],
+      "notes": "Misspelled input-validation and SQL query concepts."
+    },
+    {
+      "id": "fuzzy-004",
+      "query_type": "fuzzy",
+      "query": "auth token signatre audence and expiraton",
+      "expected_rule_keys": ["AUTH-01"],
+      "notes": "Misspelled token-validation fields."
+    },
+    {
+      "id": "fuzzy-005",
+      "query_type": "fuzzy",
+      "query": "rate limting burst alowance and retry guidnce",
+      "expected_rule_keys": ["API-03"],
+      "notes": "Misspelled throttling concepts."
+    },
+    {
+      "id": "fuzzy-006",
+      "query_type": "fuzzy",
+      "query": "databse conection poole aquisition timout",
+      "expected_rule_keys": ["DB-03"],
+      "notes": "Misspelled connection-pool query."
+    },
+    {
+      "id": "fuzzy-007",
+      "query_type": "fuzzy",
+      "query": "circut breker half opn probse",
+      "expected_rule_keys": ["REL-02"],
+      "notes": "Misspelled circuit-breaker state query."
+    },
+    {
+      "id": "fuzzy-008",
+      "query_type": "fuzzy",
+      "query": "gracful shutdwn finish inflight mesages",
+      "expected_rule_keys": ["REL-04"],
+      "notes": "Misspelled shutdown and message-processing query."
+    },
+    {
+      "id": "fuzzy-009",
+      "query_type": "fuzzy",
+      "query": "strctured log corelation identifer",
+      "expected_rule_keys": ["OBS-01"],
+      "notes": "Misspelled structured-logging query."
+    },
+    {
+      "id": "fuzzy-010",
+      "query_type": "fuzzy",
+      "query": "distrubuted trce propogation and spanns",
+      "expected_rule_keys": ["OBS-03"],
+      "notes": "Misspelled distributed-tracing query."
+    },
+    {
+      "id": "tier-001",
+      "query_type": "tier",
+      "query": "A local prototype uses production API credentials. Can it still be classified as Tier 3?",
+      "expected_rule_keys": ["GOV-01", "SEC-02"],
+      "notes": "Production credentials invalidate the Tier 3 assumption and require secret controls."
+    },
+    {
+      "id": "tier-002",
+      "query_type": "tier",
+      "query": "Does a short-lived local experiment using only synthetic data require production structured logging?",
+      "expected_rule_keys": ["GOV-01", "OBS-01"],
+      "notes": "Strictly local Tier 3 experiments are optional for structured production logging."
+    },
+    {
+      "id": "tier-003",
+      "query_type": "tier",
+      "query": "An internal Tier 2 service exposes protected employee records to multiple users. Must it check resource ownership?",
+      "expected_rule_keys": ["GOV-01", "AUTH-02"],
+      "notes": "Tier 2 and multi-user protected resources require authorization."
+    },
+    {
+      "id": "tier-004",
+      "query_type": "tier",
+      "query": "Is expand-migrate-contract required for a disposable local database used by one Tier 3 developer?",
+      "expected_rule_keys": ["GOV-01", "DB-05"],
+      "notes": "The migration rule explicitly exempts disposable local schemas."
+    },
+    {
+      "id": "tier-005",
+      "query_type": "tier",
+      "query": "A Tier 1 customer API is open to the internet. Are burst and sustained request limits required?",
+      "expected_rule_keys": ["GOV-01", "API-03"],
+      "notes": "Externally reachable Tier 1 APIs require rate limiting."
+    },
+    {
+      "id": "tier-006",
+      "query_type": "tier",
+      "query": "Must every Tier 2 dependency use a circuit breaker even when no failure or capacity problem has been measured?",
+      "expected_rule_keys": ["GOV-01", "REL-02"],
+      "notes": "Tier 2 circuit breakers require evidence of the failure mode."
+    },
+    {
+      "id": "tier-007",
+      "query_type": "tier",
+      "query": "A prototype is deployed into a shared orchestrated environment. Does it need a readiness signal?",
+      "expected_rule_keys": ["GOV-01", "REL-03"],
+      "notes": "A shared deployed Tier 3 service requires readiness behavior."
+    },
+    {
+      "id": "tier-008",
+      "query_type": "tier",
+      "query": "A Tier 0 payment release has irreversible effects. Can it immediately receive all production traffic after unit tests pass?",
+      "expected_rule_keys": ["GOV-01", "DEP-01"],
+      "notes": "High-risk Tier 0 changes require progressive delivery criteria."
+    },
+    {
+      "id": "tier-009",
+      "query_type": "tier",
+      "query": "A prototype stores real customer records. Is it exempt from retention and deletion requirements because it is called Tier 3?",
+      "expected_rule_keys": ["GOV-01", "DATA-01"],
+      "notes": "Real customer data prevents the claimed Tier 3 exemption."
+    },
+    {
+      "id": "tier-010",
+      "query_type": "tier",
+      "query": "An internal Tier 2 request crosses four independently operated services. Should trace context be propagated?",
+      "expected_rule_keys": ["GOV-01", "OBS-03"],
+      "notes": "Multi-service Tier 2 request paths require distributed tracing."
+    },
+    {
+      "id": "multi-001",
+      "query_type": "multi_rule",
+      "query": "A payment worker immediately retries failures and can process the same queued payment twice.",
+      "expected_rule_keys": ["REL-01", "REL-05", "API-02"],
+      "notes": "Retry policy, at-least-once job delivery, and harmful duplicate state changes all apply."
+    },
+    {
+      "id": "multi-002",
+      "query_type": "multi_rule",
+      "query": "A password-reset token is reusable for a day and its complete value is printed in debug logs.",
+      "expected_rule_keys": ["AUTH-04", "SEC-01"],
+      "notes": "Reset-token lifecycle and sensitive logging are separate violations."
+    },
+    {
+      "id": "multi-003",
+      "query_type": "multi_rule",
+      "query": "A cache key omits the tenant, allowing one authenticated customer to receive another customer's record.",
+      "expected_rule_keys": ["DB-04", "AUTH-02"],
+      "notes": "Cache scoping and resource authorization both fail."
+    },
+    {
+      "id": "multi-004",
+      "query_type": "multi_rule",
+      "query": "A downstream call has no deadline and is retried immediately without jitter whenever it fails.",
+      "expected_rule_keys": ["API-05", "REL-01"],
+      "notes": "Missing deadlines and unsafe retry behavior amplify each other."
+    },
+    {
+      "id": "multi-005",
+      "query_type": "multi_rule",
+      "query": "A full-traffic deployment drops a database column with no staged rollout or compatible migration sequence.",
+      "expected_rule_keys": ["DB-05", "DEP-01"],
+      "notes": "Both migration compatibility and progressive delivery are missing."
+    },
+    {
+      "id": "multi-006",
+      "query_type": "multi_rule",
+      "query": "An administrator changes another user's permissions without an ownership policy check or an audit event.",
+      "expected_rule_keys": ["AUTH-02", "OBS-04"],
+      "notes": "Authorization enforcement and security accountability both apply."
+    },
+    {
+      "id": "multi-007",
+      "query_type": "multi_rule",
+      "query": "A queue worker acknowledges an order before the transaction storing the order and line items commits.",
+      "expected_rule_keys": ["REL-05", "DB-01"],
+      "notes": "Premature acknowledgement combines with a non-atomic business write."
+    },
+    {
+      "id": "multi-008",
+      "query_type": "multi_rule",
+      "query": "Production logs are unstructured free-form messages and include complete bearer tokens.",
+      "expected_rule_keys": ["OBS-01", "SEC-01"],
+      "notes": "Logging format and sensitive-data restrictions are independent requirements."
+    },
+    {
+      "id": "multi-009",
+      "query_type": "multi_rule",
+      "query": "Metrics use customer IDs as labels, while error traces attach complete private request bodies.",
+      "expected_rule_keys": ["OBS-02", "OBS-03", "SEC-01"],
+      "notes": "Cardinality, trace payload, and sensitive-data concerns all apply."
+    },
+    {
+      "id": "multi-010",
+      "query_type": "multi_rule",
+      "query": "When a dependency circuit opens, the API returns its raw exception and internal hostname to clients.",
+      "expected_rule_keys": ["REL-02", "API-04"],
+      "notes": "Dependency isolation and safe error contracts are both relevant."
+    },
+    {
+      "id": "negative-001",
+      "query_type": "negative",
+      "query": "What colors should be used in the company logo?",
+      "expected_rule_keys": [],
+      "notes": "Brand design is outside this engineering-governance corpus."
+    },
+    {
+      "id": "negative-002",
+      "query_type": "negative",
+      "query": "What temperature should the office air conditioning use?",
+      "expected_rule_keys": [],
+      "notes": "Facilities policy is outside this corpus."
+    },
+    {
+      "id": "negative-003",
+      "query_type": "negative",
+      "query": "Which font should the marketing homepage use?",
+      "expected_rule_keys": [],
+      "notes": "Visual design choice has no applicable rule."
+    },
+    {
+      "id": "negative-004",
+      "query_type": "negative",
+      "query": "How many vacation days should an employee receive?",
+      "expected_rule_keys": [],
+      "notes": "Human-resources policy is outside this corpus."
+    },
+    {
+      "id": "negative-005",
+      "query_type": "negative",
+      "query": "Should a new internal utility be written in Python or Go?",
+      "expected_rule_keys": [],
+      "notes": "The playbook does not mandate a programming language."
+    }
+  ]
+}
