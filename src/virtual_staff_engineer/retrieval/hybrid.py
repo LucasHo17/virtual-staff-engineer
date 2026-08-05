@@ -1,4 +1,5 @@
 import math
+import re
 
 from virtual_staff_engineer.embeddings import (
     DEFAULT_EMBEDDING_MODEL,
@@ -22,6 +23,9 @@ DEFAULT_CANDIDATE_K = 20
 DEFAULT_RRF_K = 60
 DEFAULT_SEMANTIC_WEIGHT = 1.0
 DEFAULT_LEXICAL_WEIGHT = 1.0
+DEFAULT_LEXICAL_POLICY = "confident"
+DEFAULT_STRONG_TRIGRAM_THRESHOLD = 0.3
+LEXICAL_POLICIES = {"all", "confident", "explicit_only"}
 
 
 def hybrid_search(
@@ -37,6 +41,9 @@ def hybrid_search(
     ai_client=None,
     embedding_model=DEFAULT_EMBEDDING_MODEL,
     embedding_dimension=EMBEDDING_DIMENSION,
+    min_similarity=None,
+    lexical_policy=DEFAULT_LEXICAL_POLICY,
+    strong_trigram_threshold=DEFAULT_STRONG_TRIGRAM_THRESHOLD,
 ):
     """Retrieve semantic and lexical candidates and fuse their ranks."""
     normalized_query = validate_query(query)
@@ -46,6 +53,8 @@ def hybrid_search(
     if candidate_k < top_k:
         raise ValueError("candidate_k must be greater than or equal to top_k.")
     validate_fuzzy_threshold(fuzzy_threshold)
+    validate_lexical_policy(lexical_policy)
+    validate_fuzzy_threshold(strong_trigram_threshold)
 
     _validate_fusion_parameters(
         rrf_k,
@@ -61,6 +70,7 @@ def hybrid_search(
         ai_client=ai_client,
         embedding_model=embedding_model,
         embedding_dimension=embedding_dimension,
+        min_similarity=min_similarity,
     )
     lexical_results = lexical_search(
         normalized_query,
@@ -69,15 +79,63 @@ def hybrid_search(
         fuzzy_threshold=fuzzy_threshold,
         database_url=database_url,
     )
+    fusion_lexical_results = filter_lexical_results(
+        normalized_query,
+        lexical_results,
+        policy=lexical_policy,
+        strong_trigram_threshold=strong_trigram_threshold,
+    )
 
     return reciprocal_rank_fusion(
         semantic_results,
-        lexical_results,
+        fusion_lexical_results,
         top_k=top_k,
         rrf_k=rrf_k,
         semantic_weight=semantic_weight,
         lexical_weight=lexical_weight,
     )
+
+
+def filter_lexical_results(
+    query,
+    lexical_results,
+    policy=DEFAULT_LEXICAL_POLICY,
+    strong_trigram_threshold=DEFAULT_STRONG_TRIGRAM_THRESHOLD,
+):
+    """Keep only lexical evidence strong enough to influence semantic ranks."""
+    normalized_query = validate_query(query)
+    validate_lexical_policy(policy)
+    validate_fuzzy_threshold(strong_trigram_threshold)
+    if policy == "all":
+        return list(lexical_results)
+
+    filtered = []
+    for result in lexical_results:
+        explicit = result.exact_rule_key_match or _query_contains_rule_key(
+            normalized_query,
+            result.rule_key,
+        )
+        if policy == "explicit_only" and explicit:
+            filtered.append(result)
+        elif policy == "confident" and (
+            explicit
+            or result.full_text_rank > 0
+            or result.trigram_score >= strong_trigram_threshold
+        ):
+            filtered.append(result)
+    return filtered
+
+
+def validate_lexical_policy(policy):
+    if policy not in LEXICAL_POLICIES:
+        raise ValueError(
+            f"lexical_policy must be one of {sorted(LEXICAL_POLICIES)}."
+        )
+
+
+def _query_contains_rule_key(query, rule_key):
+    pattern = rf"(?<![A-Za-z0-9]){re.escape(rule_key)}(?![A-Za-z0-9])"
+    return re.search(pattern, query, flags=re.IGNORECASE) is not None
 
 
 def reciprocal_rank_fusion(

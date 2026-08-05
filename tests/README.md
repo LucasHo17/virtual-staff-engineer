@@ -36,6 +36,12 @@ threshold validation without accessing PostgreSQL.
 candidate provenance, weights, candidate-pool validation, and fusion parameter
 validation.
 
+The evaluation unit tests verify frozen-dataset validation, case selection,
+rule-level metrics, negative-query scoring, latency aggregation, one embedding
+request per benchmark case, compact result serialization, and report overwrite
+protection. They also verify offline threshold replay, guarded lexical fusion,
+semantic-threshold validation, and preflight checks before paid API work.
+
 ## PostgreSQL integration tests
 
 `integration/test_ingestion.py` verifies:

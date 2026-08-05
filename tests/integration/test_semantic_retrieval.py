@@ -238,6 +238,26 @@ class SemanticRetrievalIntegrationTests(unittest.TestCase):
         self.assertEqual(results[0].version, 1)
         self.assertEqual(results[0].category, self.category)
 
+    def test_min_similarity_can_abstain_from_weak_candidates(self):
+        document_id = self._create_document()
+        self._create_version(
+            document_id,
+            version=1,
+            chunks=[
+                ("MATCH-01", "Strong match.", self._basis_vector(0)),
+                ("WEAK-02", "Orthogonal match.", self._basis_vector(1)),
+            ],
+        )
+
+        results = self._search(
+            self._basis_vector(0),
+            category=self.category,
+            top_k=2,
+            min_similarity=0.5,
+        )
+
+        self.assertEqual([result.rule_key for result in results], ["MATCH-01"])
+
     def test_search_excludes_archived_old_and_other_category_content(self):
         active_document_id = self._create_document()
         self._create_version(

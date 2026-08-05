@@ -20,6 +20,11 @@ def parse_arguments():
         "--category",
         help="Optional exact playbook category filter.",
     )
+    parser.add_argument(
+        "--min-similarity",
+        type=float,
+        help="Optional semantic abstention threshold (-1 to 1).",
+    )
     return parser.parse_args()
 
 
@@ -29,6 +34,7 @@ if __name__ == "__main__":
         arguments.query,
         top_k=arguments.top_k,
         category=arguments.category,
+        min_similarity=arguments.min_similarity,
     )
     print(
         json.dumps(

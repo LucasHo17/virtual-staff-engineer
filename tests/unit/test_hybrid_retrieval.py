@@ -1,6 +1,7 @@
 import unittest
 
 from virtual_staff_engineer.retrieval.hybrid import (
+    filter_lexical_results,
     hybrid_search,
     reciprocal_rank_fusion,
 )
@@ -125,6 +126,42 @@ class HybridRetrievalUnitTests(unittest.TestCase):
     def test_hybrid_search_rejects_fuzzy_threshold_before_retrieval(self):
         with self.assertRaisesRegex(ValueError, "fuzzy_threshold"):
             hybrid_search("credentials", fuzzy_threshold=1.1)
+
+    def test_confident_policy_rejects_weak_fuzzy_noise(self):
+        weak = LexicalSearchResult(
+            **common_result_fields("weak", "AUTH-04"),
+            exact_rule_key_match=False,
+            full_text_rank=0,
+            trigram_score=0.21,
+            lexical_score=0.0525,
+        )
+        strong = LexicalSearchResult(
+            **common_result_fields("strong", "SEC-01"),
+            exact_rule_key_match=False,
+            full_text_rank=0,
+            trigram_score=0.35,
+            lexical_score=0.0875,
+        )
+
+        filtered = filter_lexical_results(
+            "misspelled logging requirement",
+            [weak, strong],
+            policy="confident",
+            strong_trigram_threshold=0.3,
+        )
+
+        self.assertEqual([result.rule_key for result in filtered], ["SEC-01"])
+
+    def test_explicit_rule_key_is_always_confident(self):
+        weak = lexical_result("weak", "SEC-01", 0.01)
+
+        filtered = filter_lexical_results(
+            "Review SEC-01 please",
+            [weak],
+            policy="confident",
+        )
+
+        self.assertEqual(filtered, [weak])
 
 
 if __name__ == "__main__":

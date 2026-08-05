@@ -190,7 +190,7 @@ class LexicalRetrievalIntegrationTests(unittest.TestCase):
         )
 
         results = self._search(
-            "SEC-01",
+            "SEC-01 rule",
             category=self.category,
             top_k=2,
         )

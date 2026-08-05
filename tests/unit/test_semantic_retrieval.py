@@ -9,6 +9,7 @@ from virtual_staff_engineer.retrieval.semantic import (
     generate_query_embedding,
     search_by_embedding,
     semantic_search,
+    validate_similarity_threshold,
 )
 
 
@@ -81,6 +82,15 @@ class SemanticRetrievalUnitTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "finite numbers"):
             search_by_embedding(invalid_embedding)
+
+    def test_similarity_threshold_validation(self):
+        for valid_value in (None, -1, 0.59, 1):
+            validate_similarity_threshold(valid_value)
+
+        for invalid_value in (-1.1, 1.1, True, "0.59"):
+            with self.subTest(invalid_value=invalid_value):
+                with self.assertRaises(ValueError):
+                    validate_similarity_threshold(invalid_value)
 
 
 if __name__ == "__main__":

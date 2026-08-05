@@ -21,10 +21,13 @@ Implemented:
 - Semantic cosine retrieval with citable results
 - Lexical full-text and trigram retrieval
 - Hybrid retrieval using Reciprocal Rank Fusion
+- Frozen labeled retrieval dataset and reproducible benchmark runner
+- Offline threshold/fusion replay without additional embedding calls
+- Confidence-gated lexical evidence for safer hybrid ranking
 
 Next:
 
-- Retrieval evaluation and benchmarks
+- Run and analyze the frozen Phase 1 retrieval benchmark
 
 ## Architecture
 
@@ -106,6 +109,27 @@ python scripts/search_hybrid.py \
     --category standards
 ```
 
+Validate the frozen evaluation dataset against PostgreSQL without making any
+embedding API calls:
+
+```bash
+python scripts/evaluate_retrieval.py --dry-run
+```
+
+Run a five-case smoke benchmark before the complete 65-case evaluation:
+
+```bash
+python scripts/evaluate_retrieval.py \
+    --limit 5 \
+    --output-dir evaluation_results/smoke
+```
+
+Analyze a completed benchmark offline:
+
+```bash
+python scripts/analyze_retrieval_results.py
+```
+
 Run tests:
 
 ```bash
@@ -139,4 +163,5 @@ docs/               Architecture and subsystem documentation
 
 See [docs/architecture.md](docs/architecture.md) for module boundaries,
 [docs/database.md](docs/database.md) for database migration details, and
-[docs/retrieval.md](docs/retrieval.md) for semantic retrieval behavior.
+[docs/retrieval.md](docs/retrieval.md) for retrieval behavior. The benchmark
+workflow and metric definitions are in [docs/evaluation.md](docs/evaluation.md).

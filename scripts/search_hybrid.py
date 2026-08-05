@@ -50,6 +50,23 @@ def parse_arguments():
         default=1.0,
         help="Lexical rank contribution weight (default: 1.0).",
     )
+    parser.add_argument(
+        "--min-similarity",
+        type=float,
+        help="Optional semantic abstention threshold (-1 to 1).",
+    )
+    parser.add_argument(
+        "--lexical-policy",
+        choices=["all", "confident", "explicit_only"],
+        default="confident",
+        help="Lexical evidence allowed to influence RRF (default: confident).",
+    )
+    parser.add_argument(
+        "--strong-trigram-threshold",
+        type=float,
+        default=0.3,
+        help="Strong fuzzy evidence threshold used by confident fusion.",
+    )
     return parser.parse_args()
 
 
@@ -64,6 +81,9 @@ if __name__ == "__main__":
         rrf_k=arguments.rrf_k,
         semantic_weight=arguments.semantic_weight,
         lexical_weight=arguments.lexical_weight,
+        min_similarity=arguments.min_similarity,
+        lexical_policy=arguments.lexical_policy,
+        strong_trigram_threshold=arguments.strong_trigram_threshold,
     )
     print(
         json.dumps(

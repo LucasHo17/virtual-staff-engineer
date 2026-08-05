@@ -59,7 +59,12 @@ def lexical_search(
                         pc.section,
                         pc.content,
                         lv.embedding_model,
-                        lower(pc.rule_key) = si.normalized_query
+                        lower(pc.rule_key) = ANY(
+                            regexp_split_to_array(
+                                si.normalized_query,
+                                '[^a-z0-9-]+'
+                            )
+                        )
                             AS exact_rule_key_match,
                         ts_rank_cd(
                             to_tsvector(

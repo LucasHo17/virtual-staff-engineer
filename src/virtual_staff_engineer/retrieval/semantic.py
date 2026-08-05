@@ -43,12 +43,14 @@ def semantic_search(
     ai_client=None,
     embedding_model=DEFAULT_EMBEDDING_MODEL,
     embedding_dimension=EMBEDDING_DIMENSION,
+    min_similarity=None,
 ):
     """Embed a query and return ranked chunks from active, latest playbooks."""
     normalized_query = validate_query(query)
     normalized_category = validate_category(category)
     validate_top_k(top_k)
     validate_embedding_dimension(embedding_dimension)
+    validate_similarity_threshold(min_similarity)
 
     query_embedding = generate_query_embedding(
         normalized_query,
@@ -64,6 +66,7 @@ def semantic_search(
         database_url=database_url,
         embedding_model=embedding_model,
         embedding_dimension=embedding_dimension,
+        min_similarity=min_similarity,
     )
 
 
@@ -74,11 +77,13 @@ def search_by_embedding(
     database_url=None,
     embedding_model=DEFAULT_EMBEDDING_MODEL,
     embedding_dimension=EMBEDDING_DIMENSION,
+    min_similarity=None,
 ):
     """Search pgvector using a validated embedding without calling an API."""
     normalized_category = validate_category(category)
     validate_top_k(top_k)
     validate_embedding_dimension(embedding_dimension)
+    validate_similarity_threshold(min_similarity)
     validate_embedding(query_embedding, embedding_dimension)
     vector_literal = _to_vector_literal(query_embedding)
 
@@ -134,6 +139,10 @@ def search_by_embedding(
                     embedding_model,
                     1 - cosine_distance AS similarity_score
                 FROM ranked_chunks
+                WHERE (
+                    %s::double precision IS NULL
+                    OR 1 - cosine_distance >= %s
+                )
                 ORDER BY cosine_distance ASC, playbook_chunk_id ASC
                 LIMIT %s;
                 """,
@@ -143,6 +152,8 @@ def search_by_embedding(
                     embedding_dimension,
                     normalized_category,
                     normalized_category,
+                    min_similarity,
+                    min_similarity,
                     top_k,
                 ),
             )
@@ -165,6 +176,18 @@ def search_by_embedding(
         )
         for row in rows
     ]
+
+
+def validate_similarity_threshold(min_similarity):
+    if min_similarity is None:
+        return
+    if isinstance(min_similarity, bool) or not isinstance(
+        min_similarity,
+        (int, float),
+    ):
+        raise ValueError("min_similarity must be a number or None.")
+    if min_similarity < -1 or min_similarity > 1:
+        raise ValueError("min_similarity must be between -1 and 1.")
 
 
 def _to_vector_literal(embedding_vector):
