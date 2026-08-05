@@ -1,0 +1,3935 @@
+{
+  "generated_at": "2026-08-04T05:05:56.636364+00:00",
+  "run_status": "partial",
+  "dataset": {
+    "dataset_id": "phase1-retrieval-v1",
+    "status": "frozen",
+    "source_path": "evaluation_data/retrieval_cases.json",
+    "total_case_count": 65,
+    "selected_case_count": 5,
+    "review": {
+      "reviewed_on": "2026-08-04",
+      "reviewed_case_count": 65,
+      "resolution": "Added AUTH-02 to semantic-018 after cross-checking the equivalent multi-003 scenario. All remaining labels were approved."
+    }
+  },
+  "corpus": {
+    "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+    "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "embedding_model": "models/gemini-embedding-2",
+    "embedding_dimension": 1536,
+    "chunk_count": 31,
+    "rule_keys": [
+      "API-01",
+      "API-02",
+      "API-03",
+      "API-04",
+      "API-05",
+      "AUTH-01",
+      "AUTH-02",
+      "AUTH-03",
+      "AUTH-04",
+      "DATA-01",
+      "DB-01",
+      "DB-02",
+      "DB-03",
+      "DB-04",
+      "DB-05",
+      "DEP-01",
+      "GOV-01",
+      "OBS-01",
+      "OBS-02",
+      "OBS-03",
+      "OBS-04",
+      "REL-01",
+      "REL-02",
+      "REL-03",
+      "REL-04",
+      "REL-05",
+      "SEC-01",
+      "SEC-02",
+      "SEC-03",
+      "SEC-04",
+      "SEC-05"
+    ]
+  },
+  "config": {
+    "cutoffs": [
+      1,
+      3,
+      5
+    ],
+    "candidate_k": 20,
+    "fuzzy_threshold": 0.2,
+    "rrf_k": 60,
+    "semantic_weight": 1.0,
+    "lexical_weight": 1.0,
+    "embedding_model": "models/gemini-embedding-2",
+    "embedding_dimension": 1536
+  },
+  "usage": {
+    "embedding_requests": 5
+  },
+  "summary": {
+    "overall": {
+      "semantic": {
+        "case_count": 5,
+        "positive_case_count": 5,
+        "negative_case_count": 0,
+        "quality": {
+          "recall_at_k": {
+            "1": 1.0,
+            "3": 1.0,
+            "5": 1.0
+          },
+          "precision_at_k": {
+            "1": 1.0,
+            "3": 0.3333333333333333,
+            "5": 0.2
+          },
+          "hit_rate_at_k": {
+            "1": 1.0,
+            "3": 1.0,
+            "5": 1.0
+          },
+          "mrr": 1.0
+        },
+        "negative_quality": {
+          "false_positive_rate_at_k": {
+            "1": null,
+            "3": null,
+            "5": null
+          },
+          "no_result_rate_at_k": {
+            "1": null,
+            "3": null,
+            "5": null
+          }
+        },
+        "latency_ms": {
+          "mean": 452.83616659999996,
+          "p50": 421.95099900000037,
+          "p95": 650.143999
+        }
+      },
+      "lexical": {
+        "case_count": 5,
+        "positive_case_count": 5,
+        "negative_case_count": 0,
+        "quality": {
+          "recall_at_k": {
+            "1": 1.0,
+            "3": 1.0,
+            "5": 1.0
+          },
+          "precision_at_k": {
+            "1": 1.0,
+            "3": 0.3333333333333333,
+            "5": 0.2
+          },
+          "hit_rate_at_k": {
+            "1": 1.0,
+            "3": 1.0,
+            "5": 1.0
+          },
+          "mrr": 1.0
+        },
+        "negative_quality": {
+          "false_positive_rate_at_k": {
+            "1": null,
+            "3": null,
+            "5": null
+          },
+          "no_result_rate_at_k": {
+            "1": null,
+            "3": null,
+            "5": null
+          }
+        },
+        "latency_ms": {
+          "mean": 27.33937499999999,
+          "p50": 27.41712499999993,
+          "p95": 31.908625000000022
+        }
+      },
+      "hybrid": {
+        "case_count": 5,
+        "positive_case_count": 5,
+        "negative_case_count": 0,
+        "quality": {
+          "recall_at_k": {
+            "1": 1.0,
+            "3": 1.0,
+            "5": 1.0
+          },
+          "precision_at_k": {
+            "1": 1.0,
+            "3": 0.3333333333333333,
+            "5": 0.2
+          },
+          "hit_rate_at_k": {
+            "1": 1.0,
+            "3": 1.0,
+            "5": 1.0
+          },
+          "mrr": 1.0
+        },
+        "negative_quality": {
+          "false_positive_rate_at_k": {
+            "1": null,
+            "3": null,
+            "5": null
+          },
+          "no_result_rate_at_k": {
+            "1": null,
+            "3": null,
+            "5": null
+          }
+        },
+        "latency_ms": {
+          "mean": 480.3906584,
+          "p50": 449.48041500000005,
+          "p95": 682.209208
+        }
+      }
+    },
+    "by_query_type": {
+      "semantic": {
+        "exact": {
+          "case_count": 5,
+          "positive_case_count": 5,
+          "negative_case_count": 0,
+          "quality": {
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_rate_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "mrr": 1.0
+          },
+          "negative_quality": {
+            "false_positive_rate_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "no_result_rate_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            }
+          },
+          "latency_ms": {
+            "mean": 452.83616659999996,
+            "p50": 421.95099900000037,
+            "p95": 650.143999
+          }
+        }
+      },
+      "lexical": {
+        "exact": {
+          "case_count": 5,
+          "positive_case_count": 5,
+          "negative_case_count": 0,
+          "quality": {
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_rate_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "mrr": 1.0
+          },
+          "negative_quality": {
+            "false_positive_rate_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "no_result_rate_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            }
+          },
+          "latency_ms": {
+            "mean": 27.33937499999999,
+            "p50": 27.41712499999993,
+            "p95": 31.908625000000022
+          }
+        }
+      },
+      "hybrid": {
+        "exact": {
+          "case_count": 5,
+          "positive_case_count": 5,
+          "negative_case_count": 0,
+          "quality": {
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_rate_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "mrr": 1.0
+          },
+          "negative_quality": {
+            "false_positive_rate_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "no_result_rate_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            }
+          },
+          "latency_ms": {
+            "mean": 480.3906584,
+            "p50": 449.48041500000005,
+            "p95": 682.209208
+          }
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "exact-001",
+      "query_type": "exact",
+      "query": "SEC-02 secret manager",
+      "expected_rule_keys": [
+        "SEC-02"
+      ],
+      "notes": "Exact rule identifier and secret-management term.",
+      "timing_breakdown_ms": {
+        "embedding": 624.9507080000001,
+        "semantic_database": 25.193290999999896,
+        "lexical_database": 31.908625000000022,
+        "fusion": 0.15658399999995964
+      },
+      "methods": {
+        "semantic": {
+          "latency_ms": 650.143999,
+          "ranked_rule_keys": [
+            "SEC-02",
+            "SEC-04",
+            "AUTH-04",
+            "AUTH-03",
+            "SEC-01",
+            "OBS-04",
+            "DATA-01",
+            "SEC-05",
+            "OBS-01",
+            "AUTH-02",
+            "GOV-01",
+            "DB-04",
+            "API-03",
+            "SEC-03",
+            "AUTH-01",
+            "API-02",
+            "DEP-01",
+            "DB-03",
+            "REL-04",
+            "REL-03"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.7703059033534311
+            },
+            {
+              "rank": 2,
+              "rule_key": "SEC-04",
+              "playbook_chunk_id": "416d7042-2326-4c34-82e2-d45f15a066a2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-04: Encryption and Transport Security",
+              "similarity_score": 0.6441196799281188
+            },
+            {
+              "rank": 3,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.6296632642959755
+            },
+            {
+              "rank": 4,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.6294121787826122
+            },
+            {
+              "rank": 5,
+              "rule_key": "SEC-01",
+              "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-01: Sensitive Data in Logs",
+              "similarity_score": 0.6267505208402667
+            },
+            {
+              "rank": 6,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.6250952779565431
+            },
+            {
+              "rank": 7,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.6200224780929898
+            },
+            {
+              "rank": 8,
+              "rule_key": "SEC-05",
+              "playbook_chunk_id": "5eb10c8f-deb8-49e5-bca1-0726c945ad17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-05: Dependency and Supply-Chain Security",
+              "similarity_score": 0.6188552323416513
+            },
+            {
+              "rank": 9,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.6134698764036712
+            },
+            {
+              "rank": 10,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.6087669548271198
+            },
+            {
+              "rank": 11,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6053302397735315
+            },
+            {
+              "rank": 12,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6028515214591308
+            },
+            {
+              "rank": 13,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.5947261371187352
+            },
+            {
+              "rank": 14,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.5947145755337054
+            },
+            {
+              "rank": 15,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.5931443875843166
+            },
+            {
+              "rank": 16,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.5811925392906663
+            },
+            {
+              "rank": 17,
+              "rule_key": "DEP-01",
+              "playbook_chunk_id": "747ce824-7147-4495-a80e-f411fecc89ae",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DEP-01: Progressive Delivery and Rollback",
+              "similarity_score": 0.5790583835213879
+            },
+            {
+              "rank": 18,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.5756975069228621
+            },
+            {
+              "rank": 19,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.572635011294514
+            },
+            {
+              "rank": 20,
+              "rule_key": "REL-03",
+              "playbook_chunk_id": "e2951156-20a1-40e8-9b84-efef0951a310",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-03: Health and Readiness Checks",
+              "similarity_score": 0.5713855028332984
+            }
+          ]
+        },
+        "lexical": {
+          "latency_ms": 31.908625000000022,
+          "ranked_rule_keys": [
+            "SEC-02",
+            "SEC-04",
+            "SEC-01",
+            "SEC-03",
+            "SEC-05"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.09090909,
+              "trigram_score": 0.5862069,
+              "lexical_score": 0.23746082186698914
+            },
+            {
+              "rank": 2,
+              "rule_key": "SEC-04",
+              "playbook_chunk_id": "416d7042-2326-4c34-82e2-d45f15a066a2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-04: Encryption and Transport Security",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.23809524,
+              "lexical_score": 0.0595238097012043
+            },
+            {
+              "rank": 3,
+              "rule_key": "SEC-01",
+              "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-01: Sensitive Data in Logs",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.23809524,
+              "lexical_score": 0.0595238097012043
+            },
+            {
+              "rank": 4,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.23809524,
+              "lexical_score": 0.0595238097012043
+            },
+            {
+              "rank": 5,
+              "rule_key": "SEC-05",
+              "playbook_chunk_id": "5eb10c8f-deb8-49e5-bca1-0726c945ad17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-05: Dependency and Supply-Chain Security",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.23809524,
+              "lexical_score": 0.0595238097012043
+            }
+          ]
+        },
+        "hybrid": {
+          "latency_ms": 682.209208,
+          "ranked_rule_keys": [
+            "SEC-02",
+            "SEC-04",
+            "SEC-01",
+            "SEC-05",
+            "SEC-03",
+            "AUTH-04",
+            "AUTH-03",
+            "OBS-04",
+            "DATA-01",
+            "OBS-01",
+            "AUTH-02",
+            "GOV-01",
+            "DB-04",
+            "API-03",
+            "AUTH-01",
+            "API-02",
+            "DEP-01",
+            "DB-03",
+            "REL-04",
+            "REL-03"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.7703059033534311,
+              "lexical_score": 0.23746082186698914,
+              "semantic_rank": 1,
+              "lexical_rank": 1,
+              "rrf_score": 0.03278688524590164
+            },
+            {
+              "rank": 2,
+              "rule_key": "SEC-04",
+              "playbook_chunk_id": "416d7042-2326-4c34-82e2-d45f15a066a2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-04: Encryption and Transport Security",
+              "similarity_score": 0.6441196799281188,
+              "lexical_score": 0.0595238097012043,
+              "semantic_rank": 2,
+              "lexical_rank": 2,
+              "rrf_score": 0.03225806451612903
+            },
+            {
+              "rank": 3,
+              "rule_key": "SEC-01",
+              "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-01: Sensitive Data in Logs",
+              "similarity_score": 0.6267505208402667,
+              "lexical_score": 0.0595238097012043,
+              "semantic_rank": 5,
+              "lexical_rank": 3,
+              "rrf_score": 0.03125763125763126
+            },
+            {
+              "rank": 4,
+              "rule_key": "SEC-05",
+              "playbook_chunk_id": "5eb10c8f-deb8-49e5-bca1-0726c945ad17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-05: Dependency and Supply-Chain Security",
+              "similarity_score": 0.6188552323416513,
+              "lexical_score": 0.0595238097012043,
+              "semantic_rank": 8,
+              "lexical_rank": 5,
+              "rrf_score": 0.030090497737556562
+            },
+            {
+              "rank": 5,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.5947145755337054,
+              "lexical_score": 0.0595238097012043,
+              "semantic_rank": 14,
+              "lexical_rank": 4,
+              "rrf_score": 0.029138513513513514
+            },
+            {
+              "rank": 6,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.6296632642959755,
+              "lexical_score": null,
+              "semantic_rank": 3,
+              "lexical_rank": null,
+              "rrf_score": 0.015873015873015872
+            },
+            {
+              "rank": 7,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.6294121787826122,
+              "lexical_score": null,
+              "semantic_rank": 4,
+              "lexical_rank": null,
+              "rrf_score": 0.015625
+            },
+            {
+              "rank": 8,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.6250952779565431,
+              "lexical_score": null,
+              "semantic_rank": 6,
+              "lexical_rank": null,
+              "rrf_score": 0.015151515151515152
+            },
+            {
+              "rank": 9,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.6200224780929898,
+              "lexical_score": null,
+              "semantic_rank": 7,
+              "lexical_rank": null,
+              "rrf_score": 0.014925373134328358
+            },
+            {
+              "rank": 10,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.6134698764036712,
+              "lexical_score": null,
+              "semantic_rank": 9,
+              "lexical_rank": null,
+              "rrf_score": 0.014492753623188406
+            },
+            {
+              "rank": 11,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.6087669548271198,
+              "lexical_score": null,
+              "semantic_rank": 10,
+              "lexical_rank": null,
+              "rrf_score": 0.014285714285714285
+            },
+            {
+              "rank": 12,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6053302397735315,
+              "lexical_score": null,
+              "semantic_rank": 11,
+              "lexical_rank": null,
+              "rrf_score": 0.014084507042253521
+            },
+            {
+              "rank": 13,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6028515214591308,
+              "lexical_score": null,
+              "semantic_rank": 12,
+              "lexical_rank": null,
+              "rrf_score": 0.013888888888888888
+            },
+            {
+              "rank": 14,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.5947261371187352,
+              "lexical_score": null,
+              "semantic_rank": 13,
+              "lexical_rank": null,
+              "rrf_score": 0.0136986301369863
+            },
+            {
+              "rank": 15,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.5931443875843166,
+              "lexical_score": null,
+              "semantic_rank": 15,
+              "lexical_rank": null,
+              "rrf_score": 0.013333333333333334
+            },
+            {
+              "rank": 16,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.5811925392906663,
+              "lexical_score": null,
+              "semantic_rank": 16,
+              "lexical_rank": null,
+              "rrf_score": 0.013157894736842105
+            },
+            {
+              "rank": 17,
+              "rule_key": "DEP-01",
+              "playbook_chunk_id": "747ce824-7147-4495-a80e-f411fecc89ae",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DEP-01: Progressive Delivery and Rollback",
+              "similarity_score": 0.5790583835213879,
+              "lexical_score": null,
+              "semantic_rank": 17,
+              "lexical_rank": null,
+              "rrf_score": 0.012987012987012988
+            },
+            {
+              "rank": 18,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.5756975069228621,
+              "lexical_score": null,
+              "semantic_rank": 18,
+              "lexical_rank": null,
+              "rrf_score": 0.01282051282051282
+            },
+            {
+              "rank": 19,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.572635011294514,
+              "lexical_score": null,
+              "semantic_rank": 19,
+              "lexical_rank": null,
+              "rrf_score": 0.012658227848101266
+            },
+            {
+              "rank": 20,
+              "rule_key": "REL-03",
+              "playbook_chunk_id": "e2951156-20a1-40e8-9b84-efef0951a310",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-03: Health and Readiness Checks",
+              "similarity_score": 0.5713855028332984,
+              "lexical_score": null,
+              "semantic_rank": 20,
+              "lexical_rank": null,
+              "rrf_score": 0.0125
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "exact-002",
+      "query_type": "exact",
+      "query": "AUTH-02 resource ownership",
+      "expected_rule_keys": [
+        "AUTH-02"
+      ],
+      "notes": "Exact authorization rule lookup.",
+      "timing_breakdown_ms": {
+        "embedding": 368.911792,
+        "semantic_database": 16.291999999999973,
+        "lexical_database": 18.81095799999999,
+        "fusion": 0.21808399999989625
+      },
+      "methods": {
+        "semantic": {
+          "latency_ms": 385.20379199999996,
+          "ranked_rule_keys": [
+            "AUTH-02",
+            "AUTH-01",
+            "API-03",
+            "AUTH-04",
+            "AUTH-03",
+            "OBS-04",
+            "GOV-01",
+            "API-02",
+            "SEC-02",
+            "DB-04",
+            "DATA-01",
+            "SEC-03",
+            "SEC-04",
+            "SEC-01",
+            "SEC-05",
+            "OBS-01",
+            "DB-03",
+            "DB-01",
+            "REL-03",
+            "REL-04"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.7711509738981056
+            },
+            {
+              "rank": 2,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.6976829656305483
+            },
+            {
+              "rank": 3,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.6824075958243334
+            },
+            {
+              "rank": 4,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.6775477548028996
+            },
+            {
+              "rank": 5,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.6768942667905233
+            },
+            {
+              "rank": 6,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.6733030470248835
+            },
+            {
+              "rank": 7,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6709195194504748
+            },
+            {
+              "rank": 8,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.6600341594239674
+            },
+            {
+              "rank": 9,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6586337889055432
+            },
+            {
+              "rank": 10,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6556971424746617
+            },
+            {
+              "rank": 11,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.653523046198259
+            },
+            {
+              "rank": 12,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.6514147812885688
+            },
+            {
+              "rank": 13,
+              "rule_key": "SEC-04",
+              "playbook_chunk_id": "416d7042-2326-4c34-82e2-d45f15a066a2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-04: Encryption and Transport Security",
+              "similarity_score": 0.6418280254769888
+            },
+            {
+              "rank": 14,
+              "rule_key": "SEC-01",
+              "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-01: Sensitive Data in Logs",
+              "similarity_score": 0.6390083548451538
+            },
+            {
+              "rank": 15,
+              "rule_key": "SEC-05",
+              "playbook_chunk_id": "5eb10c8f-deb8-49e5-bca1-0726c945ad17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-05: Dependency and Supply-Chain Security",
+              "similarity_score": 0.6323809124174464
+            },
+            {
+              "rank": 16,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.6300615570114262
+            },
+            {
+              "rank": 17,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.6297606031802832
+            },
+            {
+              "rank": 18,
+              "rule_key": "DB-01",
+              "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-01: Transaction Boundaries",
+              "similarity_score": 0.6295162118875508
+            },
+            {
+              "rank": 19,
+              "rule_key": "REL-03",
+              "playbook_chunk_id": "e2951156-20a1-40e8-9b84-efef0951a310",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-03: Health and Readiness Checks",
+              "similarity_score": 0.6278711488016525
+            },
+            {
+              "rank": 20,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.6275491714477718
+            }
+          ]
+        },
+        "lexical": {
+          "latency_ms": 18.81095799999999,
+          "ranked_rule_keys": [
+            "AUTH-02",
+            "AUTH-03",
+            "AUTH-01",
+            "AUTH-04"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.032258064,
+              "trigram_score": 0.6136364,
+              "lexical_score": 0.18566715717315674
+            },
+            {
+              "rank": 2,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.20689656,
+              "lexical_score": 0.0517241396009922
+            },
+            {
+              "rank": 3,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.20689656,
+              "lexical_score": 0.0517241396009922
+            },
+            {
+              "rank": 4,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.20689656,
+              "lexical_score": 0.0517241396009922
+            }
+          ]
+        },
+        "hybrid": {
+          "latency_ms": 404.23283399999985,
+          "ranked_rule_keys": [
+            "AUTH-02",
+            "AUTH-01",
+            "AUTH-03",
+            "AUTH-04",
+            "API-03",
+            "OBS-04",
+            "GOV-01",
+            "API-02",
+            "SEC-02",
+            "DB-04",
+            "DATA-01",
+            "SEC-03",
+            "SEC-04",
+            "SEC-01",
+            "SEC-05",
+            "OBS-01",
+            "DB-03",
+            "DB-01",
+            "REL-03",
+            "REL-04"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.7711509738981056,
+              "lexical_score": 0.18566715717315674,
+              "semantic_rank": 1,
+              "lexical_rank": 1,
+              "rrf_score": 0.03278688524590164
+            },
+            {
+              "rank": 2,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.6976829656305483,
+              "lexical_score": 0.0517241396009922,
+              "semantic_rank": 2,
+              "lexical_rank": 3,
+              "rrf_score": 0.03200204813108039
+            },
+            {
+              "rank": 3,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.6768942667905233,
+              "lexical_score": 0.0517241396009922,
+              "semantic_rank": 5,
+              "lexical_rank": 2,
+              "rrf_score": 0.0315136476426799
+            },
+            {
+              "rank": 4,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.6775477548028996,
+              "lexical_score": 0.0517241396009922,
+              "semantic_rank": 4,
+              "lexical_rank": 4,
+              "rrf_score": 0.03125
+            },
+            {
+              "rank": 5,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.6824075958243334,
+              "lexical_score": null,
+              "semantic_rank": 3,
+              "lexical_rank": null,
+              "rrf_score": 0.015873015873015872
+            },
+            {
+              "rank": 6,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.6733030470248835,
+              "lexical_score": null,
+              "semantic_rank": 6,
+              "lexical_rank": null,
+              "rrf_score": 0.015151515151515152
+            },
+            {
+              "rank": 7,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6709195194504748,
+              "lexical_score": null,
+              "semantic_rank": 7,
+              "lexical_rank": null,
+              "rrf_score": 0.014925373134328358
+            },
+            {
+              "rank": 8,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.6600341594239674,
+              "lexical_score": null,
+              "semantic_rank": 8,
+              "lexical_rank": null,
+              "rrf_score": 0.014705882352941176
+            },
+            {
+              "rank": 9,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6586337889055432,
+              "lexical_score": null,
+              "semantic_rank": 9,
+              "lexical_rank": null,
+              "rrf_score": 0.014492753623188406
+            },
+            {
+              "rank": 10,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6556971424746617,
+              "lexical_score": null,
+              "semantic_rank": 10,
+              "lexical_rank": null,
+              "rrf_score": 0.014285714285714285
+            },
+            {
+              "rank": 11,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.653523046198259,
+              "lexical_score": null,
+              "semantic_rank": 11,
+              "lexical_rank": null,
+              "rrf_score": 0.014084507042253521
+            },
+            {
+              "rank": 12,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.6514147812885688,
+              "lexical_score": null,
+              "semantic_rank": 12,
+              "lexical_rank": null,
+              "rrf_score": 0.013888888888888888
+            },
+            {
+              "rank": 13,
+              "rule_key": "SEC-04",
+              "playbook_chunk_id": "416d7042-2326-4c34-82e2-d45f15a066a2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-04: Encryption and Transport Security",
+              "similarity_score": 0.6418280254769888,
+              "lexical_score": null,
+              "semantic_rank": 13,
+              "lexical_rank": null,
+              "rrf_score": 0.0136986301369863
+            },
+            {
+              "rank": 14,
+              "rule_key": "SEC-01",
+              "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-01: Sensitive Data in Logs",
+              "similarity_score": 0.6390083548451538,
+              "lexical_score": null,
+              "semantic_rank": 14,
+              "lexical_rank": null,
+              "rrf_score": 0.013513513513513514
+            },
+            {
+              "rank": 15,
+              "rule_key": "SEC-05",
+              "playbook_chunk_id": "5eb10c8f-deb8-49e5-bca1-0726c945ad17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-05: Dependency and Supply-Chain Security",
+              "similarity_score": 0.6323809124174464,
+              "lexical_score": null,
+              "semantic_rank": 15,
+              "lexical_rank": null,
+              "rrf_score": 0.013333333333333334
+            },
+            {
+              "rank": 16,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.6300615570114262,
+              "lexical_score": null,
+              "semantic_rank": 16,
+              "lexical_rank": null,
+              "rrf_score": 0.013157894736842105
+            },
+            {
+              "rank": 17,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.6297606031802832,
+              "lexical_score": null,
+              "semantic_rank": 17,
+              "lexical_rank": null,
+              "rrf_score": 0.012987012987012988
+            },
+            {
+              "rank": 18,
+              "rule_key": "DB-01",
+              "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-01: Transaction Boundaries",
+              "similarity_score": 0.6295162118875508,
+              "lexical_score": null,
+              "semantic_rank": 18,
+              "lexical_rank": null,
+              "rrf_score": 0.01282051282051282
+            },
+            {
+              "rank": 19,
+              "rule_key": "REL-03",
+              "playbook_chunk_id": "e2951156-20a1-40e8-9b84-efef0951a310",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-03: Health and Readiness Checks",
+              "similarity_score": 0.6278711488016525,
+              "lexical_score": null,
+              "semantic_rank": 19,
+              "lexical_rank": null,
+              "rrf_score": 0.012658227848101266
+            },
+            {
+              "rank": 20,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.6275491714477718,
+              "lexical_score": null,
+              "semantic_rank": 20,
+              "lexical_rank": null,
+              "rrf_score": 0.0125
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "exact-003",
+      "query_type": "exact",
+      "query": "API-02 idempotency key",
+      "expected_rule_keys": [
+        "API-02"
+      ],
+      "notes": "Exact request-idempotency lookup.",
+      "timing_breakdown_ms": {
+        "embedding": 395.8737910000001,
+        "semantic_database": 26.07720800000024,
+        "lexical_database": 27.350124999999892,
+        "fusion": 0.1792909999998038
+      },
+      "methods": {
+        "semantic": {
+          "latency_ms": 421.95099900000037,
+          "ranked_rule_keys": [
+            "API-02",
+            "REL-05",
+            "API-03",
+            "DB-04",
+            "REL-01",
+            "API-01",
+            "API-04",
+            "SEC-02",
+            "GOV-01",
+            "OBS-04",
+            "DB-01",
+            "AUTH-02",
+            "SEC-03",
+            "OBS-03",
+            "AUTH-04",
+            "AUTH-01",
+            "REL-03",
+            "OBS-01",
+            "DATA-01",
+            "AUTH-03"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.7882306701999517
+            },
+            {
+              "rank": 2,
+              "rule_key": "REL-05",
+              "playbook_chunk_id": "a2901bb6-bd3b-463b-a3c0-c592837be2bc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-05: Asynchronous Job Delivery",
+              "similarity_score": 0.6593477332980804
+            },
+            {
+              "rank": 3,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.6490807773874521
+            },
+            {
+              "rank": 4,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6391376373582282
+            },
+            {
+              "rank": 5,
+              "rule_key": "REL-01",
+              "playbook_chunk_id": "5445fe11-097c-4007-acac-807c900f19a6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-01: Retries and Exponential Backoff",
+              "similarity_score": 0.6370121377433965
+            },
+            {
+              "rank": 6,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "similarity_score": 0.6282887986222842
+            },
+            {
+              "rank": 7,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "similarity_score": 0.6229730844497681
+            },
+            {
+              "rank": 8,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6161192149902892
+            },
+            {
+              "rank": 9,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6118626629897219
+            },
+            {
+              "rank": 10,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.6071912390729983
+            },
+            {
+              "rank": 11,
+              "rule_key": "DB-01",
+              "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-01: Transaction Boundaries",
+              "similarity_score": 0.6033105916730935
+            },
+            {
+              "rank": 12,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.5987508061526454
+            },
+            {
+              "rank": 13,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.5986310057041743
+            },
+            {
+              "rank": 14,
+              "rule_key": "OBS-03",
+              "playbook_chunk_id": "6f24a5da-11c5-421f-8339-e0b5c6161653",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-03: Distributed Trace Propagation",
+              "similarity_score": 0.5982951990582188
+            },
+            {
+              "rank": 15,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.5951682087879316
+            },
+            {
+              "rank": 16,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.5941249279380864
+            },
+            {
+              "rank": 17,
+              "rule_key": "REL-03",
+              "playbook_chunk_id": "e2951156-20a1-40e8-9b84-efef0951a310",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-03: Health and Readiness Checks",
+              "similarity_score": 0.5938578005944383
+            },
+            {
+              "rank": 18,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.5930319716084027
+            },
+            {
+              "rank": 19,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.5927342176437378
+            },
+            {
+              "rank": 20,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.5927043093375701
+            }
+          ]
+        },
+        "lexical": {
+          "latency_ms": 27.350124999999892,
+          "ranked_rule_keys": [
+            "API-02",
+            "API-01",
+            "API-05",
+            "API-04",
+            "API-03"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0017513136,
+              "trigram_score": 0.3043478,
+              "lexical_score": 0.07783826685044914
+            },
+            {
+              "rank": 2,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.2,
+              "lexical_score": 0.05000000074505806
+            },
+            {
+              "rank": 3,
+              "rule_key": "API-05",
+              "playbook_chunk_id": "65d2b5ce-5d92-4a35-9c81-5806c966c418",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-05: Deadlines and Cancellation",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.2,
+              "lexical_score": 0.05000000074505806
+            },
+            {
+              "rank": 4,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.2,
+              "lexical_score": 0.05000000074505806
+            },
+            {
+              "rank": 5,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.2,
+              "lexical_score": 0.05000000074505806
+            }
+          ]
+        },
+        "hybrid": {
+          "latency_ms": 449.48041500000005,
+          "ranked_rule_keys": [
+            "API-02",
+            "API-01",
+            "API-03",
+            "API-04",
+            "REL-05",
+            "API-05",
+            "DB-04",
+            "REL-01",
+            "SEC-02",
+            "GOV-01",
+            "OBS-04",
+            "DB-01",
+            "AUTH-02",
+            "SEC-03",
+            "OBS-03",
+            "AUTH-04",
+            "AUTH-01",
+            "REL-03",
+            "OBS-01",
+            "DATA-01"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.7882306701999517,
+              "lexical_score": 0.07783826685044914,
+              "semantic_rank": 1,
+              "lexical_rank": 1,
+              "rrf_score": 0.03278688524590164
+            },
+            {
+              "rank": 2,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "similarity_score": 0.6282887986222842,
+              "lexical_score": 0.05000000074505806,
+              "semantic_rank": 6,
+              "lexical_rank": 2,
+              "rrf_score": 0.03128054740957967
+            },
+            {
+              "rank": 3,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.6490807773874521,
+              "lexical_score": 0.05000000074505806,
+              "semantic_rank": 3,
+              "lexical_rank": 5,
+              "rrf_score": 0.03125763125763126
+            },
+            {
+              "rank": 4,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "similarity_score": 0.6229730844497681,
+              "lexical_score": 0.05000000074505806,
+              "semantic_rank": 7,
+              "lexical_rank": 4,
+              "rrf_score": 0.03055037313432836
+            },
+            {
+              "rank": 5,
+              "rule_key": "REL-05",
+              "playbook_chunk_id": "a2901bb6-bd3b-463b-a3c0-c592837be2bc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-05: Asynchronous Job Delivery",
+              "similarity_score": 0.6593477332980804,
+              "lexical_score": null,
+              "semantic_rank": 2,
+              "lexical_rank": null,
+              "rrf_score": 0.016129032258064516
+            },
+            {
+              "rank": 6,
+              "rule_key": "API-05",
+              "playbook_chunk_id": "65d2b5ce-5d92-4a35-9c81-5806c966c418",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-05: Deadlines and Cancellation",
+              "similarity_score": null,
+              "lexical_score": 0.05000000074505806,
+              "semantic_rank": null,
+              "lexical_rank": 3,
+              "rrf_score": 0.015873015873015872
+            },
+            {
+              "rank": 7,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6391376373582282,
+              "lexical_score": null,
+              "semantic_rank": 4,
+              "lexical_rank": null,
+              "rrf_score": 0.015625
+            },
+            {
+              "rank": 8,
+              "rule_key": "REL-01",
+              "playbook_chunk_id": "5445fe11-097c-4007-acac-807c900f19a6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-01: Retries and Exponential Backoff",
+              "similarity_score": 0.6370121377433965,
+              "lexical_score": null,
+              "semantic_rank": 5,
+              "lexical_rank": null,
+              "rrf_score": 0.015384615384615385
+            },
+            {
+              "rank": 9,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6161192149902892,
+              "lexical_score": null,
+              "semantic_rank": 8,
+              "lexical_rank": null,
+              "rrf_score": 0.014705882352941176
+            },
+            {
+              "rank": 10,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6118626629897219,
+              "lexical_score": null,
+              "semantic_rank": 9,
+              "lexical_rank": null,
+              "rrf_score": 0.014492753623188406
+            },
+            {
+              "rank": 11,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.6071912390729983,
+              "lexical_score": null,
+              "semantic_rank": 10,
+              "lexical_rank": null,
+              "rrf_score": 0.014285714285714285
+            },
+            {
+              "rank": 12,
+              "rule_key": "DB-01",
+              "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-01: Transaction Boundaries",
+              "similarity_score": 0.6033105916730935,
+              "lexical_score": null,
+              "semantic_rank": 11,
+              "lexical_rank": null,
+              "rrf_score": 0.014084507042253521
+            },
+            {
+              "rank": 13,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.5987508061526454,
+              "lexical_score": null,
+              "semantic_rank": 12,
+              "lexical_rank": null,
+              "rrf_score": 0.013888888888888888
+            },
+            {
+              "rank": 14,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.5986310057041743,
+              "lexical_score": null,
+              "semantic_rank": 13,
+              "lexical_rank": null,
+              "rrf_score": 0.0136986301369863
+            },
+            {
+              "rank": 15,
+              "rule_key": "OBS-03",
+              "playbook_chunk_id": "6f24a5da-11c5-421f-8339-e0b5c6161653",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-03: Distributed Trace Propagation",
+              "similarity_score": 0.5982951990582188,
+              "lexical_score": null,
+              "semantic_rank": 14,
+              "lexical_rank": null,
+              "rrf_score": 0.013513513513513514
+            },
+            {
+              "rank": 16,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.5951682087879316,
+              "lexical_score": null,
+              "semantic_rank": 15,
+              "lexical_rank": null,
+              "rrf_score": 0.013333333333333334
+            },
+            {
+              "rank": 17,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.5941249279380864,
+              "lexical_score": null,
+              "semantic_rank": 16,
+              "lexical_rank": null,
+              "rrf_score": 0.013157894736842105
+            },
+            {
+              "rank": 18,
+              "rule_key": "REL-03",
+              "playbook_chunk_id": "e2951156-20a1-40e8-9b84-efef0951a310",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-03: Health and Readiness Checks",
+              "similarity_score": 0.5938578005944383,
+              "lexical_score": null,
+              "semantic_rank": 17,
+              "lexical_rank": null,
+              "rrf_score": 0.012987012987012988
+            },
+            {
+              "rank": 19,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.5930319716084027,
+              "lexical_score": null,
+              "semantic_rank": 18,
+              "lexical_rank": null,
+              "rrf_score": 0.01282051282051282
+            },
+            {
+              "rank": 20,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.5927342176437378,
+              "lexical_score": null,
+              "semantic_rank": 19,
+              "lexical_rank": null,
+              "rrf_score": 0.012658227848101266
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "exact-004",
+      "query_type": "exact",
+      "query": "DB-05 expand migrate contract",
+      "expected_rule_keys": [
+        "DB-05"
+      ],
+      "notes": "Exact schema-migration terminology.",
+      "timing_breakdown_ms": {
+        "embedding": 427.8578749999999,
+        "semantic_database": 17.4553340000001,
+        "lexical_database": 27.41712499999993,
+        "fusion": 0.14308300000021035
+      },
+      "methods": {
+        "semantic": {
+          "latency_ms": 445.31320900000003,
+          "ranked_rule_keys": [
+            "DB-05",
+            "DB-01",
+            "DB-03",
+            "REL-04",
+            "API-01",
+            "GOV-01",
+            "DATA-01",
+            "DB-02",
+            "SEC-02",
+            "DEP-01",
+            "AUTH-03",
+            "SEC-03",
+            "DB-04",
+            "API-02",
+            "OBS-04",
+            "AUTH-02",
+            "REL-05",
+            "OBS-03",
+            "OBS-01",
+            "SEC-04"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "DB-05",
+              "playbook_chunk_id": "555244e9-ba8d-47e1-8f89-4eaa07070ce2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-05: Safe Schema Migrations",
+              "similarity_score": 0.7180462631958864
+            },
+            {
+              "rank": 2,
+              "rule_key": "DB-01",
+              "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-01: Transaction Boundaries",
+              "similarity_score": 0.645694994077936
+            },
+            {
+              "rank": 3,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.6367268941837609
+            },
+            {
+              "rank": 4,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.6242793801883015
+            },
+            {
+              "rank": 5,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "similarity_score": 0.6161912769930158
+            },
+            {
+              "rank": 6,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6139454475675086
+            },
+            {
+              "rank": 7,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.607987424855
+            },
+            {
+              "rank": 8,
+              "rule_key": "DB-02",
+              "playbook_chunk_id": "bcb5aa2b-d73c-46ac-8e52-36680a7d77fd",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-02: Query Efficiency and Indexing",
+              "similarity_score": 0.6074313454943884
+            },
+            {
+              "rank": 9,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6039477923196572
+            },
+            {
+              "rank": 10,
+              "rule_key": "DEP-01",
+              "playbook_chunk_id": "747ce824-7147-4495-a80e-f411fecc89ae",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DEP-01: Progressive Delivery and Rollback",
+              "similarity_score": 0.6027061555803894
+            },
+            {
+              "rank": 11,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.5939334425091253
+            },
+            {
+              "rank": 12,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.5868164333022665
+            },
+            {
+              "rank": 13,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.5865763672247974
+            },
+            {
+              "rank": 14,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.5864412721938808
+            },
+            {
+              "rank": 15,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.5861501776277002
+            },
+            {
+              "rank": 16,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.5843433235029479
+            },
+            {
+              "rank": 17,
+              "rule_key": "REL-05",
+              "playbook_chunk_id": "a2901bb6-bd3b-463b-a3c0-c592837be2bc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-05: Asynchronous Job Delivery",
+              "similarity_score": 0.5830309342613157
+            },
+            {
+              "rank": 18,
+              "rule_key": "OBS-03",
+              "playbook_chunk_id": "6f24a5da-11c5-421f-8339-e0b5c6161653",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-03: Distributed Trace Propagation",
+              "similarity_score": 0.5808138347644247
+            },
+            {
+              "rank": 19,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.5780843482438341
+            },
+            {
+              "rank": 20,
+              "rule_key": "SEC-04",
+              "playbook_chunk_id": "416d7042-2326-4c34-82e2-d45f15a066a2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-04: Encryption and Transport Security",
+              "similarity_score": 0.577981540916351
+            }
+          ]
+        },
+        "lexical": {
+          "latency_ms": 27.41712499999993,
+          "ranked_rule_keys": [
+            "DB-05",
+            "API-04"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "DB-05",
+              "playbook_chunk_id": "555244e9-ba8d-47e1-8f89-4eaa07070ce2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-05: Safe Schema Migrations",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0016638936,
+              "trigram_score": 0.23529412,
+              "lexical_score": 0.06048742320854217
+            },
+            {
+              "rank": 2,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0,
+              "trigram_score": 0.2037037,
+              "lexical_score": 0.05092592537403107
+            }
+          ]
+        },
+        "hybrid": {
+          "latency_ms": 472.8734170000002,
+          "ranked_rule_keys": [
+            "DB-05",
+            "API-04",
+            "DB-01",
+            "DB-03",
+            "REL-04",
+            "API-01",
+            "GOV-01",
+            "DATA-01",
+            "DB-02",
+            "SEC-02",
+            "DEP-01",
+            "AUTH-03",
+            "SEC-03",
+            "DB-04",
+            "API-02",
+            "OBS-04",
+            "AUTH-02",
+            "REL-05",
+            "OBS-03",
+            "OBS-01"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "DB-05",
+              "playbook_chunk_id": "555244e9-ba8d-47e1-8f89-4eaa07070ce2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-05: Safe Schema Migrations",
+              "similarity_score": 0.7180462631958864,
+              "lexical_score": 0.06048742320854217,
+              "semantic_rank": 1,
+              "lexical_rank": 1,
+              "rrf_score": 0.03278688524590164
+            },
+            {
+              "rank": 2,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "similarity_score": null,
+              "lexical_score": 0.05092592537403107,
+              "semantic_rank": null,
+              "lexical_rank": 2,
+              "rrf_score": 0.016129032258064516
+            },
+            {
+              "rank": 3,
+              "rule_key": "DB-01",
+              "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-01: Transaction Boundaries",
+              "similarity_score": 0.645694994077936,
+              "lexical_score": null,
+              "semantic_rank": 2,
+              "lexical_rank": null,
+              "rrf_score": 0.016129032258064516
+            },
+            {
+              "rank": 4,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.6367268941837609,
+              "lexical_score": null,
+              "semantic_rank": 3,
+              "lexical_rank": null,
+              "rrf_score": 0.015873015873015872
+            },
+            {
+              "rank": 5,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.6242793801883015,
+              "lexical_score": null,
+              "semantic_rank": 4,
+              "lexical_rank": null,
+              "rrf_score": 0.015625
+            },
+            {
+              "rank": 6,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "similarity_score": 0.6161912769930158,
+              "lexical_score": null,
+              "semantic_rank": 5,
+              "lexical_rank": null,
+              "rrf_score": 0.015384615384615385
+            },
+            {
+              "rank": 7,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6139454475675086,
+              "lexical_score": null,
+              "semantic_rank": 6,
+              "lexical_rank": null,
+              "rrf_score": 0.015151515151515152
+            },
+            {
+              "rank": 8,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.607987424855,
+              "lexical_score": null,
+              "semantic_rank": 7,
+              "lexical_rank": null,
+              "rrf_score": 0.014925373134328358
+            },
+            {
+              "rank": 9,
+              "rule_key": "DB-02",
+              "playbook_chunk_id": "bcb5aa2b-d73c-46ac-8e52-36680a7d77fd",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-02: Query Efficiency and Indexing",
+              "similarity_score": 0.6074313454943884,
+              "lexical_score": null,
+              "semantic_rank": 8,
+              "lexical_rank": null,
+              "rrf_score": 0.014705882352941176
+            },
+            {
+              "rank": 10,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6039477923196572,
+              "lexical_score": null,
+              "semantic_rank": 9,
+              "lexical_rank": null,
+              "rrf_score": 0.014492753623188406
+            },
+            {
+              "rank": 11,
+              "rule_key": "DEP-01",
+              "playbook_chunk_id": "747ce824-7147-4495-a80e-f411fecc89ae",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DEP-01: Progressive Delivery and Rollback",
+              "similarity_score": 0.6027061555803894,
+              "lexical_score": null,
+              "semantic_rank": 10,
+              "lexical_rank": null,
+              "rrf_score": 0.014285714285714285
+            },
+            {
+              "rank": 12,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.5939334425091253,
+              "lexical_score": null,
+              "semantic_rank": 11,
+              "lexical_rank": null,
+              "rrf_score": 0.014084507042253521
+            },
+            {
+              "rank": 13,
+              "rule_key": "SEC-03",
+              "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-03: Untrusted Input Validation",
+              "similarity_score": 0.5868164333022665,
+              "lexical_score": null,
+              "semantic_rank": 12,
+              "lexical_rank": null,
+              "rrf_score": 0.013888888888888888
+            },
+            {
+              "rank": 14,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.5865763672247974,
+              "lexical_score": null,
+              "semantic_rank": 13,
+              "lexical_rank": null,
+              "rrf_score": 0.0136986301369863
+            },
+            {
+              "rank": 15,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.5864412721938808,
+              "lexical_score": null,
+              "semantic_rank": 14,
+              "lexical_rank": null,
+              "rrf_score": 0.013513513513513514
+            },
+            {
+              "rank": 16,
+              "rule_key": "OBS-04",
+              "playbook_chunk_id": "2861f2c7-f930-4f5e-9853-081c7866dadc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-04: Security Audit Events",
+              "similarity_score": 0.5861501776277002,
+              "lexical_score": null,
+              "semantic_rank": 15,
+              "lexical_rank": null,
+              "rrf_score": 0.013333333333333334
+            },
+            {
+              "rank": 17,
+              "rule_key": "AUTH-02",
+              "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-02: Authorization and Resource Ownership",
+              "similarity_score": 0.5843433235029479,
+              "lexical_score": null,
+              "semantic_rank": 16,
+              "lexical_rank": null,
+              "rrf_score": 0.013157894736842105
+            },
+            {
+              "rank": 18,
+              "rule_key": "REL-05",
+              "playbook_chunk_id": "a2901bb6-bd3b-463b-a3c0-c592837be2bc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-05: Asynchronous Job Delivery",
+              "similarity_score": 0.5830309342613157,
+              "lexical_score": null,
+              "semantic_rank": 17,
+              "lexical_rank": null,
+              "rrf_score": 0.012987012987012988
+            },
+            {
+              "rank": 19,
+              "rule_key": "OBS-03",
+              "playbook_chunk_id": "6f24a5da-11c5-421f-8339-e0b5c6161653",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-03: Distributed Trace Propagation",
+              "similarity_score": 0.5808138347644247,
+              "lexical_score": null,
+              "semantic_rank": 18,
+              "lexical_rank": null,
+              "rrf_score": 0.01282051282051282
+            },
+            {
+              "rank": 20,
+              "rule_key": "OBS-01",
+              "playbook_chunk_id": "5ea3f039-6a90-4c83-a50b-f18380ca94ca",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-01: Structured Application Logging",
+              "similarity_score": 0.5780843482438341,
+              "lexical_score": null,
+              "semantic_rank": 19,
+              "lexical_rank": null,
+              "rrf_score": 0.012658227848101266
+            }
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "exact-005",
+      "query_type": "exact",
+      "query": "REL-01 exponential backoff Retry-After",
+      "expected_rule_keys": [
+        "REL-01"
+      ],
+      "notes": "Exact retry-policy terminology.",
+      "timing_breakdown_ms": {
+        "embedding": 335.1970839999998,
+        "semantic_database": 26.371750000000027,
+        "lexical_database": 31.210042000000104,
+        "fusion": 0.3785419999999817
+      },
+      "methods": {
+        "semantic": {
+          "latency_ms": 361.5688339999998,
+          "ranked_rule_keys": [
+            "REL-01",
+            "REL-05",
+            "API-02",
+            "API-03",
+            "API-05",
+            "API-04",
+            "DATA-01",
+            "DEP-01",
+            "REL-04",
+            "AUTH-04",
+            "DB-03",
+            "OBS-03",
+            "API-01",
+            "REL-02",
+            "GOV-01",
+            "DB-04",
+            "DB-05",
+            "SEC-02",
+            "AUTH-01",
+            "AUTH-03"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "REL-01",
+              "playbook_chunk_id": "5445fe11-097c-4007-acac-807c900f19a6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-01: Retries and Exponential Backoff",
+              "similarity_score": 0.7429012724371301
+            },
+            {
+              "rank": 2,
+              "rule_key": "REL-05",
+              "playbook_chunk_id": "a2901bb6-bd3b-463b-a3c0-c592837be2bc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-05: Asynchronous Job Delivery",
+              "similarity_score": 0.6904488759430285
+            },
+            {
+              "rank": 3,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.6834064096081729
+            },
+            {
+              "rank": 4,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.6672689912549336
+            },
+            {
+              "rank": 5,
+              "rule_key": "API-05",
+              "playbook_chunk_id": "65d2b5ce-5d92-4a35-9c81-5806c966c418",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-05: Deadlines and Cancellation",
+              "similarity_score": 0.6559379696846195
+            },
+            {
+              "rank": 6,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "similarity_score": 0.6416477392139791
+            },
+            {
+              "rank": 7,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.6381702258384004
+            },
+            {
+              "rank": 8,
+              "rule_key": "DEP-01",
+              "playbook_chunk_id": "747ce824-7147-4495-a80e-f411fecc89ae",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DEP-01: Progressive Delivery and Rollback",
+              "similarity_score": 0.6373112411657763
+            },
+            {
+              "rank": 9,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.6365637453642499
+            },
+            {
+              "rank": 10,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.6342229465113416
+            },
+            {
+              "rank": 11,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.6230713793848992
+            },
+            {
+              "rank": 12,
+              "rule_key": "OBS-03",
+              "playbook_chunk_id": "6f24a5da-11c5-421f-8339-e0b5c6161653",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-03: Distributed Trace Propagation",
+              "similarity_score": 0.6228921256872779
+            },
+            {
+              "rank": 13,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "similarity_score": 0.6225089205807081
+            },
+            {
+              "rank": 14,
+              "rule_key": "REL-02",
+              "playbook_chunk_id": "87ce2043-a2c5-416c-b08c-4b621205a459",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-02: Circuit Breakers and Dependency Isolation",
+              "similarity_score": 0.6221614281881345
+            },
+            {
+              "rank": 15,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6198292886906129
+            },
+            {
+              "rank": 16,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6141061688851954
+            },
+            {
+              "rank": 17,
+              "rule_key": "DB-05",
+              "playbook_chunk_id": "555244e9-ba8d-47e1-8f89-4eaa07070ce2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-05: Safe Schema Migrations",
+              "similarity_score": 0.6093537546744932
+            },
+            {
+              "rank": 18,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6041160809647806
+            },
+            {
+              "rank": 19,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.6016675223902119
+            },
+            {
+              "rank": 20,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.6005262134891123
+            }
+          ]
+        },
+        "lexical": {
+          "latency_ms": 31.210042000000104,
+          "ranked_rule_keys": [
+            "REL-01"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "REL-01",
+              "playbook_chunk_id": "5445fe11-097c-4007-acac-807c900f19a6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-01: Retries and Exponential Backoff",
+              "exact_rule_key_match": false,
+              "full_text_rank": 0.0013679891,
+              "trigram_score": 0.625,
+              "lexical_score": 0.15761798911262304
+            }
+          ]
+        },
+        "hybrid": {
+          "latency_ms": 393.1574179999999,
+          "ranked_rule_keys": [
+            "REL-01",
+            "REL-05",
+            "API-02",
+            "API-03",
+            "API-05",
+            "API-04",
+            "DATA-01",
+            "DEP-01",
+            "REL-04",
+            "AUTH-04",
+            "DB-03",
+            "OBS-03",
+            "API-01",
+            "REL-02",
+            "GOV-01",
+            "DB-04",
+            "DB-05",
+            "SEC-02",
+            "AUTH-01",
+            "AUTH-03"
+          ],
+          "metrics": {
+            "is_negative": false,
+            "recall_at_k": {
+              "1": 1.0,
+              "3": 1.0,
+              "5": 1.0
+            },
+            "precision_at_k": {
+              "1": 1.0,
+              "3": 0.3333333333333333,
+              "5": 0.2
+            },
+            "hit_at_k": {
+              "1": 1,
+              "3": 1,
+              "5": 1
+            },
+            "false_positive_at_k": {
+              "1": null,
+              "3": null,
+              "5": null
+            },
+            "reciprocal_rank": 1.0
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "rule_key": "REL-01",
+              "playbook_chunk_id": "5445fe11-097c-4007-acac-807c900f19a6",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-01: Retries and Exponential Backoff",
+              "similarity_score": 0.7429012724371301,
+              "lexical_score": 0.15761798911262304,
+              "semantic_rank": 1,
+              "lexical_rank": 1,
+              "rrf_score": 0.03278688524590164
+            },
+            {
+              "rank": 2,
+              "rule_key": "REL-05",
+              "playbook_chunk_id": "a2901bb6-bd3b-463b-a3c0-c592837be2bc",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-05: Asynchronous Job Delivery",
+              "similarity_score": 0.6904488759430285,
+              "lexical_score": null,
+              "semantic_rank": 2,
+              "lexical_rank": null,
+              "rrf_score": 0.016129032258064516
+            },
+            {
+              "rank": 3,
+              "rule_key": "API-02",
+              "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-02: Idempotent State-Changing Requests",
+              "similarity_score": 0.6834064096081729,
+              "lexical_score": null,
+              "semantic_rank": 3,
+              "lexical_rank": null,
+              "rrf_score": 0.015873015873015872
+            },
+            {
+              "rank": 4,
+              "rule_key": "API-03",
+              "playbook_chunk_id": "e9a3cb58-fb77-4cb2-882e-00b718bb5c30",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-03: Rate Limiting and Abuse Control",
+              "similarity_score": 0.6672689912549336,
+              "lexical_score": null,
+              "semantic_rank": 4,
+              "lexical_rank": null,
+              "rrf_score": 0.015625
+            },
+            {
+              "rank": 5,
+              "rule_key": "API-05",
+              "playbook_chunk_id": "65d2b5ce-5d92-4a35-9c81-5806c966c418",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-05: Deadlines and Cancellation",
+              "similarity_score": 0.6559379696846195,
+              "lexical_score": null,
+              "semantic_rank": 5,
+              "lexical_rank": null,
+              "rrf_score": 0.015384615384615385
+            },
+            {
+              "rank": 6,
+              "rule_key": "API-04",
+              "playbook_chunk_id": "be4bb566-67a2-444e-b0f9-f1a936fc3988",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-04: Error Response Contract",
+              "similarity_score": 0.6416477392139791,
+              "lexical_score": null,
+              "semantic_rank": 6,
+              "lexical_rank": null,
+              "rrf_score": 0.015151515151515152
+            },
+            {
+              "rank": 7,
+              "rule_key": "DATA-01",
+              "playbook_chunk_id": "1e048aee-4d1b-4e47-bef2-fa7378c39f46",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DATA-01: Data Retention and Deletion",
+              "similarity_score": 0.6381702258384004,
+              "lexical_score": null,
+              "semantic_rank": 7,
+              "lexical_rank": null,
+              "rrf_score": 0.014925373134328358
+            },
+            {
+              "rank": 8,
+              "rule_key": "DEP-01",
+              "playbook_chunk_id": "747ce824-7147-4495-a80e-f411fecc89ae",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DEP-01: Progressive Delivery and Rollback",
+              "similarity_score": 0.6373112411657763,
+              "lexical_score": null,
+              "semantic_rank": 8,
+              "lexical_rank": null,
+              "rrf_score": 0.014705882352941176
+            },
+            {
+              "rank": 9,
+              "rule_key": "REL-04",
+              "playbook_chunk_id": "b5506843-6d93-45af-9999-fd03b553fd0e",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-04: Graceful Shutdown",
+              "similarity_score": 0.6365637453642499,
+              "lexical_score": null,
+              "semantic_rank": 9,
+              "lexical_rank": null,
+              "rrf_score": 0.014492753623188406
+            },
+            {
+              "rank": 10,
+              "rule_key": "AUTH-04",
+              "playbook_chunk_id": "9cf92e76-fa10-4479-a84b-99652007e20f",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-04: Password Storage and Login Protection",
+              "similarity_score": 0.6342229465113416,
+              "lexical_score": null,
+              "semantic_rank": 10,
+              "lexical_rank": null,
+              "rrf_score": 0.014285714285714285
+            },
+            {
+              "rank": 11,
+              "rule_key": "DB-03",
+              "playbook_chunk_id": "e2e0a7fa-499e-4aa3-9c8a-760bbb20e8f7",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-03: Connection Pool Management",
+              "similarity_score": 0.6230713793848992,
+              "lexical_score": null,
+              "semantic_rank": 11,
+              "lexical_rank": null,
+              "rrf_score": 0.014084507042253521
+            },
+            {
+              "rank": 12,
+              "rule_key": "OBS-03",
+              "playbook_chunk_id": "6f24a5da-11c5-421f-8339-e0b5c6161653",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule OBS-03: Distributed Trace Propagation",
+              "similarity_score": 0.6228921256872779,
+              "lexical_score": null,
+              "semantic_rank": 12,
+              "lexical_rank": null,
+              "rrf_score": 0.013888888888888888
+            },
+            {
+              "rank": 13,
+              "rule_key": "API-01",
+              "playbook_chunk_id": "421c8850-62d3-4f32-afeb-aa490d46b1e1",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule API-01: API Versioning and Compatibility",
+              "similarity_score": 0.6225089205807081,
+              "lexical_score": null,
+              "semantic_rank": 13,
+              "lexical_rank": null,
+              "rrf_score": 0.0136986301369863
+            },
+            {
+              "rank": 14,
+              "rule_key": "REL-02",
+              "playbook_chunk_id": "87ce2043-a2c5-416c-b08c-4b621205a459",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule REL-02: Circuit Breakers and Dependency Isolation",
+              "similarity_score": 0.6221614281881345,
+              "lexical_score": null,
+              "semantic_rank": 14,
+              "lexical_rank": null,
+              "rrf_score": 0.013513513513513514
+            },
+            {
+              "rank": 15,
+              "rule_key": "GOV-01",
+              "playbook_chunk_id": "b1eedc6c-190c-4a39-92fa-a2b025760fc2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule GOV-01: Risk Tiers and Applicability",
+              "similarity_score": 0.6198292886906129,
+              "lexical_score": null,
+              "semantic_rank": 15,
+              "lexical_rank": null,
+              "rrf_score": 0.013333333333333334
+            },
+            {
+              "rank": 16,
+              "rule_key": "DB-04",
+              "playbook_chunk_id": "336c1212-dd65-49dc-9867-548c12596501",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-04: Cache Correctness",
+              "similarity_score": 0.6141061688851954,
+              "lexical_score": null,
+              "semantic_rank": 16,
+              "lexical_rank": null,
+              "rrf_score": 0.013157894736842105
+            },
+            {
+              "rank": 17,
+              "rule_key": "DB-05",
+              "playbook_chunk_id": "555244e9-ba8d-47e1-8f89-4eaa07070ce2",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule DB-05: Safe Schema Migrations",
+              "similarity_score": 0.6093537546744932,
+              "lexical_score": null,
+              "semantic_rank": 17,
+              "lexical_rank": null,
+              "rrf_score": 0.012987012987012988
+            },
+            {
+              "rank": 18,
+              "rule_key": "SEC-02",
+              "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule SEC-02: Secret Management",
+              "similarity_score": 0.6041160809647806,
+              "lexical_score": null,
+              "semantic_rank": 18,
+              "lexical_rank": null,
+              "rrf_score": 0.01282051282051282
+            },
+            {
+              "rank": 19,
+              "rule_key": "AUTH-01",
+              "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-01: Authentication Token Validation",
+              "similarity_score": 0.6016675223902119,
+              "lexical_score": null,
+              "semantic_rank": 19,
+              "lexical_rank": null,
+              "rrf_score": 0.012658227848101266
+            },
+            {
+              "rank": 20,
+              "rule_key": "AUTH-03",
+              "playbook_chunk_id": "2c8ee295-5c8d-401f-bdc6-645a110c8b99",
+              "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+              "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+              "filename": "evaluation_playbook.md",
+              "version": 1,
+              "section": "Rule AUTH-03: Session Lifecycle and Cookies",
+              "similarity_score": 0.6005262134891123,
+              "lexical_score": null,
+              "semantic_rank": 20,
+              "lexical_rank": null,
+              "rrf_score": 0.0125
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

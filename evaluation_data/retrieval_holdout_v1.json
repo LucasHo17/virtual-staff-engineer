@@ -1,0 +1,162 @@
+{
+  "dataset_id": "phase1-retrieval-holdout-v1",
+  "status": "frozen",
+  "review": {
+    "reviewed_on": "2026-08-04",
+    "reviewed_case_count": 20,
+    "resolution": "All 20 labels were independently reviewed and approved. Clarified that holdout-semantic-005 is a compliant example governed by DB-05."
+  },
+  "playbook": {
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "rule_count": 31
+  },
+  "labeling_guidelines": {
+    "expected_rule_keys": "All rules that directly answer the query, not rules that merely share engineering vocabulary.",
+    "negative_cases": "Engineering-adjacent questions remain negative when the playbook provides no actual policy answer.",
+    "holdout_policy": "Freeze labels before the first benchmark and never use holdout results to select thresholds or fusion parameters."
+  },
+  "cases": [
+    {
+      "id": "holdout-semantic-001",
+      "query_type": "semantic",
+      "query": "The API accepts a signed login token without verifying who issued it or which service it was intended for.",
+      "expected_rule_keys": ["AUTH-01"],
+      "notes": "Issuer and audience validation for authentication tokens."
+    },
+    {
+      "id": "holdout-semantic-002",
+      "query_type": "semantic",
+      "query": "A customer updates their profile in PostgreSQL but subsequent reads continue serving the old cached profile.",
+      "expected_rule_keys": ["DB-04"],
+      "notes": "Cache invalidation after a durable database write."
+    },
+    {
+      "id": "holdout-semantic-003",
+      "query_type": "semantic",
+      "query": "On SIGTERM the worker exits immediately and abandons messages that it already started processing.",
+      "expected_rule_keys": ["REL-04"],
+      "notes": "Graceful shutdown and completion of in-flight work."
+    },
+    {
+      "id": "holdout-semantic-004",
+      "query_type": "semantic",
+      "query": "When the payment provider fails, the client retries continuously with no delay or randomization.",
+      "expected_rule_keys": ["REL-01"],
+      "notes": "Bounded retries with exponential backoff and jitter."
+    },
+    {
+      "id": "holdout-semantic-005",
+      "query_type": "semantic",
+      "query": "A deployment adds a nullable column, backfills existing rows, and only later enforces the non-null constraint.",
+      "expected_rule_keys": ["DB-05"],
+      "notes": "Compliant example of the required expand-migrate-contract sequence; DB-05 directly governs this pattern."
+    },
+    {
+      "id": "holdout-semantic-006",
+      "query_type": "semantic",
+      "query": "A request counter uses the raw customer identifier as a metric label.",
+      "expected_rule_keys": ["OBS-02"],
+      "notes": "Unbounded high-cardinality metric dimensions."
+    },
+    {
+      "id": "holdout-semantic-007",
+      "query_type": "semantic",
+      "query": "The build installs an unpinned library version even though its current release has a known critical vulnerability.",
+      "expected_rule_keys": ["SEC-05"],
+      "notes": "Dependency pinning and vulnerability response."
+    },
+    {
+      "id": "holdout-semantic-008",
+      "query_type": "semantic",
+      "query": "A signed-in user can request another tenant's invoice by changing the invoice identifier in the URL.",
+      "expected_rule_keys": ["AUTH-02"],
+      "notes": "Resource ownership authorization at the data-access boundary."
+    },
+    {
+      "id": "holdout-multi-001",
+      "query_type": "multi_rule",
+      "query": "A timed-out order POST is retried and creates a duplicate order, while the same command may also be delivered twice by the job broker.",
+      "expected_rule_keys": ["API-02", "REL-05"],
+      "notes": "Request idempotency and at-least-once asynchronous delivery."
+    },
+    {
+      "id": "holdout-multi-002",
+      "query_type": "multi_rule",
+      "query": "Calls to a slow partner have no deadline, and every failure is retried immediately until the request succeeds.",
+      "expected_rule_keys": ["API-05", "REL-01"],
+      "notes": "Deadlines plus bounded backoff for dependency failures."
+    },
+    {
+      "id": "holdout-negative-001",
+      "query_type": "negative",
+      "query": "Should a new read-only product API use REST or GraphQL?",
+      "expected_rule_keys": [],
+      "notes": "Architecture preference not governed by the playbook."
+    },
+    {
+      "id": "holdout-negative-002",
+      "query_type": "negative",
+      "query": "Should this internal service be implemented in Python, Go, or Java?",
+      "expected_rule_keys": [],
+      "notes": "Programming-language selection is not governed."
+    },
+    {
+      "id": "holdout-negative-003",
+      "query_type": "negative",
+      "query": "Should JSON fields use camelCase or snake_case?",
+      "expected_rule_keys": [],
+      "notes": "Naming style is outside the playbook."
+    },
+    {
+      "id": "holdout-negative-004",
+      "query_type": "negative",
+      "query": "Should the engineering organization use a monorepo or multiple repositories?",
+      "expected_rule_keys": [],
+      "notes": "Repository topology is not governed."
+    },
+    {
+      "id": "holdout-negative-005",
+      "query_type": "negative",
+      "query": "Should frontend unit tests use Jest or Vitest?",
+      "expected_rule_keys": [],
+      "notes": "Test-framework selection is not governed."
+    },
+    {
+      "id": "holdout-negative-006",
+      "query_type": "negative",
+      "query": "How many engineers should approve an ordinary pull request?",
+      "expected_rule_keys": [],
+      "notes": "General code-review policy is not specified."
+    },
+    {
+      "id": "holdout-negative-007",
+      "query_type": "negative",
+      "query": "Should commit messages follow Conventional Commits?",
+      "expected_rule_keys": [],
+      "notes": "Commit-message formatting is outside the playbook."
+    },
+    {
+      "id": "holdout-negative-008",
+      "query_type": "negative",
+      "query": "Should the web application use npm, pnpm, or Yarn for package management?",
+      "expected_rule_keys": [],
+      "notes": "Package-manager preference is not governed."
+    },
+    {
+      "id": "holdout-negative-009",
+      "query_type": "negative",
+      "query": "What minimum unit-test coverage percentage should every repository require?",
+      "expected_rule_keys": [],
+      "notes": "The playbook defines no code-coverage target."
+    },
+    {
+      "id": "holdout-negative-010",
+      "query_type": "negative",
+      "query": "What naming convention should feature branches use?",
+      "expected_rule_keys": [],
+      "notes": "Branch naming is outside the playbook."
+    }
+  ]
+}
