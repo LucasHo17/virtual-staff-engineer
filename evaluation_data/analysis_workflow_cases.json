@@ -1,0 +1,234 @@
+{
+  "dataset_id": "phase2-workflow-acceptance-v1",
+  "status": "draft",
+  "review": {
+    "reviewed_case_count": 0,
+    "purpose": "Deterministic workflow acceptance only; labels must be manually reviewed before real-model quality evaluation."
+  },
+  "playbook": {
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation"
+  },
+  "cases": [
+    {
+      "id": "violating-001",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "logger.info(\"access_token=%s\", access_token)",
+      "relevant_rule_keys": ["SEC-01"],
+      "expected_rule_keys": ["SEC-01"],
+      "expected_status": "review_required",
+      "notes": "An access token is written directly to application logs."
+    },
+    {
+      "id": "violating-002",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "reports.py",
+      "content": "os.system(\"generate-report \" + request.args[\"name\"])",
+      "relevant_rule_keys": ["SEC-03"],
+      "expected_rule_keys": ["SEC-03"],
+      "expected_status": "review_required",
+      "notes": "Untrusted request data is concatenated into a shell command."
+    },
+    {
+      "id": "violating-003",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "authentication.md",
+      "content": "The API verifies the JWT signature but does not validate issuer or audience.",
+      "relevant_rule_keys": ["AUTH-01"],
+      "expected_rule_keys": ["AUTH-01"],
+      "expected_status": "review_required",
+      "notes": "Signature-only token validation omits required claims."
+    },
+    {
+      "id": "violating-004",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "orders.py",
+      "content": "order.save()\ncharge_customer(order)\nline_items.save()",
+      "relevant_rule_keys": ["DB-01"],
+      "expected_rule_keys": ["DB-01"],
+      "expected_status": "review_required",
+      "notes": "A multi-write business operation has no transaction boundary."
+    },
+    {
+      "id": "violating-005",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "Clients retry timed-out payment creation requests without an idempotency key.",
+      "relevant_rule_keys": ["API-02"],
+      "expected_rule_keys": ["API-02"],
+      "expected_status": "review_required",
+      "notes": "Retrying a state-changing payment can create duplicate charges."
+    },
+    {
+      "id": "clean-001",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "logger.info(\"authentication completed for user_id=%s\", user.id)",
+      "relevant_rule_keys": ["SEC-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "The log contains an identifier but no credential or secret."
+    },
+    {
+      "id": "clean-002",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "reports.py",
+      "content": "subprocess.run([\"generate-report\", validated_name], check=True)",
+      "relevant_rule_keys": ["SEC-03"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "Validated input is passed through an argument array without a shell."
+    },
+    {
+      "id": "clean-003",
+      "case_type": "clean",
+      "input_type": "design_document",
+      "source_path": "authentication.md",
+      "content": "The API validates JWT signature, issuer, audience, expiration, and not-before claims.",
+      "relevant_rule_keys": ["AUTH-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "The design explicitly includes the required token checks."
+    },
+    {
+      "id": "clean-004",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "orders.py",
+      "content": "with database.transaction():\n    order.save()\n    line_items.save()",
+      "relevant_rule_keys": ["DB-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "Related writes execute within one transaction."
+    },
+    {
+      "id": "clean-005",
+      "case_type": "clean",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "Payment creation requires an idempotency key and replays the stored first response.",
+      "relevant_rule_keys": ["API-02"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "The design supplies deterministic replay protection."
+    },
+    {
+      "id": "ambiguous-001",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "audit_authentication(authentication_result)",
+      "relevant_rule_keys": ["SEC-01"],
+      "expected_rule_keys": [],
+      "expected_status": "inconclusive",
+      "notes": "The helper implementation is unavailable, so logged fields are unknown."
+    },
+    {
+      "id": "ambiguous-002",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "reports.py",
+      "content": "run_report(requested_report)",
+      "relevant_rule_keys": ["SEC-03"],
+      "expected_rule_keys": [],
+      "expected_status": "inconclusive",
+      "notes": "The helper may validate input or invoke a shell; its implementation is missing."
+    },
+    {
+      "id": "ambiguous-003",
+      "case_type": "ambiguous",
+      "input_type": "design_document",
+      "source_path": "authentication.md",
+      "content": "The shared identity library validates incoming access tokens.",
+      "relevant_rule_keys": ["AUTH-01"],
+      "expected_rule_keys": [],
+      "expected_status": "inconclusive",
+      "notes": "The validated claims and identity-library configuration are unspecified."
+    },
+    {
+      "id": "ambiguous-004",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "orders.py",
+      "content": "save_order_and_items(order, items)",
+      "relevant_rule_keys": ["DB-01"],
+      "expected_rule_keys": [],
+      "expected_status": "inconclusive",
+      "notes": "The helper's transaction behavior cannot be observed from the call site."
+    },
+    {
+      "id": "ambiguous-005",
+      "case_type": "ambiguous",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "The payment API includes duplicate-request protection.",
+      "relevant_rule_keys": ["API-02"],
+      "expected_rule_keys": [],
+      "expected_status": "inconclusive",
+      "notes": "The document does not define key scope, storage, or replay behavior."
+    },
+    {
+      "id": "irrelevant-001",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "brand.md",
+      "content": "The company logo uses blue and white variants on dark backgrounds.",
+      "relevant_rule_keys": ["GOV-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "Brand colors are outside the engineering playbook."
+    },
+    {
+      "id": "irrelevant-002",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "office.md",
+      "content": "The office air conditioner should remain at twenty-four degrees Celsius.",
+      "relevant_rule_keys": ["GOV-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "Office temperature has no applicable engineering rule."
+    },
+    {
+      "id": "irrelevant-003",
+      "case_type": "irrelevant",
+      "input_type": "code_diff",
+      "source_path": "styles.css",
+      "content": ".title { font-family: Inter, sans-serif; }",
+      "relevant_rule_keys": ["OBS-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "A font choice is unrelated to structured application logging."
+    },
+    {
+      "id": "irrelevant-004",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "language-choice.md",
+      "content": "The team is comparing Python and Go for a command-line utility.",
+      "relevant_rule_keys": ["GOV-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "Language preference alone does not violate an engineering rule."
+    },
+    {
+      "id": "irrelevant-005",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "vacation.md",
+      "content": "Employees should submit summer vacation requests before May.",
+      "relevant_rule_keys": ["DATA-01"],
+      "expected_rule_keys": [],
+      "expected_status": "completed_clean",
+      "notes": "Vacation scheduling is unrelated to application data retention."
+    }
+  ]
+}

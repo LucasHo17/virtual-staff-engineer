@@ -31,3 +31,29 @@ multi_rule  10
 negative     5
 total       65
 ```
+
+## Phase 2 workflow acceptance cases
+
+`analysis_workflow_cases.json` contains 20 draft cases, balanced across:
+
+```text
+violating    5
+clean        5
+ambiguous    5
+irrelevant   5
+total       20
+```
+
+These cases currently test deterministic workflow behavior with scripted
+reasoning and retrieval components. They verify control flow, not Gemini
+quality. In particular:
+
+- violating cases must reach `review_required` with the expected rule;
+- clean cases inject a false proposal that the evaluator must reject;
+- ambiguous cases must stop as `inconclusive` after bounded context requests;
+  and
+- irrelevant cases receive a retrieval candidate but must produce no proposal.
+
+The dataset intentionally remains `draft`. Before it is used for Phase 2 model
+metrics, every input and label must be manually reviewed, the review count must
+equal 20, and a new frozen version should be created if labels change later.

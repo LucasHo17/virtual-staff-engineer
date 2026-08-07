@@ -7,7 +7,7 @@ and create remediation pull requests safely.
 
 ## Current status
 
-The project is currently in **Phase 1: Reliable Organizational Memory**.
+The project is currently in **Phase 2: Evidence-Grounded Analysis**.
 
 Implemented:
 
@@ -24,23 +24,28 @@ Implemented:
 - Frozen labeled retrieval dataset and reproducible benchmark runner
 - Offline threshold/fusion replay without additional embedding calls
 - Confidence-gated lexical evidence for safer hybrid ranking
+- Structured code-diff and design-document analysis contracts
+- Bounded planner → retrieval → analyst → evaluator workflow
+- Deterministic rule and input citation validation
+- Transactional analysis audit trail in PostgreSQL
+- Balanced 20-case deterministic workflow acceptance suite
 
 Next:
 
-- Run and analyze the frozen Phase 1 retrieval benchmark
+- Review and freeze the Phase 2 labels, then measure the real Gemini workflow
 
 ## Architecture
 
 ```text
-GitHub diff
-    ↓
-LangGraph orchestrator
-    ↓
-Agent → tools → evaluator
-    ↓
-Human approval
-    ↓
-GitHub pull request
+Code diff / design document
+           ↓
+Bounded Python orchestrator
+           ↓
+Planner → hybrid retrieval → analyst
+           ↓
+Deterministic evidence gate → evaluator
+           ↓
+PostgreSQL audit trail
 ```
 
 PostgreSQL is the durable source of truth for versioned playbooks, analysis
@@ -66,6 +71,7 @@ Copy `.env.example` to `.env`, then provide local credentials:
 
 ```dotenv
 GEMINI_API_KEY=your_api_key
+GEMINI_REASONING_MODEL=your_reasoning_model
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/staff_engineer_db
 ```
 
@@ -142,7 +148,7 @@ and commands for running individual test suites.
 ## Roadmap
 
 1. Build and benchmark hybrid playbook retrieval.
-2. Add the controlled LangGraph agent workflow.
+2. Build and evaluate the controlled agent workflow.
 3. Add GitHub tools, patch validation, idempotency, and approval checkpoints.
 4. Build the Next.js/FastAPI product and optimize measured bottlenecks.
 
@@ -153,7 +159,8 @@ src/virtual_staff_engineer/
 ├── database/       PostgreSQL connections, migrations, and SQL
 ├── ingestion/      Markdown parsing, embeddings, and versioned ingestion
 ├── retrieval/      Semantic, lexical, and hybrid retrieval
-└── evaluation/     Retrieval datasets, metrics, and benchmarks
+├── evaluation/     Retrieval datasets, metrics, and benchmarks
+└── analysis/       Agent contracts, orchestration, validation, and persistence
 
 scripts/            Thin command-line entry points
 tests/unit/         Fast tests without infrastructure
@@ -165,3 +172,5 @@ See [docs/architecture.md](docs/architecture.md) for module boundaries,
 [docs/database.md](docs/database.md) for database migration details, and
 [docs/retrieval.md](docs/retrieval.md) for retrieval behavior. The benchmark
 workflow and metric definitions are in [docs/evaluation.md](docs/evaluation.md).
+The Phase 2 workflow and safety boundaries are in
+[docs/analysis.md](docs/analysis.md).

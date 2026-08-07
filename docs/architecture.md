@@ -11,25 +11,31 @@ playbook Markdown
       ↓
 ingestion ─────→ PostgreSQL + pgvector
                        ↑
-query ─────────→ retrieval
-                       ↓
-                  evaluation
+input ──→ analysis ──→ retrieval
+             │             ↓
+             └──────→ PostgreSQL
+                           ↑
+                       evaluation
 ```
 
 - `database` owns PostgreSQL connections, SQL migrations, and schema assets.
 - `ingestion` owns Markdown parsing, embedding generation, and immutable
   playbook version creation.
 - `retrieval` owns semantic, lexical, and hybrid ranking.
-- `evaluation` will own datasets, quality metrics, and benchmark execution.
+- `evaluation` owns datasets, quality metrics, and benchmark execution.
+- `analysis` owns reasoning contracts, bounded orchestration, deterministic
+  evidence validation, provider adapters, and analysis persistence.
 - `scripts` contains only command-line argument handling and calls into the
   application package.
 
-The Phase 2 agent will consume retrieval through a tool boundary. Retrieval
-must not depend on agent orchestration.
+The Phase 2 agent consumes retrieval through a tool boundary. Retrieval does
+not depend on agent orchestration, and orchestration does not contain SQL.
+`AnalysisService` coordinates the in-memory workflow with the repository so
+the reasoning and persistence layers remain independently testable.
 
 ## Why a modular monolith
 
-The current bottleneck is retrieval correctness, not independent service
+The current bottleneck is analysis correctness, not independent service
 scaling. A modular monolith provides clear ownership and test boundaries
 without adding network calls, deployment units, or distributed failure modes.
 Services such as Go gateways, Redis queues, or separate workers should be

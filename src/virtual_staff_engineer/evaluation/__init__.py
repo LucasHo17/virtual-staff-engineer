@@ -1,1 +1,1 @@
-"""Retrieval datasets, metrics, and benchmark runners (Phase 1)."""
+"""Retrieval and analysis datasets, metrics, and benchmark runners."""

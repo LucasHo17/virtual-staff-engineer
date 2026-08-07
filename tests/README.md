@@ -1,7 +1,7 @@
 # Tests
 
 The test suite contains fast unit tests and PostgreSQL integration tests for
-Phase 1 ingestion and retrieval.
+Phase 1 retrieval and the Phase 2 analysis workflow.
 
 ## Run all tests
 
@@ -42,6 +42,11 @@ request per benchmark case, compact result serialization, and report overwrite
 protection. They also verify offline threshold replay, guarded lexical fusion,
 semantic-threshold validation, and preflight checks before paid API work.
 
+The analysis unit tests verify contracts, bounded iterations and tool calls,
+structured Gemini responses, deterministic citation validation, duplicate
+suppression, evaluator decisions, and successful/failed persistence lifecycle
+handling. They use fake reasoners and clients and make no model API calls.
+
 ## PostgreSQL integration tests
 
 `integration/test_ingestion.py` verifies:
@@ -74,6 +79,16 @@ semantic-threshold validation, and preflight checks before paid API work.
 `integration/test_hybrid_retrieval.py` verifies the complete semantic and
 lexical retrieval flow and confirms that a chunk found by both methods is
 promoted above a semantic-only candidate.
+
+`integration/test_analysis_repository.py` verifies that one transaction stores
+the raw input checksum, executed query, retrieval provenance, supported and
+unsupported reviews, deterministic rejection, playbook version, and only the
+supported violation.
+
+`integration/test_analysis_workflow_acceptance.py` runs the bounded planner,
+retrieval, analyst, validation, and evaluator flow across 20 labeled workflow
+scenarios. It uses scripted components rather than PostgreSQL or Gemini, so it
+tests cross-module behavior without claiming model quality.
 
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project
