@@ -91,6 +91,7 @@ class AnalysisContractTests(unittest.TestCase):
             "filename": "evaluation_playbook.md",
             "section": "Sensitive Data in Logs",
             "content": "Access tokens must not be written to logs.",
+            "retrieval_query": "access token logging restrictions",
             "rank_position": 1,
             "retrieval_score": 0.03,
             "semantic_rank": 1,

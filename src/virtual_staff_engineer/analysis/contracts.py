@@ -74,6 +74,7 @@ class RuleEvidence:
     filename: str
     section: str
     content: str
+    retrieval_query: str
     rank_position: int
     retrieval_score: float
     semantic_rank: Optional[int] = None
@@ -87,6 +88,7 @@ class RuleEvidence:
             "filename",
             "section",
             "content",
+            "retrieval_query",
         ):
             _require_text(getattr(self, field_name), field_name)
         _require_positive_integer(self.rank_position, "rank_position")
