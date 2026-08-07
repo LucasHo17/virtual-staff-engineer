@@ -121,6 +121,25 @@ class AnalysisOrchestratorTests(unittest.TestCase):
         self.assertEqual(result.status, "completed_clean")
         self.assertEqual(result.findings, ())
 
+    def test_fabricated_evidence_is_rejected_before_evaluator(self):
+        reasoner = FakeReasoner(
+            queries=(_query("logging sensitive tokens"),),
+            finding_rounds=((_finding(playbook_chunk_id="invented-chunk"),),),
+            evaluation_rounds=(),
+        )
+
+        result = BoundedAnalysisOrchestrator(
+            reasoner, FakeRetrievalTool()
+        ).run(self.analysis_input)
+
+        self.assertEqual(result.status, "completed_clean")
+        self.assertEqual(result.findings, ())
+        self.assertEqual(reasoner.evaluation_calls, 0)
+        self.assertEqual(
+            result.rejected_findings[0].code,
+            "unknown_playbook_chunk",
+        )
+
     def test_more_context_runs_one_additional_bounded_iteration(self):
         finding = _finding()
         reasoner = FakeReasoner(
@@ -202,7 +221,16 @@ class AnalysisOrchestratorTests(unittest.TestCase):
     def test_completed_evaluation_must_decide_every_finding(self):
         reasoner = FakeReasoner(
             queries=(_query("logging sensitive tokens"),),
-            finding_rounds=((_finding(), _finding()),),
+            finding_rounds=(
+                (
+                    _finding(),
+                    _finding(
+                        start_line=1,
+                        end_line=1,
+                        input_excerpt="safe_call()",
+                    ),
+                ),
+            ),
             evaluation_rounds=(
                 EvaluationResult(
                     decisions=(
@@ -279,18 +307,20 @@ def _evidence(chunk_id, query):
     )
 
 
-def _finding():
-    return ProposedFinding(
-        rule_key="SEC-01",
-        playbook_chunk_id="chunk-1",
-        source_path="app.py",
-        start_line=2,
-        end_line=2,
-        input_excerpt="logger.info(token)",
-        explanation="An access token is written to logs.",
-        severity="high",
-        confidence=0.95,
-    )
+def _finding(**overrides):
+    values = {
+        "rule_key": "SEC-01",
+        "playbook_chunk_id": "chunk-1",
+        "source_path": "app.py",
+        "start_line": 2,
+        "end_line": 2,
+        "input_excerpt": "logger.info(token)",
+        "explanation": "An access token is written to logs.",
+        "severity": "high",
+        "confidence": 0.95,
+    }
+    values.update(overrides)
+    return ProposedFinding(**values)
 
 
 if __name__ == "__main__":

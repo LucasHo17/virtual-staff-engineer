@@ -8,6 +8,10 @@ from virtual_staff_engineer.analysis.contracts import (
     RuleEvidence,
     SearchQuery,
 )
+from virtual_staff_engineer.analysis.validation import (
+    FindingRejection,
+    validate_findings,
+)
 
 
 ANALYSIS_STATUSES = frozenset(
@@ -67,7 +71,9 @@ class AnalysisResult:
 
     status: str
     findings: Tuple[ProposedFinding, ...]
+    evaluated_findings: Tuple[ProposedFinding, ...]
     decisions: Tuple[EvaluationDecision, ...]
+    rejected_findings: Tuple[FindingRejection, ...]
     evidence: Tuple[RuleEvidence, ...]
     queries: Tuple[SearchQuery, ...]
     iterations: int
@@ -99,16 +105,38 @@ class BoundedAnalysisOrchestrator:
 
         evidence, executed_queries = self._retrieve(initial_queries, ())
         all_queries = list(executed_queries)
+        rejected_findings = []
 
         for iteration in range(1, self.limits.max_iterations + 1):
-            findings = tuple(
+            proposed_findings = tuple(
                 self.reasoner.propose_findings(analysis_input, evidence)
             )
+            if not proposed_findings:
+                return AnalysisResult(
+                    status="completed_clean",
+                    findings=(),
+                    evaluated_findings=(),
+                    decisions=(),
+                    rejected_findings=tuple(rejected_findings),
+                    evidence=evidence,
+                    queries=tuple(all_queries),
+                    iterations=iteration,
+                )
+
+            validation = validate_findings(
+                analysis_input,
+                proposed_findings,
+                evidence,
+            )
+            rejected_findings.extend(validation.rejections)
+            findings = validation.valid_findings
             if not findings:
                 return AnalysisResult(
                     status="completed_clean",
                     findings=(),
+                    evaluated_findings=(),
                     decisions=(),
+                    rejected_findings=tuple(rejected_findings),
                     evidence=evidence,
                     queries=tuple(all_queries),
                     iterations=iteration,
@@ -134,7 +162,9 @@ class BoundedAnalysisOrchestrator:
                 return AnalysisResult(
                     status=status,
                     findings=supported,
+                    evaluated_findings=findings,
                     decisions=evaluation.decisions,
+                    rejected_findings=tuple(rejected_findings),
                     evidence=evidence,
                     queries=tuple(all_queries),
                     iterations=iteration,
@@ -167,7 +197,9 @@ class BoundedAnalysisOrchestrator:
         return AnalysisResult(
             status="inconclusive",
             findings=(),
+            evaluated_findings=findings,
             decisions=evaluation.decisions,
+            rejected_findings=tuple(rejected_findings),
             evidence=evidence,
             queries=tuple(all_queries),
             iterations=min(iteration, self.limits.max_iterations),

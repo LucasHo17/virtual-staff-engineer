@@ -36,3 +36,19 @@ python scripts/ingest_playbook.py playbooks/sample_playbook.md \
 An unchanged checksum embedded by the same model and dimension is skipped.
 Changed content or an embedding-model change creates the next immutable
 `playbook_versions.version` and a new set of `playbook_chunks`.
+
+## Phase 2 analysis audit trail
+
+`003_analysis_audit_trail.sql` allows analysis runs to originate from a raw
+code diff or design document as well as a stored commit. It adds
+`inconclusive` as a terminal status and creates:
+
+- `analysis_run_queries` for ordered tool calls;
+- `analysis_retrieval_evidence` for query-to-chunk provenance;
+- `analysis_finding_reviews` for supported, unsupported, and undecided
+  evaluator outcomes; and
+- `analysis_finding_rejections` for proposals blocked by deterministic checks.
+
+Supported reviews create `violations` linked back to the reviewed proposal.
+Unsupported and malformed proposals remain auditable but never become
+violations. All historical foreign keys continue to use `ON DELETE RESTRICT`.
