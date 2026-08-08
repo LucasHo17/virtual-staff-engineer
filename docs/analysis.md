@@ -120,7 +120,7 @@ explicit no-finding outcome for irrelevant inputs.
 ## Workflow acceptance suite
 
 Phase 2 Step 5 uses `evaluation_data/analysis_workflow_cases.json`, a balanced
-20-case draft covering violating, clean, ambiguous, and irrelevant inputs. A
+20-case development set covering violating, clean, ambiguous, and irrelevant inputs. A
 scripted reasoner and retrieval tool exercise the complete bounded workflow
 without external model calls:
 
@@ -132,5 +132,127 @@ without external model calls:
 - irrelevant inputs receive retrieval candidates but produce no proposals.
 
 This proves workflow behavior but does not measure agent intelligence. The
-dataset must remain excluded from quality claims until its labels are manually
-reviewed and a real Gemini run is measured in Step 6.
+labels were frozen only after the workflow distinguished missing submitted
+input from missing playbook evidence.
+
+## Live agent benchmark
+
+Phase 2 Step 6 runs the production `GeminiReasoner`, hybrid retrieval tool,
+deterministic evidence gate, and evaluator against the same frozen 20-case
+development set. The runner records rule-level precision/recall/F1, terminal
+status accuracy, category-specific safety rates, latency, query and iteration
+counts, token usage, embedding requests, and estimated reasoning cost.
+
+The CLI validates both the destination and the exact PostgreSQL playbook
+version before paid requests. It supports case and category selection for
+smoke tests, uses the model's default reasoning policy unless an explicit
+legacy numeric thinking budget is supplied, and can pace cases to respect API
+request quotas.
+
+```bash
+python scripts/evaluate_analysis.py \
+    --model gemini-3.5-flash-lite \
+    --case-delay-seconds 15 \
+    --output-dir evaluation_results/phase2_v1
+```
+
+The first complete baseline on 2026-08-07 measured:
+
+| Metric | Result |
+|---|---:|
+| Precision | 1.000 |
+| Recall | 0.600 |
+| F1 | 0.750 |
+| Exact-rule accuracy | 0.900 |
+| Terminal-status accuracy | 0.900 |
+| Clean false-positive rate | 0.000 |
+| Irrelevant false-positive rate | 0.000 |
+| Ambiguous-inconclusive rate | 1.000 |
+| Latency p50 / p95 | 2.85 s / 3.93 s |
+| Estimated reasoning cost | $0.024816 |
+
+The system missed two of five violating examples. One `DB-01` example was
+classified as lacking sufficient context. One `API-02` proposal was retrieved
+and generated, then correctly blocked by the deterministic gate because its
+input excerpt was not verbatim. These are development-set diagnostics, not
+production-quality claims. Any prompt or workflow optimization must be
+confirmed on a separately reviewed holdout to avoid overfitting.
+
+## Development-set optimization
+
+The first iteration addressed both failure mechanisms without relaxing the
+evidence gate:
+
+- The Gemini finding schema now asks for inclusive input line coordinates, not
+  model-written paths or excerpts. Application code validates the range and
+  constructs the exact source path and verbatim excerpt deterministically.
+- Missing-input context is reserved for cases where relevant behavior is not
+  shown, such as a declaration or function call without an implementation. A
+  directly visible conflict with a mandatory rule proceeds to evaluator and
+  human review rather than assuming an unseen mitigation.
+- The analyst is instructed to prefer the narrowest directly applicable rule
+  when several retrieved rules describe the same location and underlying
+  defect.
+
+The complete frozen development benchmark was then rerun without changing its
+labels:
+
+| Metric | Baseline v1 | Optimized v2 |
+|---|---:|---:|
+| Precision | 1.000 | 0.833 |
+| Recall | 0.600 | 1.000 |
+| F1 | 0.750 | 0.909 |
+| Exact-rule accuracy | 0.900 | 0.950 |
+| Terminal-status accuracy | 0.900 | 1.000 |
+| Clean false-positive rate | 0.000 | 0.000 |
+| Irrelevant false-positive rate | 0.000 | 0.000 |
+| Ambiguous-inconclusive rate | 1.000 | 1.000 |
+| Deterministic citation rejections | 2 | 0 |
+| Latency p50 | 2.85 s | 2.78 s |
+
+The only non-exact v2 case expected `API-02` but returned both `API-02` and
+`REL-01`. Independent inspection shows that `REL-01` also explicitly prohibits
+retrying an operation that is neither idempotent nor protected by an
+idempotency mechanism. Because the label was frozen before observing the model
+output, it remains unchanged in v1. This overlap must be adjudicated explicitly
+and, if accepted, represented in a new dataset version rather than silently
+editing the benchmark. The v2 result is an optimization signal, not final
+generalization evidence.
+
+A separate 20-case holdout exists as
+`evaluation_data/analysis_holdout_v1.json`. All labels were independently
+reviewed against the full playbook and approved with zero changes on
+2026-08-08, before any live-agent exposure. The review explicitly adjudicated
+`AUTH-02` as the sole root-cause label for the invoice-ownership case; `OBS-04`
+is a downstream audit obligation rather than the violated access-control rule.
+The dataset is now frozen for one final, no-tuning evaluation.
+
+## Frozen holdout result
+
+The frozen holdout was run exactly once on 2026-08-08 using the same
+`gemini-3.5-flash-lite` model, retrieval configuration, and quota pacing as the
+optimized development run. No prompt or label changes were made after seeing
+its results.
+
+| Metric | Holdout v1 |
+|---|---:|
+| Precision | 0.833 |
+| Recall | 1.000 |
+| F1 | 0.909 |
+| Exact-rule accuracy | 0.950 |
+| Terminal-status accuracy | 0.950 |
+| Violating detection rate | 1.000 |
+| Clean false-positive rate | 0.200 |
+| Irrelevant false-positive rate | 0.000 |
+| Ambiguous-inconclusive rate | 1.000 |
+| Latency p50 / p95 | 2.62 s / 4.22 s |
+| Estimated reasoning cost | $0.030598 |
+
+All five violating cases returned the exact expected rule. All five ambiguous
+cases stopped inconclusively, and all five irrelevant cases returned clean. The
+only failure was `holdout-clean-004`: an invoice query explicitly scoped with
+`Invoice.for_customer(current_user.id)` was incorrectly flagged as `AUTH-02`.
+The analyst and evaluator both recognized the owner scope but still speculated
+that resource ownership might be only partially verified. This is retained as
+a measured limitation in recognizing positive compliance evidence; the system
+was not tuned against the holdout after observing it.

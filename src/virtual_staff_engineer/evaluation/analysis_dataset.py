@@ -2,7 +2,10 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from virtual_staff_engineer.evaluation.dataset import DatasetValidationError
+from virtual_staff_engineer.evaluation.dataset import (
+    DatasetValidationError,
+    PlaybookReference,
+)
 
 
 ANALYSIS_CASE_TYPES = frozenset(
@@ -21,7 +24,7 @@ class AnalysisEvaluationCase:
     input_type: str
     source_path: str
     content: str
-    relevant_rule_keys: tuple
+    candidate_rule_keys: tuple
     expected_rule_keys: tuple
     expected_status: str
     notes: str
@@ -31,8 +34,7 @@ class AnalysisEvaluationCase:
 class AnalysisEvaluationDataset:
     dataset_id: str
     status: str
-    playbook_filename: str
-    playbook_category: str
+    playbook: PlaybookReference
     cases: tuple
     source_path: str
     review: dict
@@ -64,8 +66,12 @@ def load_analysis_dataset(file_path, require_frozen=True):
     playbook = payload.get("playbook")
     if not isinstance(playbook, dict):
         raise DatasetValidationError("Dataset playbook must be an object.")
-    playbook_filename = _text(playbook, "filename", "playbook")
-    playbook_category = _text(playbook, "category", "playbook")
+    playbook_reference = PlaybookReference(
+        filename=_text(playbook, "filename", "playbook"),
+        category=_text(playbook, "category", "playbook"),
+        version=_positive_integer(playbook, "version", "playbook"),
+        rule_count=_positive_integer(playbook, "rule_count", "playbook"),
+    )
 
     raw_cases = payload.get("cases")
     if not isinstance(raw_cases, list) or not raw_cases:
@@ -97,12 +103,41 @@ def load_analysis_dataset(file_path, require_frozen=True):
     return AnalysisEvaluationDataset(
         dataset_id=dataset_id,
         status=status,
-        playbook_filename=playbook_filename,
-        playbook_category=playbook_category,
+        playbook=playbook_reference,
         cases=tuple(cases),
         source_path=str(path),
         review=review,
     )
+
+
+def select_analysis_cases(dataset, case_types=None, case_ids=None, limit=None):
+    """Select a deterministic Phase 2 subset without changing the dataset."""
+    selected = list(dataset.cases)
+    if case_types:
+        invalid_types = set(case_types) - ANALYSIS_CASE_TYPES
+        if invalid_types:
+            raise DatasetValidationError(
+                f"Unknown analysis case types: {sorted(invalid_types)}."
+            )
+        selected = [
+            case for case in selected if case.case_type in set(case_types)
+        ]
+    if case_ids:
+        requested_ids = set(case_ids)
+        known_ids = {case.case_id for case in dataset.cases}
+        unknown_ids = requested_ids - known_ids
+        if unknown_ids:
+            raise DatasetValidationError(
+                f"Unknown analysis case ids: {sorted(unknown_ids)}."
+            )
+        selected = [case for case in selected if case.case_id in requested_ids]
+    if limit is not None:
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit < 1:
+            raise DatasetValidationError("limit must be a positive integer.")
+        selected = selected[:limit]
+    if not selected:
+        raise DatasetValidationError("Case selection produced no cases.")
+    return tuple(selected)
 
 
 def _load_case(payload, location):
@@ -130,8 +165,8 @@ def _load_case(payload, location):
         input_type=input_type,
         source_path=_text(payload, "source_path", location),
         content=_text(payload, "content", location, strip=False),
-        relevant_rule_keys=_rule_keys(
-            payload, "relevant_rule_keys", location
+        candidate_rule_keys=_rule_keys(
+            payload, "candidate_rule_keys", location
         ),
         expected_rule_keys=_rule_keys(
             payload, "expected_rule_keys", location
@@ -142,9 +177,9 @@ def _load_case(payload, location):
 
 
 def _validate_case_labels(case, location):
-    if not case.relevant_rule_keys:
+    if not case.candidate_rule_keys:
         raise DatasetValidationError(
-            f"{location}.relevant_rule_keys must not be empty."
+            f"{location}.candidate_rule_keys must not be empty."
         )
     expected_status_by_type = {
         "violating": "review_required",
@@ -164,10 +199,10 @@ def _validate_case_labels(case, location):
                 f"{location} violating case needs expected rule keys."
             )
         if not set(case.expected_rule_keys).issubset(
-            case.relevant_rule_keys
+            case.candidate_rule_keys
         ):
             raise DatasetValidationError(
-                f"{location} expected rules must be relevant rules."
+                f"{location} expected rules must be candidate rules."
             )
     elif case.expected_rule_keys:
         raise DatasetValidationError(
@@ -196,3 +231,12 @@ def _rule_keys(payload, key, location):
     if len(normalized) != len(set(normalized)):
         raise DatasetValidationError(f"{location}.{key} contains duplicates.")
     return normalized
+
+
+def _positive_integer(payload, key, location):
+    value = payload.get(key)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise DatasetValidationError(
+            f"{location}.{key} must be a positive integer."
+        )
+    return value

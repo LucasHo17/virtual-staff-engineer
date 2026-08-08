@@ -29,10 +29,20 @@ Implemented:
 - Deterministic rule and input citation validation
 - Transactional analysis audit trail in PostgreSQL
 - Balanced 20-case deterministic workflow acceptance suite
+- Frozen 20-case live-agent benchmark with quality, safety, latency, usage, and
+  estimated-cost reporting
 
-Next:
-
-- Review and freeze the Phase 2 labels, then measure the real Gemini workflow
+The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
+`1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
+and a narrower missing-context policy, the same frozen development set measured
+precision `0.833`, recall `1.00`, F1 `0.909`, and status accuracy `1.00` while
+preserving zero clean/irrelevant false positives and perfect ambiguous-input
+abstention. The remaining extra `REL-01` result on an `API-02` case requires
+label adjudication before a new dataset version. A separately reviewed frozen
+holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
+`0.909`, exact-rule accuracy `0.95`, and terminal-status accuracy `0.95`. It
+found every violation and handled every ambiguous and irrelevant case correctly,
+with one false positive on ownership-scoped authorization code.
 
 ## Architecture
 
@@ -134,6 +144,24 @@ Analyze a completed benchmark offline:
 
 ```bash
 python scripts/analyze_retrieval_results.py
+```
+
+Validate the frozen Phase 2 dataset and database corpus without model calls:
+
+```bash
+python scripts/evaluate_analysis.py \
+    --model gemini-3.5-flash-lite \
+    --dry-run
+```
+
+Run the live 20-case agent benchmark. `--case-delay-seconds` is an explicit
+quota-control setting and is recorded in the report:
+
+```bash
+python scripts/evaluate_analysis.py \
+    --model gemini-3.5-flash-lite \
+    --case-delay-seconds 15 \
+    --output-dir evaluation_results/phase2_v1
 ```
 
 Run tests:

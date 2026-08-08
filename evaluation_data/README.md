@@ -34,7 +34,8 @@ total       65
 
 ## Phase 2 workflow acceptance cases
 
-`analysis_workflow_cases.json` contains 20 draft cases, balanced across:
+`analysis_workflow_cases.json` contains 20 frozen development cases, balanced
+across:
 
 ```text
 violating    5
@@ -44,9 +45,10 @@ irrelevant   5
 total       20
 ```
 
-These cases currently test deterministic workflow behavior with scripted
-reasoning and retrieval components. They verify control flow, not Gemini
-quality. In particular:
+These cases serve two purposes: deterministic workflow acceptance with
+scripted components and a live development benchmark using the production
+Gemini reasoner and hybrid retriever. The scripted suite verifies control flow;
+the live runner measures model-dependent quality. In particular:
 
 - violating cases must reach `review_required` with the expected rule;
 - clean cases inject a false proposal that the evaluator must reject;
@@ -54,6 +56,30 @@ quality. In particular:
   and
 - irrelevant cases receive a retrieval candidate but must produce no proposal.
 
-The dataset intentionally remains `draft`. Before it is used for Phase 2 model
-metrics, every input and label must be manually reviewed, the review count must
-equal 20, and a new frozen version should be created if labels change later.
+The labels were cross-checked against `evaluation_playbook.md` version 1 and
+frozen on 2026-08-07. Any input, candidate-rule, or expected-outcome change now
+requires a new dataset version or an explicit review record. This is a
+development benchmark; a separate holdout is still required before making
+final generalization claims.
+
+The first complete live run produced 1.000 precision, 0.600 recall, 0.750 F1,
+and 0.900 terminal-status accuracy. All clean, ambiguous, and irrelevant cases
+had the expected safety outcome; two violating cases were false negatives.
+The detailed generated reports are written under `evaluation_results/` and are
+intentionally not treated as source labels.
+
+An optimized rerun improved recall to 1.000 and status accuracy to 1.000 while
+preserving all clean, irrelevant, and ambiguous safety outcomes. It also
+surfaced one cross-rule labeling question: the payment-retry case labeled
+`API-02` also directly matches the idempotency requirement in `REL-01`. The
+frozen dataset has not been edited in response. Any adjudicated correction must
+create a new dataset version with an explicit review record.
+
+`analysis_holdout_v1.json` is a separate balanced 20-case holdout. All labels
+were independently reviewed against the complete playbook and approved with
+zero changes on 2026-08-08 before any agent exposure. The dataset is frozen and
+was run exactly once without tuning. The result measured 0.833 precision,
+1.000 recall, 0.909 F1, and 0.950 terminal-status accuracy. Every violating,
+ambiguous, and irrelevant case had the expected outcome; one clean
+ownership-scoped authorization example was falsely flagged. The result is final
+holdout evidence and must not be used for further prompt selection.
