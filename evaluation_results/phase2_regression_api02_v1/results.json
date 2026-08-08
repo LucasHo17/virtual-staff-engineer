@@ -1,0 +1,202 @@
+{
+  "generated_at": "2026-08-07T16:35:49.378354+00:00",
+  "run_status": "partial",
+  "dataset": {
+    "dataset_id": "phase2-workflow-acceptance-v1",
+    "status": "frozen",
+    "source_path": "evaluation_data/analysis_workflow_cases.json",
+    "total_case_count": 20,
+    "selected_case_count": 1,
+    "review": {
+      "reviewed_on": "2026-08-07",
+      "reviewed_case_count": 20,
+      "review_method": "Each expected outcome and candidate rule was cross-checked against evaluation_playbook.md version 1.",
+      "resolution": "Separated missing submitted-input context from missing playbook context before freezing. All 20 labels approved for the Phase 2 development benchmark."
+    }
+  },
+  "corpus": {
+    "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+    "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "embedding_model": "models/gemini-embedding-2",
+    "embedding_dimension": 1536,
+    "chunk_count": 31,
+    "rule_keys": [
+      "API-01",
+      "API-02",
+      "API-03",
+      "API-04",
+      "API-05",
+      "AUTH-01",
+      "AUTH-02",
+      "AUTH-03",
+      "AUTH-04",
+      "DATA-01",
+      "DB-01",
+      "DB-02",
+      "DB-03",
+      "DB-04",
+      "DB-05",
+      "DEP-01",
+      "GOV-01",
+      "OBS-01",
+      "OBS-02",
+      "OBS-03",
+      "OBS-04",
+      "REL-01",
+      "REL-02",
+      "REL-03",
+      "REL-04",
+      "REL-05",
+      "SEC-01",
+      "SEC-02",
+      "SEC-03",
+      "SEC-04",
+      "SEC-05"
+    ]
+  },
+  "config": {
+    "model": "gemini-3.5-flash-lite",
+    "top_k": 5,
+    "candidate_k": 20,
+    "max_iterations": 2,
+    "case_delay_seconds": 0.0,
+    "thinking_budget": null,
+    "input_cost_per_million": 0.3,
+    "output_cost_per_million": 2.5
+  },
+  "summary": {
+    "case_count": 1,
+    "quality": {
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "exact_rule_accuracy": 0.0,
+      "status_accuracy": 1.0,
+      "violating_detection_rate": 0.0,
+      "clean_false_positive_rate": 0.0,
+      "irrelevant_false_positive_rate": 0.0,
+      "ambiguous_inconclusive_rate": 0.0
+    },
+    "safety": {
+      "deterministic_rejection_count": 0,
+      "deterministic_rejection_rate": 0.0,
+      "unsupported_decision_count": 0,
+      "unsupported_decision_rate": 0.0
+    },
+    "workflow": {
+      "average_queries": 1.0,
+      "average_iterations": 1.0
+    },
+    "latency_ms": {
+      "p50": 4448.263292,
+      "p95": 4448.263292,
+      "mean": 4448.263292
+    },
+    "usage": {
+      "model_calls": 3,
+      "input_tokens": 4100,
+      "output_tokens": 573,
+      "thinking_tokens": 0,
+      "billed_output_tokens": 573,
+      "embedding_requests": 1,
+      "estimated_reasoning_cost_usd": 0.0026625
+    },
+    "by_case_type": {
+      "violating": {
+        "case_count": 1,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 0.0,
+        "false_positive_rate": 1.0,
+        "inconclusive_rate": 0.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "violating-005",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "Clients retry timed-out payment creation requests without an idempotency key.",
+      "notes": "Retrying a state-changing payment can create duplicate charges.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [
+        "API-02"
+      ],
+      "actual_rule_keys": [
+        "API-02",
+        "REL-01"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 1,
+        "false_negatives": 0,
+        "exact_rule_match": false,
+        "status_match": true
+      },
+      "latency_ms": 4448.263292,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "payments idempotency key retry policy",
+          "purpose": "Find playbook rules regarding idempotency for payment creation and retry mechanisms."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "API-02",
+          "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+          "source_path": "payments.md",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "Clients retry timed-out payment creation requests without an idempotency key.",
+          "explanation": "Clients are retrying timed-out payment creation requests without an idempotency key. Rule API-02 requires that POST operations creating financial records or triggering non-repeatable state changes must support an idempotency key.",
+          "severity": "high",
+          "confidence": 0.95
+        },
+        {
+          "rule_key": "REL-01",
+          "playbook_chunk_id": "5445fe11-097c-4007-acac-807c900f19a6",
+          "source_path": "payments.md",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "Clients retry timed-out payment creation requests without an idempotency key.",
+          "explanation": "Retries are being performed for payment creation requests without an idempotency mechanism. Rule REL-01 mandates that retries are allowed only for operations that are idempotent or protected by an idempotency mechanism.",
+          "severity": "high",
+          "confidence": 0.9
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The input states that clients retry payment creation requests without an idempotency key. Rule API-02 requires POST operations that create financial records to support an idempotency key, making this a clear violation."
+        },
+        {
+          "finding_index": 1,
+          "verdict": "supported",
+          "reason": "The input explicitly describes clients retrying payment creation requests without an idempotency key. Rule REL-01 mandates that retries are allowed only for operations that are idempotent or protected by an idempotency mechanism, meaning performing these retries without one violates the rule."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 2,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 4100,
+        "output_tokens": 573,
+        "thinking_tokens": 0
+      }
+    }
+  ]
+}

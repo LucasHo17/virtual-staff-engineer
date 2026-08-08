@@ -1,0 +1,1145 @@
+{
+  "generated_at": "2026-08-07T14:05:41.078695+00:00",
+  "run_status": "complete",
+  "dataset": {
+    "dataset_id": "phase2-workflow-acceptance-v1",
+    "status": "frozen",
+    "source_path": "evaluation_data/analysis_workflow_cases.json",
+    "total_case_count": 20,
+    "selected_case_count": 20,
+    "review": {
+      "reviewed_on": "2026-08-07",
+      "reviewed_case_count": 20,
+      "review_method": "Each expected outcome and candidate rule was cross-checked against evaluation_playbook.md version 1.",
+      "resolution": "Separated missing submitted-input context from missing playbook context before freezing. All 20 labels approved for the Phase 2 development benchmark."
+    }
+  },
+  "corpus": {
+    "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+    "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "embedding_model": "models/gemini-embedding-2",
+    "embedding_dimension": 1536,
+    "chunk_count": 31,
+    "rule_keys": [
+      "API-01",
+      "API-02",
+      "API-03",
+      "API-04",
+      "API-05",
+      "AUTH-01",
+      "AUTH-02",
+      "AUTH-03",
+      "AUTH-04",
+      "DATA-01",
+      "DB-01",
+      "DB-02",
+      "DB-03",
+      "DB-04",
+      "DB-05",
+      "DEP-01",
+      "GOV-01",
+      "OBS-01",
+      "OBS-02",
+      "OBS-03",
+      "OBS-04",
+      "REL-01",
+      "REL-02",
+      "REL-03",
+      "REL-04",
+      "REL-05",
+      "SEC-01",
+      "SEC-02",
+      "SEC-03",
+      "SEC-04",
+      "SEC-05"
+    ]
+  },
+  "config": {
+    "model": "gemini-3.5-flash-lite",
+    "top_k": 5,
+    "candidate_k": 20,
+    "max_iterations": 2,
+    "case_delay_seconds": 15.0,
+    "thinking_budget": null,
+    "input_cost_per_million": 0.3,
+    "output_cost_per_million": 2.5
+  },
+  "summary": {
+    "case_count": 20,
+    "quality": {
+      "precision": 1.0,
+      "recall": 0.6,
+      "f1": 0.7499999999999999,
+      "exact_rule_accuracy": 0.9,
+      "status_accuracy": 0.9,
+      "violating_detection_rate": 0.6,
+      "clean_false_positive_rate": 0.0,
+      "irrelevant_false_positive_rate": 0.0,
+      "ambiguous_inconclusive_rate": 1.0
+    },
+    "safety": {
+      "deterministic_rejection_count": 2,
+      "deterministic_rejection_rate": 0.4,
+      "unsupported_decision_count": 0,
+      "unsupported_decision_rate": 0.0
+    },
+    "workflow": {
+      "average_queries": 1.55,
+      "average_iterations": 1.0
+    },
+    "latency_ms": {
+      "p50": 2850.615624999989,
+      "p95": 3930.5450420000057,
+      "mean": 3029.763666799994
+    },
+    "usage": {
+      "model_calls": 43,
+      "input_tokens": 53669,
+      "output_tokens": 3486,
+      "thinking_tokens": 0,
+      "billed_output_tokens": 3486,
+      "embedding_requests": 31,
+      "estimated_reasoning_cost_usd": 0.024815699999999996
+    },
+    "by_case_type": {
+      "ambiguous": {
+        "case_count": 5,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 1.0
+      },
+      "clean": {
+        "case_count": 5,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 0.0
+      },
+      "irrelevant": {
+        "case_count": 5,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 0.0
+      },
+      "violating": {
+        "case_count": 5,
+        "status_accuracy": 0.6,
+        "exact_rule_accuracy": 0.6,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 0.2
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "violating-001",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "logger.info(\"access_token=%s\", access_token)",
+      "notes": "An access token is written directly to application logs.",
+      "candidate_rule_keys": [
+        "SEC-01"
+      ],
+      "expected_rule_keys": [
+        "SEC-01"
+      ],
+      "actual_rule_keys": [
+        "SEC-01"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3612.7745,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "logging sensitive data tokens credentials",
+          "purpose": "Identify rules regarding the logging of access tokens or sensitive security information."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "SEC-01",
+          "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+          "source_path": "auth.py",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "logger.info(\"access_token=%s\", access_token)",
+          "explanation": "The application is logging an access token via logger.info, which violates rule SEC-01 prohibiting the writing of authentication tokens and sensitive personal data to logs.",
+          "severity": "high",
+          "confidence": 0.95
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code logs an access token using logger.info, which directly violates Rule SEC-01 prohibiting writing access tokens to logs."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 3847,
+        "output_tokens": 353,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "violating-002",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "reports.py",
+      "content": "os.system(\"generate-report \" + request.args[\"name\"])",
+      "notes": "Untrusted request data is concatenated into a shell command.",
+      "candidate_rule_keys": [
+        "SEC-03"
+      ],
+      "expected_rule_keys": [
+        "SEC-03"
+      ],
+      "actual_rule_keys": [
+        "SEC-03"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4545.388457999998,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "os.system command injection security rule",
+          "purpose": "Check playbook rules regarding the use of os.system with untrusted user input."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "SEC-03",
+          "playbook_chunk_id": "48356bc4-1167-48f1-a68b-5baef2ba64f6",
+          "source_path": "reports.py",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "os.system(\"generate-report \" + request.args[\"name\"])",
+          "explanation": "The code uses os.system with string concatenation involving request.args['name'], which is an externally controlled value. According to Rule SEC-03, process execution must use argument arrays rather than concatenated shell commands, and every externally controlled value must be validated.",
+          "severity": "high",
+          "confidence": 0.95
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code uses os.system with string concatenation involving request.args['name'], which violates Rule SEC-03 by using concatenated shell commands with externally controlled input."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 3902,
+        "output_tokens": 387,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "violating-003",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "authentication.md",
+      "content": "The API verifies the JWT signature but does not validate issuer or audience.",
+      "notes": "Signature-only token validation omits required claims.",
+      "candidate_rule_keys": [
+        "AUTH-01"
+      ],
+      "expected_rule_keys": [
+        "AUTH-01"
+      ],
+      "actual_rule_keys": [
+        "AUTH-01"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3647.724791999998,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "JWT validation issuer audience check",
+          "purpose": "Check governance rules regarding JWT verification completeness, specifically issuer and audience validation."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "AUTH-01",
+          "playbook_chunk_id": "5dfe37c5-4b82-428d-aa82-953c5414ed17",
+          "source_path": "authentication.md",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "The API verifies the JWT signature but does not validate issuer or audience.",
+          "explanation": "Rule AUTH-01 states that every service receiving a bearer token must validate its signature, issuer, audience, expiration time, and not-before time. The design document explicitly states that the API does not validate the issuer or audience.",
+          "severity": "high",
+          "confidence": 1.0
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "Rule AUTH-01 explicitly requires that every service receiving a bearer token must validate its signature, issuer, audience, expiration time, and not-before time. The design document states that the API does not validate issuer or audience, which violates this rule."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 3893,
+        "output_tokens": 390,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "violating-004",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "orders.py",
+      "content": "order.save()\ncharge_customer(order)\nline_items.save()",
+      "notes": "A multi-write business operation has no transaction boundary.",
+      "candidate_rule_keys": [
+        "DB-01"
+      ],
+      "expected_rule_keys": [
+        "DB-01"
+      ],
+      "actual_rule_keys": [],
+      "expected_status": "review_required",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The input snippet shows order saving and payment charging, but lacks necessary context regarding the application tier, error handling, transaction block setup, or idempotency keys to definitively determine a rule violation.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 1,
+        "exact_rule_match": false,
+        "status_match": false
+      },
+      "latency_ms": 2947.5027920000016,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "database save order execution order payment processing",
+          "purpose": "Find playbook rules regarding transaction safety and payment processing order."
+        },
+        {
+          "query": "line items save side effects database models",
+          "purpose": "Find playbook rules regarding cascading saves and model persistence standards."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2629,
+        "output_tokens": 151,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "violating-005",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "Clients retry timed-out payment creation requests without an idempotency key.",
+      "notes": "Retrying a state-changing payment can create duplicate charges.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [
+        "API-02"
+      ],
+      "actual_rule_keys": [],
+      "expected_status": "review_required",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 1,
+        "exact_rule_match": false,
+        "status_match": false
+      },
+      "latency_ms": 2693.4792079999993,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "idempotency key payment creation retry",
+          "purpose": "Find rules regarding idempotency for payment APIs and retry handling."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [
+        {
+          "finding_index": 0,
+          "code": "input_excerpt_mismatch",
+          "reason": "The input excerpt is not the verbatim text at the cited lines."
+        },
+        {
+          "finding_index": 1,
+          "code": "input_excerpt_mismatch",
+          "reason": "The input excerpt is not the verbatim text at the cited lines."
+        }
+      ],
+      "proposal_count": 2,
+      "deterministic_rejection_count": 2,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1955,
+        "output_tokens": 440,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "clean-001",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "logger.info(\"authentication completed for user_id=%s\", user.id)",
+      "notes": "The log contains an identifier but no credential or secret.",
+      "candidate_rule_keys": [
+        "SEC-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2954.0088749999995,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "logging security PII authentication user id",
+          "purpose": "Determine if logging user identifiers without explicit masking violates logging or privacy policies."
+        },
+        {
+          "query": "authentication logging rules playbook",
+          "purpose": "Check specific playbook requirements for logging events related to authentication."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2278,
+        "output_tokens": 78,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "clean-002",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "reports.py",
+      "content": "subprocess.run([\"generate-report\", validated_name], check=True)",
+      "notes": "Validated input is passed through an argument array without a shell.",
+      "candidate_rule_keys": [
+        "SEC-03"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2666.727124999994,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "subprocess execution security rule",
+          "purpose": "Check for secure subprocess handling policies and restrictions."
+        },
+        {
+          "query": "command injection prevention playbook",
+          "purpose": "Identify rules regarding safe command execution and argument validation."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2587,
+        "output_tokens": 105,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "clean-003",
+      "case_type": "clean",
+      "input_type": "design_document",
+      "source_path": "authentication.md",
+      "content": "The API validates JWT signature, issuer, audience, expiration, and not-before claims.",
+      "notes": "The design explicitly includes the required token checks.",
+      "candidate_rule_keys": [
+        "AUTH-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2274.678292000004,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "JWT validation claims signature expiration audience issuer",
+          "purpose": "Check playbook rules regarding JWT validation requirements and claim checks."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1915,
+        "output_tokens": 77,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "clean-004",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "orders.py",
+      "content": "with database.transaction():\n    order.save()\n    line_items.save()",
+      "notes": "Related writes execute within one transaction.",
+      "candidate_rule_keys": [
+        "DB-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2850.615624999989,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "database transaction management and save operations",
+          "purpose": "Check rules regarding transactional safety and ORM usage in database updates."
+        },
+        {
+          "query": "orders and line items bulk save guidelines",
+          "purpose": "Verify governance rules for saving related entity models within a single transaction."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2969,
+        "output_tokens": 117,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "clean-005",
+      "case_type": "clean",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "Payment creation requires an idempotency key and replays the stored first response.",
+      "notes": "The design supplies deterministic replay protection.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2216.2672919999977,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "idempotency key requirements payment creation",
+          "purpose": "Find rules governing idempotency keys and replay behavior for payment APIs."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1968,
+        "output_tokens": 79,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "ambiguous-001",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "audit_authentication(authentication_result)",
+      "notes": "The helper implementation is unavailable, so logged fields are unknown.",
+      "candidate_rule_keys": [
+        "SEC-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The provided code snippet only shows a function call 'audit_authentication(authentication_result)', but lacks the surrounding implementation details necessary to verify compliance with rules such as OBS-04 (audit event structure, required fields, protection) and SEC-01 (sensitive data handling in logs/audits).",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3533.5337500000037,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "authentication audit logging requirements",
+          "purpose": "Find playbook rules regarding logging and auditing of authentication events in auth.py."
+        },
+        {
+          "query": "security audit function usage standards",
+          "purpose": "Identify governance rules for calling audit functions like audit_authentication."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2262,
+        "output_tokens": 175,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "ambiguous-002",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "reports.py",
+      "content": "run_report(requested_report)",
+      "notes": "The helper may validate input or invoke a shell; its implementation is missing.",
+      "candidate_rule_keys": [
+        "SEC-03"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The provided code snippet only contains a single line calling a report function with an input variable ('run_report(requested_report)'). Implementation details such as input validation, authorization checks, tier classification, and how 'requested_report' is handled are absent, making it impossible to confirm a rule violation.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3213.2138329999975,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "report execution function security rules",
+          "purpose": "Find playbook rules regarding the authorization and execution of reports from untrusted input."
+        },
+        {
+          "query": "dynamic function call governance reports.py",
+          "purpose": "Check for compliance standards related to running dynamically requested reports."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2605,
+        "output_tokens": 176,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "ambiguous-003",
+      "case_type": "ambiguous",
+      "input_type": "design_document",
+      "source_path": "authentication.md",
+      "content": "The shared identity library validates incoming access tokens.",
+      "notes": "The validated claims and identity-library configuration are unspecified.",
+      "candidate_rule_keys": [
+        "AUTH-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The design document states that the shared identity library validates incoming access tokens, but it lacks specific implementation details on whether it validates signature, issuer, audience, expiration time, not-before time, and explicitly configures the signing algorithm as required by rule AUTH-01.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2722.543291999983,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "shared identity library token validation rules",
+          "purpose": "Find playbook rules governing authentication token validation and shared identity libraries."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1920,
+        "output_tokens": 131,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "ambiguous-004",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "orders.py",
+      "content": "save_order_and_items(order, items)",
+      "notes": "The helper's transaction behavior cannot be observed from the call site.",
+      "candidate_rule_keys": [
+        "DB-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The provided code snippet only shows a function signature 'save_order_and_items(order, items)' without its body implementation details. Therefore, it is impossible to verify whether database transactions or proper error rollbacks are actually implemented.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3196.154084,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "database transaction atomic operations orders items",
+          "purpose": "Find playbook rules regarding atomic saves or database transactions when creating related records like orders and items."
+        },
+        {
+          "query": "order processing governance validation functions",
+          "purpose": "Identify any naming conventions or architectural requirements for order-related service functions."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3264,
+        "output_tokens": 168,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "ambiguous-005",
+      "case_type": "ambiguous",
+      "input_type": "design_document",
+      "source_path": "payments.md",
+      "content": "The payment API includes duplicate-request protection.",
+      "notes": "The document does not define key scope, storage, or replay behavior.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The input states that the payment API includes duplicate-request protection, but lacks required implementation details such as whether it supports an idempotency key bound to the caller and request hash, stores/returns terminal responses, and correctly handles payload mismatches as required by rule API-02.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2749.900916999991,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "duplicate request protection payment API idempotency rules",
+          "purpose": "Find playbook rules regarding idempotency and duplicate request handling for payment APIs"
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1962,
+        "output_tokens": 137,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "irrelevant-001",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "brand.md",
+      "content": "The company logo uses blue and white variants on dark backgrounds.",
+      "notes": "Brand colors are outside the engineering playbook.",
+      "candidate_rule_keys": [
+        "GOV-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2192.7643330000137,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "logo color variants blue and white dark backgrounds",
+          "purpose": "Find brand guidelines regarding logo color usage and background contrast."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 1957,
+        "output_tokens": 78,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "irrelevant-002",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "office.md",
+      "content": "The office air conditioner should remain at twenty-four degrees Celsius.",
+      "notes": "Office temperature has no applicable engineering rule.",
+      "candidate_rule_keys": [
+        "GOV-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3185.521291999976,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "office temperature setting rules",
+          "purpose": "to find governance rules related to office air conditioning and thermostat settings"
+        },
+        {
+          "query": "climate control policy twenty-four degrees",
+          "purpose": "to check compliance standards for specific temperature thresholds in workspace guidelines"
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3292,
+        "output_tokens": 114,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "irrelevant-003",
+      "case_type": "irrelevant",
+      "input_type": "code_diff",
+      "source_path": "styles.css",
+      "content": ".title { font-family: Inter, sans-serif; }",
+      "notes": "A font choice is unrelated to structured application logging.",
+      "candidate_rule_keys": [
+        "OBS-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2746.1690419999627,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "CSS font family standards typography rules",
+          "purpose": "Check compliance with approved typography and font-family guidelines in CSS styles"
+        },
+        {
+          "query": "CSS styling governance rules",
+          "purpose": "Identify general style sheet formatting and naming conventions"
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2617,
+        "output_tokens": 111,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "irrelevant-004",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "language-choice.md",
+      "content": "The team is comparing Python and Go for a command-line utility.",
+      "notes": "Language preference alone does not violate an engineering rule.",
+      "candidate_rule_keys": [
+        "GOV-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 3930.5450420000057,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "approved programming languages for command-line utilities",
+          "purpose": "Identify governance policies regarding language choices for CLI tools."
+        },
+        {
+          "query": "Python vs Go technology stack guidelines",
+          "purpose": "Check engineering standards for evaluating and selecting backend languages."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3265,
+        "output_tokens": 112,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "irrelevant-005",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "vacation.md",
+      "content": "Employees should submit summer vacation requests before May.",
+      "notes": "Vacation scheduling is unrelated to application data retention.",
+      "candidate_rule_keys": [
+        "DATA-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2715.760791999969,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "vacation request timeline policy",
+          "purpose": "Find playbook rules regarding deadlines for submitting vacation requests."
+        },
+        {
+          "query": "summer leave submission guidelines",
+          "purpose": "Identify governance requirements for seasonal time-off requests."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2582,
+        "output_tokens": 107,
+        "thinking_tokens": 0
+      }
+    }
+  ]
+}

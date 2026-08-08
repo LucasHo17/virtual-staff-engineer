@@ -1,0 +1,188 @@
+{
+  "generated_at": "2026-08-07T13:57:03.859009+00:00",
+  "run_status": "partial",
+  "dataset": {
+    "dataset_id": "phase2-workflow-acceptance-v1",
+    "status": "frozen",
+    "source_path": "evaluation_data/analysis_workflow_cases.json",
+    "total_case_count": 20,
+    "selected_case_count": 1,
+    "review": {
+      "reviewed_on": "2026-08-07",
+      "reviewed_case_count": 20,
+      "review_method": "Each expected outcome and candidate rule was cross-checked against evaluation_playbook.md version 1.",
+      "resolution": "Separated missing submitted-input context from missing playbook context before freezing. All 20 labels approved for the Phase 2 development benchmark."
+    }
+  },
+  "corpus": {
+    "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+    "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "embedding_model": "models/gemini-embedding-2",
+    "embedding_dimension": 1536,
+    "chunk_count": 31,
+    "rule_keys": [
+      "API-01",
+      "API-02",
+      "API-03",
+      "API-04",
+      "API-05",
+      "AUTH-01",
+      "AUTH-02",
+      "AUTH-03",
+      "AUTH-04",
+      "DATA-01",
+      "DB-01",
+      "DB-02",
+      "DB-03",
+      "DB-04",
+      "DB-05",
+      "DEP-01",
+      "GOV-01",
+      "OBS-01",
+      "OBS-02",
+      "OBS-03",
+      "OBS-04",
+      "REL-01",
+      "REL-02",
+      "REL-03",
+      "REL-04",
+      "REL-05",
+      "SEC-01",
+      "SEC-02",
+      "SEC-03",
+      "SEC-04",
+      "SEC-05"
+    ]
+  },
+  "config": {
+    "model": "gemini-3.5-flash-lite",
+    "top_k": 5,
+    "candidate_k": 20,
+    "max_iterations": 2,
+    "thinking_budget": null,
+    "input_cost_per_million": 0.3,
+    "output_cost_per_million": 2.5
+  },
+  "summary": {
+    "case_count": 1,
+    "quality": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "exact_rule_accuracy": 1.0,
+      "status_accuracy": 1.0,
+      "violating_detection_rate": 1.0,
+      "clean_false_positive_rate": 0.0,
+      "irrelevant_false_positive_rate": 0.0,
+      "ambiguous_inconclusive_rate": 0.0
+    },
+    "safety": {
+      "deterministic_rejection_count": 0,
+      "deterministic_rejection_rate": 0.0,
+      "unsupported_decision_count": 0,
+      "unsupported_decision_rate": 0.0
+    },
+    "workflow": {
+      "average_queries": 2.0,
+      "average_iterations": 1.0
+    },
+    "latency_ms": {
+      "p50": 4612.559375,
+      "p95": 4612.559375,
+      "mean": 4612.559375
+    },
+    "usage": {
+      "model_calls": 3,
+      "input_tokens": 4469,
+      "output_tokens": 384,
+      "thinking_tokens": 0,
+      "billed_output_tokens": 384,
+      "embedding_requests": 2,
+      "estimated_reasoning_cost_usd": 0.0023006999999999997
+    },
+    "by_case_type": {
+      "violating": {
+        "case_count": 1,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 0.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "violating-001",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "auth.py",
+      "content": "logger.info(\"access_token=%s\", access_token)",
+      "notes": "An access token is written directly to application logs.",
+      "candidate_rule_keys": [
+        "SEC-01"
+      ],
+      "expected_rule_keys": [
+        "SEC-01"
+      ],
+      "actual_rule_keys": [
+        "SEC-01"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4612.559375,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "logging secrets tokens credentials",
+          "purpose": "Identify rules regarding logging sensitive information like access tokens."
+        },
+        {
+          "query": "secure logging practices",
+          "purpose": "Check for general code governance guidelines on what is safe to log."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "SEC-01",
+          "playbook_chunk_id": "45888ad8-b06c-4500-8037-299de88f6925",
+          "source_path": "auth.py",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "logger.info(\"access_token=%s\", access_token)",
+          "explanation": "Rule SEC-01 explicitly states that applications must not write access tokens or other sensitive authentication data to logs.",
+          "severity": "high",
+          "confidence": 0.99
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code logs an access token using logger.info(\"access_token=%s\", access_token), which violates Rule SEC-01 prohibiting writing access tokens to logs."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 4469,
+        "output_tokens": 384,
+        "thinking_tokens": 0
+      }
+    }
+  ]
+}

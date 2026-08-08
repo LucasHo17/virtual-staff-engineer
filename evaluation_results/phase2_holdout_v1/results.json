@@ -1,0 +1,1214 @@
+{
+  "generated_at": "2026-08-07T17:38:54.686979+00:00",
+  "run_status": "complete",
+  "dataset": {
+    "dataset_id": "phase2-agent-holdout-v1",
+    "status": "frozen",
+    "source_path": "evaluation_data/analysis_holdout_v1.json",
+    "total_case_count": 20,
+    "selected_case_count": 20,
+    "review": {
+      "reviewed_on": "2026-08-08",
+      "reviewed_case_count": 20,
+      "review_method": "Independent human review of all 20 cases against every rule in evaluation_playbook.md version 1, completed before any agent exposure.",
+      "resolution": "All 20 labels approved with zero changes. AUTH-02 remains the sole label for holdout-violating-004 because OBS-04 is a consequence/audit obligation rather than the root-cause access-control violation. No case required overlapping expected rules."
+    }
+  },
+  "corpus": {
+    "document_id": "96297998-a2a7-44da-86ac-4e49e6966263",
+    "playbook_version_id": "5457f2e9-d1ac-429e-97d6-20a99376aa8c",
+    "filename": "evaluation_playbook.md",
+    "category": "evaluation",
+    "version": 1,
+    "embedding_model": "models/gemini-embedding-2",
+    "embedding_dimension": 1536,
+    "chunk_count": 31,
+    "rule_keys": [
+      "API-01",
+      "API-02",
+      "API-03",
+      "API-04",
+      "API-05",
+      "AUTH-01",
+      "AUTH-02",
+      "AUTH-03",
+      "AUTH-04",
+      "DATA-01",
+      "DB-01",
+      "DB-02",
+      "DB-03",
+      "DB-04",
+      "DB-05",
+      "DEP-01",
+      "GOV-01",
+      "OBS-01",
+      "OBS-02",
+      "OBS-03",
+      "OBS-04",
+      "REL-01",
+      "REL-02",
+      "REL-03",
+      "REL-04",
+      "REL-05",
+      "SEC-01",
+      "SEC-02",
+      "SEC-03",
+      "SEC-04",
+      "SEC-05"
+    ]
+  },
+  "config": {
+    "model": "gemini-3.5-flash-lite",
+    "top_k": 5,
+    "candidate_k": 20,
+    "max_iterations": 2,
+    "case_delay_seconds": 15.0,
+    "thinking_budget": null,
+    "input_cost_per_million": 0.3,
+    "output_cost_per_million": 2.5
+  },
+  "summary": {
+    "case_count": 20,
+    "quality": {
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "f1": 0.9090909090909091,
+      "exact_rule_accuracy": 0.95,
+      "status_accuracy": 0.95,
+      "violating_detection_rate": 1.0,
+      "clean_false_positive_rate": 0.2,
+      "irrelevant_false_positive_rate": 0.0,
+      "ambiguous_inconclusive_rate": 1.0
+    },
+    "safety": {
+      "deterministic_rejection_count": 0,
+      "deterministic_rejection_rate": 0.0,
+      "unsupported_decision_count": 0,
+      "unsupported_decision_rate": 0.0
+    },
+    "workflow": {
+      "average_queries": 1.8,
+      "average_iterations": 1.0
+    },
+    "latency_ms": {
+      "p50": 2615.8587500000012,
+      "p95": 4224.647832999999,
+      "mean": 3039.5766354499997
+    },
+    "usage": {
+      "model_calls": 46,
+      "input_tokens": 69659,
+      "output_tokens": 3880,
+      "thinking_tokens": 0,
+      "billed_output_tokens": 3880,
+      "embedding_requests": 36,
+      "estimated_reasoning_cost_usd": 0.030597700000000002
+    },
+    "by_case_type": {
+      "ambiguous": {
+        "case_count": 5,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 1.0
+      },
+      "clean": {
+        "case_count": 5,
+        "status_accuracy": 0.8,
+        "exact_rule_accuracy": 0.8,
+        "false_positive_rate": 0.2,
+        "inconclusive_rate": 0.0
+      },
+      "irrelevant": {
+        "case_count": 5,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 0.0
+      },
+      "violating": {
+        "case_count": 5,
+        "status_accuracy": 1.0,
+        "exact_rule_accuracy": 1.0,
+        "false_positive_rate": 0.0,
+        "inconclusive_rate": 0.0
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "holdout-violating-001",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "checkout.py",
+      "content": "inventory.reserve(item.sku, item.quantity)\npurchase.save()\nreceipt.save()",
+      "notes": "Several durable writes form one checkout operation without a visible transaction boundary.",
+      "candidate_rule_keys": [
+        "DB-01"
+      ],
+      "expected_rule_keys": [
+        "DB-01"
+      ],
+      "actual_rule_keys": [
+        "DB-01"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4200.65975,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "inventory reservation database transaction rollback error handling",
+          "purpose": "Check governance rules for handling failures during inventory reservation."
+        },
+        {
+          "query": "sequential model saves without atomic transaction",
+          "purpose": "Identify playbooks related to atomicity when saving multiple related records like purchase and receipt."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "DB-01",
+          "playbook_chunk_id": "e5ae94c6-6c9d-46a7-adbb-c6f6faf7d6ef",
+          "source_path": "checkout.py",
+          "start_line": 1,
+          "end_line": 3,
+          "input_excerpt": "inventory.reserve(item.sku, item.quantity)\npurchase.save()\nreceipt.save()",
+          "explanation": "Multiple durable writes (inventory reservation, purchase save, and receipt save) are performed sequentially without an enclosing database transaction to ensure atomicity and rollback on failure.",
+          "severity": "high",
+          "confidence": 0.95
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code performs sequential durable writes across inventory reservation, purchase save, and receipt save without any enclosing database transaction or atomic boundary, directly violating Rule DB-01."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 4729,
+        "output_tokens": 361,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-violating-002",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "transfers.md",
+      "content": "POST /transfers accepts no idempotency key and creates a new transfer record whenever an identical request is submitted again.",
+      "notes": "Duplicate non-repeatable transfer requests create duplicate financial records.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [
+        "API-02"
+      ],
+      "actual_rule_keys": [
+        "API-02"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4224.647832999999,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "idempotency key required for payment transfer POST endpoints",
+          "purpose": "Find governance rules regarding idempotency for financial transfer APIs."
+        },
+        {
+          "query": "duplicate transaction prevention api design",
+          "purpose": "Check policies on preventing duplicate record creation on repeated identical requests."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "API-02",
+          "playbook_chunk_id": "7ab1aed8-0a76-4a46-a8f6-344ef3fe11aa",
+          "source_path": "transfers.md",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "POST /transfers accepts no idempotency key and creates a new transfer record whenever an identical request is submitted again.",
+          "explanation": "POST /transfers creates financial records and state changes without accepting an idempotency key, violating rule API-02 which requires state-changing requests to support an idempotency key to prevent duplicate creation on retry.",
+          "severity": "high",
+          "confidence": 1.0
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The design document explicitly states that POST /transfers accepts no idempotency key and creates a new transfer record on identical requests, which violates Rule API-02 requiring idempotency keys for operations that create financial records."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 4791,
+        "output_tokens": 380,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-violating-003",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "settings.py",
+      "content": "PRODUCTION_DATABASE_PASSWORD = \"correct-horse-battery-staple\"",
+      "notes": "A production credential is embedded directly in source code.",
+      "candidate_rule_keys": [
+        "SEC-02"
+      ],
+      "expected_rule_keys": [
+        "SEC-02"
+      ],
+      "actual_rule_keys": [
+        "SEC-02"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4215.0613340000045,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "hardcoded database password secret management rule",
+          "purpose": "Check if storing raw database passwords in settings files violates security governance playbooks."
+        },
+        {
+          "query": "PRODUCTION_DATABASE_PASSWORD configuration guidelines",
+          "purpose": "Find specific rules regarding environment variables and credential handling in Python settings."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "SEC-02",
+          "playbook_chunk_id": "f5dd9d40-3df9-4e6b-afb6-c91d8ba05666",
+          "source_path": "settings.py",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "PRODUCTION_DATABASE_PASSWORD = \"correct-horse-battery-staple\"",
+          "explanation": "The production database password is hardcoded directly into a plaintext configuration file (settings.py), violating Rule SEC-02 which states that database passwords must not be stored in plaintext configuration files or committed to source control.",
+          "severity": "high",
+          "confidence": 0.99
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code hardcodes a production database password directly in the settings.py file, which directly violates Rule SEC-02 prohibiting storing secrets in plaintext configuration files or committing them to source control."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 5306,
+        "output_tokens": 382,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-violating-004",
+      "case_type": "violating",
+      "input_type": "design_document",
+      "source_path": "invoices.md",
+      "content": "An authenticated customer can download any invoice by changing the invoice_id path parameter; the service does not check invoice ownership.",
+      "notes": "Authentication is present, but object-level authorization is absent.",
+      "candidate_rule_keys": [
+        "AUTH-02"
+      ],
+      "expected_rule_keys": [
+        "AUTH-02"
+      ],
+      "actual_rule_keys": [
+        "AUTH-02"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4121.388625000001,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "authorization check access control IDOR invoice",
+          "purpose": "Find playbook rules regarding ownership verification and object-level authorization for downloaded resources."
+        },
+        {
+          "query": "authentication session validation path parameter",
+          "purpose": "Find rules governing secure access to resource endpoints via path parameters."
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "AUTH-02",
+          "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+          "source_path": "invoices.md",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "An authenticated customer can download any invoice by changing the invoice_id path parameter; the service does not check invoice ownership.",
+          "explanation": "The design document explicitly states that the service does not check invoice ownership when a user changes the invoice_id path parameter, which violates the requirement for server-side authorization and resource ownership verification.",
+          "severity": "high",
+          "confidence": 1.0
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The design document explicitly states that the service does not check invoice ownership when the invoice_id path parameter is changed, violating Rule AUTH-02 which mandates server-side verification of resource ownership."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 4764,
+        "output_tokens": 346,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-violating-005",
+      "case_type": "violating",
+      "input_type": "code_diff",
+      "source_path": "metrics.py",
+      "content": "requests_total.labels(user_id=request.user.id, request_id=request.id).inc()",
+      "notes": "Unbounded user and request identifiers create high-cardinality metric labels.",
+      "candidate_rule_keys": [
+        "OBS-02"
+      ],
+      "expected_rule_keys": [
+        "OBS-02"
+      ],
+      "actual_rule_keys": [
+        "OBS-02"
+      ],
+      "expected_status": "review_required",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 1,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 4118.7900000000045,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "metrics cardinality user_id request_id",
+          "purpose": "Check for high cardinality label usage in Prometheus metrics"
+        },
+        {
+          "query": "prometheus counter labels guidelines",
+          "purpose": "Identify rules regarding allowed label types and dimensions in metrics"
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "OBS-02",
+          "playbook_chunk_id": "c340f7fc-9192-491f-bc0e-05ca55f583a8",
+          "source_path": "metrics.py",
+          "start_line": 1,
+          "end_line": 1,
+          "input_excerpt": "requests_total.labels(user_id=request.user.id, request_id=request.id).inc()",
+          "explanation": "The metric uses unbounded values (`user_id` and `request_id`) as label dimensions, which violates Rule OBS-02 by creating a cardinality explosion.",
+          "severity": "high",
+          "confidence": 0.95
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code uses `user_id` and `request_id` as label dimensions on a metric, which directly violates Rule OBS-02 prohibiting unbounded values such as user IDs and request IDs as metric labels due to cardinality explosions."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 6110,
+        "output_tokens": 373,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-clean-001",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "checkout.py",
+      "content": "with database.transaction():\n    inventory.reserve(item.sku, item.quantity)\n    purchase.save()\n    receipt.save()",
+      "notes": "The related durable writes share one explicit transaction boundary.",
+      "candidate_rule_keys": [
+        "DB-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2555.5104999999967,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "database transaction inventory reservation purchase save",
+          "purpose": "Find playbook rules regarding database transaction boundaries and service calls inside transactions."
+        },
+        {
+          "query": "checkout payment inventory save ordering governance",
+          "purpose": "Find rules on the correct sequence of saving purchase and inventory records."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2775,
+        "output_tokens": 116,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-clean-002",
+      "case_type": "clean",
+      "input_type": "design_document",
+      "source_path": "transfers.md",
+      "content": "POST /transfers requires an idempotency key bound to the caller and request hash, persists the terminal response, and rejects reuse with a different payload.",
+      "notes": "The transfer contract describes the required idempotency behavior.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2615.8587500000012,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "idempotency key requirements transfers API",
+          "purpose": "Find playbook rules regarding idempotency key implementation, payload binding, and reuse prevention for POST endpoints."
+        },
+        {
+          "query": "terminal response persistence guidelines",
+          "purpose": "Check engineering governance rules for persisting and handling terminal responses in transactional APIs."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3074,
+        "output_tokens": 122,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-clean-003",
+      "case_type": "clean",
+      "input_type": "design_document",
+      "source_path": "secrets.md",
+      "content": "Production database credentials are loaded at runtime from the approved secret manager, scoped to the service identity, and rotated without rebuilding the image.",
+      "notes": "Secrets are externally managed, scoped, and rotatable.",
+      "candidate_rule_keys": [
+        "SEC-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2158.095583000005,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "secret management runtime credentials rotation guidelines",
+          "purpose": "Find playbook rules regarding how production database credentials and runtime secrets must be loaded, scoped, and rotated."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2058,
+        "output_tokens": 85,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-clean-004",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "invoices.py",
+      "content": "invoice = Invoice.for_customer(current_user.id).get(invoice_id)\nreturn download(invoice)",
+      "notes": "The lookup scopes the resource to the authenticated owner before download.",
+      "candidate_rule_keys": [
+        "AUTH-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [
+        "AUTH-02"
+      ],
+      "expected_status": "completed_clean",
+      "actual_status": "review_required",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 1,
+        "false_negatives": 0,
+        "exact_rule_match": false,
+        "status_match": false
+      },
+      "latency_ms": 4711.017707999986,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "authorization check access control invoice download",
+          "purpose": "Check if accessing an invoice by ID requires verifying ownership or permissions against current_user"
+        },
+        {
+          "query": "insecure direct object reference idor policy",
+          "purpose": "Identify rules regarding fetching resources using user-supplied identifiers without validation"
+        }
+      ],
+      "findings": [
+        {
+          "rule_key": "AUTH-02",
+          "playbook_chunk_id": "01fb5eee-d89f-4d46-a1a5-881532573da9",
+          "source_path": "invoices.py",
+          "start_line": 1,
+          "end_line": 2,
+          "input_excerpt": "invoice = Invoice.for_customer(current_user.id).get(invoice_id)\nreturn download(invoice)",
+          "explanation": "The code retrieves an invoice directly using only invoice_id combined with current_user.id, but does not verify whether the specific invoice belongs to the tenant or if explicit ownership of the specific resource is fully validated beyond the initial query scope, risking an insecure direct object reference (IDOR).",
+          "severity": "high",
+          "confidence": 0.85
+        }
+      ],
+      "decisions": [
+        {
+          "finding_index": 0,
+          "verdict": "supported",
+          "reason": "The code uses `Invoice.for_customer(current_user.id).get(invoice_id)`, which scopes the query to `current_user.id`. The rule AUTH-02 explicitly states that database queries should include tenant or owner scope and that handlers must verify ownership of the specific resource being accessed. The analysis correctly identifies that retrieving records using only `invoice_id` within a potentially unscoped or partially verified context risks IDOR, and the rule explicitly covers this requirement."
+        }
+      ],
+      "rejections": [],
+      "proposal_count": 1,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 3,
+        "input_tokens": 6116,
+        "output_tokens": 461,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-clean-005",
+      "case_type": "clean",
+      "input_type": "code_diff",
+      "source_path": "metrics.py",
+      "content": "requests_total.labels(method=request.method, route=request.route_template, status=response.status_code).inc()",
+      "notes": "Metric labels use bounded dimensions rather than unique identifiers.",
+      "candidate_rule_keys": [
+        "OBS-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2142.600041999998,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "metrics instrumentation prometheus labels high cardinality",
+          "purpose": "Check rules regarding the use of dynamic labels such as route templates versus raw routes in metrics."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2118,
+        "output_tokens": 66,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-ambiguous-001",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "checkout.py",
+      "content": "persist_checkout(purchase, inventory, receipt)",
+      "notes": "The helper implementation is required to determine its transaction boundary.",
+      "candidate_rule_keys": [
+        "DB-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The submitted input consists only of a single-line function call 'persist_checkout(purchase, inventory, receipt)' without any internal implementation details. The code does not show whether database transactions, error handling, or atomicity are implemented. Therefore, required implementation details are absent and more input is needed to evaluate compliance with Rule DB-01.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2949.9232499999835,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "checkout persistence transaction rules",
+          "purpose": "Find playbook rules regarding database operations and persistence in checkout flows."
+        },
+        {
+          "query": "inventory management checkout validation",
+          "purpose": "Identify rules governing inventory updates during purchase persistence."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3377,
+        "output_tokens": 176,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-ambiguous-002",
+      "case_type": "ambiguous",
+      "input_type": "design_document",
+      "source_path": "transfers.md",
+      "content": "The transfer endpoint protects callers from duplicate submissions.",
+      "notes": "The document omits key scope, payload binding, response persistence, and mismatch behavior.",
+      "candidate_rule_keys": [
+        "API-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The submitted design document only contains a high-level statement that the transfer endpoint protects against duplicate submissions (line 1), but lacks required implementation details such as how idempotency keys are bound, stored, and verified according to Rule API-02.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2073.1846250000103,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "idempotency duplicate submissions transfer endpoint design",
+          "purpose": "Find playbook rules regarding idempotency and duplicate prevention for transfer endpoints."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2061,
+        "output_tokens": 130,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-ambiguous-003",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "settings.py",
+      "content": "database_password = load_database_password()",
+      "notes": "The helper may use an approved secret store or an unsafe local source.",
+      "candidate_rule_keys": [
+        "SEC-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The input line calls load_database_password(), but the implementation details of how the password is obtained and loaded are absent, so it cannot be determined whether an approved secret manager or secure environment variable is used.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2842.8721249999853,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "database_password secret configuration settings",
+          "purpose": "Find rules regarding handling passwords and secrets in settings files."
+        },
+        {
+          "query": "hardcoded secrets credentials detection",
+          "purpose": "Check for potential plaintext credentials in code diffs."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2321,
+        "output_tokens": 124,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-ambiguous-004",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "invoices.py",
+      "content": "authorize_invoice_access(current_user, invoice_id)",
+      "notes": "The authorization helper's ownership and policy checks are not visible.",
+      "candidate_rule_keys": [
+        "AUTH-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The input only shows a function call to authorize_invoice_access, but lacks the necessary implementation details to verify if authorization is correctly enforced on the server for every protected operation according to Rule AUTH-02.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2658.4027499999934,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "authorization access control invoices",
+          "purpose": "Find playbook rules related to authorization checks on invoice access."
+        },
+        {
+          "query": "user permissions authentication current_user",
+          "purpose": "Find governance policies for verifying user roles and permissions in functions."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2725,
+        "output_tokens": 153,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-ambiguous-005",
+      "case_type": "ambiguous",
+      "input_type": "code_diff",
+      "source_path": "metrics.py",
+      "content": "record_request_metrics(request, response)",
+      "notes": "The emitted labels and their cardinality are hidden inside the helper.",
+      "candidate_rule_keys": [
+        "OBS-02"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "inconclusive",
+      "actual_status": "inconclusive",
+      "inconclusive_reason": "The input only shows a function call to record_request_metrics without showing the implementation details, label sets, or metric definitions, making it impossible to determine if bounded sets are used or if any violations of Rule OBS-02 or other observability rules actually occur.",
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2947.6194580000197,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "metrics recording standards and naming conventions",
+          "purpose": "Find playbook rules regarding metric collection and function naming in metrics.py"
+        },
+        {
+          "query": "telemetry and observability governance rules",
+          "purpose": "Check for mandatory telemetry parameters and error handling guidelines when recording requests"
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2406,
+        "output_tokens": 170,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-irrelevant-001",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "cafeteria.md",
+      "content": "Friday lunch service will add a vegetarian noodle option.",
+      "notes": "A cafeteria menu is outside the engineering playbook.",
+      "candidate_rule_keys": [
+        "DATA-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2532.817792000003,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "cafeteria menu additions vegetarian options policy",
+          "purpose": "Find governance rules regarding food service and menu changes in cafeteria design documents."
+        },
+        {
+          "query": "Friday lunch service guidelines",
+          "purpose": "Check for specific scheduling or operational restrictions on lunch services."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3725,
+        "output_tokens": 87,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-irrelevant-002",
+      "case_type": "irrelevant",
+      "input_type": "code_diff",
+      "source_path": "theme.css",
+      "content": ":root { --brand-accent: #6c5ce7; }",
+      "notes": "A CSS color variable has no transport-encryption relevance.",
+      "candidate_rule_keys": [
+        "SEC-04"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2491.0443750000013,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "theme css design tokens brand accent color rules",
+          "purpose": "Find rules governing CSS custom properties and color variables in theme files."
+        },
+        {
+          "query": "css file modification governance brand guidelines",
+          "purpose": "Check for policies regarding styling changes and adherence to design systems."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2729,
+        "output_tokens": 82,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-irrelevant-003",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "offsite.md",
+      "content": "The engineering offsite will include a museum visit and a team dinner.",
+      "notes": "Social-event planning has no applicable engineering rule.",
+      "candidate_rule_keys": [
+        "GOV-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2565.8997499999714,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "engineering offsite events team dinner museum",
+          "purpose": "Find policies regarding company-sponsored events and offsites."
+        },
+        {
+          "query": "team building offsite budget guidelines",
+          "purpose": "Check rules governing offsite activities and associated costs."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 3409,
+        "output_tokens": 84,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-irrelevant-004",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "equipment.md",
+      "content": "Developers may choose either a compact or full-size mechanical keyboard.",
+      "notes": "Keyboard preferences are unrelated to graceful shutdown.",
+      "candidate_rule_keys": [
+        "REL-04"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2550.4980840000258,
+      "query_count": 2,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "mechanical keyboard layout standard",
+          "purpose": "Check rules regarding permitted keyboard types and hardware specifications."
+        },
+        {
+          "query": "developer hardware procurement guidelines",
+          "purpose": "Identify governance policies for developer equipment choices."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2999,
+        "output_tokens": 104,
+        "thinking_tokens": 0
+      }
+    },
+    {
+      "case_id": "holdout-irrelevant-005",
+      "case_type": "irrelevant",
+      "input_type": "design_document",
+      "source_path": "writing-style.md",
+      "content": "Documentation headings should use sentence case and avoid trailing punctuation.",
+      "notes": "Editorial style is not structured application logging.",
+      "candidate_rule_keys": [
+        "OBS-01"
+      ],
+      "expected_rule_keys": [],
+      "actual_rule_keys": [],
+      "expected_status": "completed_clean",
+      "actual_status": "completed_clean",
+      "inconclusive_reason": null,
+      "metrics": {
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "exact_rule_match": true,
+        "status_match": true
+      },
+      "latency_ms": 2115.640374999998,
+      "query_count": 1,
+      "iterations": 1,
+      "queries": [
+        {
+          "query": "documentation headings sentence case trailing punctuation",
+          "purpose": "Find playbook rules regarding documentation heading formatting, casing, and punctuation."
+        }
+      ],
+      "findings": [],
+      "decisions": [],
+      "rejections": [],
+      "proposal_count": 0,
+      "deterministic_rejection_count": 0,
+      "unsupported_decision_count": 0,
+      "usage": {
+        "model_calls": 2,
+        "input_tokens": 2066,
+        "output_tokens": 78,
+        "thinking_tokens": 0
+      }
+    }
+  ]
+}
