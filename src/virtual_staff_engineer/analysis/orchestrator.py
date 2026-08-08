@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from typing import Sequence, Tuple
+from typing import Optional
 
 from virtual_staff_engineer.analysis.contracts import (
     AnalysisInput,
+    AnalysisProposal,
     EvaluationDecision,
     ProposedFinding,
     RuleEvidence,
@@ -77,10 +79,23 @@ class AnalysisResult:
     evidence: Tuple[RuleEvidence, ...]
     queries: Tuple[SearchQuery, ...]
     iterations: int
+    inconclusive_reason: Optional[str] = None
 
     def __post_init__(self):
         if self.status not in ANALYSIS_STATUSES:
             raise ValueError(f"Unknown analysis status: {self.status}.")
+        if self.status == "inconclusive":
+            if (
+                not isinstance(self.inconclusive_reason, str)
+                or not self.inconclusive_reason.strip()
+            ):
+                raise ValueError(
+                    "inconclusive results require an inconclusive_reason."
+                )
+        elif self.inconclusive_reason is not None:
+            raise ValueError(
+                "inconclusive_reason is only valid for inconclusive results."
+            )
 
 
 class BoundedAnalysisOrchestrator:
@@ -108,9 +123,26 @@ class BoundedAnalysisOrchestrator:
         rejected_findings = []
 
         for iteration in range(1, self.limits.max_iterations + 1):
-            proposed_findings = tuple(
-                self.reasoner.propose_findings(analysis_input, evidence)
+            proposal = self.reasoner.propose_findings(
+                analysis_input, evidence
             )
+            if not isinstance(proposal, AnalysisProposal):
+                raise TypeError(
+                    "Reasoners must return an AnalysisProposal."
+                )
+            if proposal.needs_more_input:
+                return AnalysisResult(
+                    status="inconclusive",
+                    findings=(),
+                    evaluated_findings=(),
+                    decisions=(),
+                    rejected_findings=tuple(rejected_findings),
+                    evidence=evidence,
+                    queries=tuple(all_queries),
+                    iterations=iteration,
+                    inconclusive_reason=proposal.context_reason,
+                )
+            proposed_findings = proposal.findings
             if not proposed_findings:
                 return AnalysisResult(
                     status="completed_clean",
@@ -203,6 +235,7 @@ class BoundedAnalysisOrchestrator:
             evidence=evidence,
             queries=tuple(all_queries),
             iterations=min(iteration, self.limits.max_iterations),
+            inconclusive_reason=evaluation.context_reason,
         )
 
     def _retrieve(self, queries, existing_evidence):

@@ -129,6 +129,7 @@ class AnalysisRepository:
                         input_tokens = %s,
                         output_tokens = %s,
                         tool_call_count = %s,
+                        inconclusive_reason = %s,
                         error_message = NULL
                     WHERE analysis_run_id = %s
                       AND status = 'analyzing';
@@ -138,6 +139,7 @@ class AnalysisRepository:
                         input_tokens,
                         output_tokens,
                         len(result.queries),
+                        result.inconclusive_reason,
                         analysis_run_id,
                     ),
                 )

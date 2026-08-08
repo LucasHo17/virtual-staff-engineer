@@ -2,6 +2,7 @@
 
 from virtual_staff_engineer.analysis.contracts import (
     AnalysisInput,
+    AnalysisProposal,
     EvaluationDecision,
     EvaluationResult,
     ProposedFinding,
@@ -27,6 +28,7 @@ from virtual_staff_engineer.analysis.service import (
 
 __all__ = [
     "AnalysisInput",
+    "AnalysisProposal",
     "AnalysisResult",
     "AnalysisRepository",
     "AnalysisService",

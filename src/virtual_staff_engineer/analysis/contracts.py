@@ -147,6 +147,39 @@ class ProposedFinding:
 
 
 @dataclass(frozen=True)
+class AnalysisProposal:
+    """Analyst findings or an explicit declaration of missing input context."""
+
+    findings: Tuple[ProposedFinding, ...]
+    needs_more_input: bool = False
+    context_reason: Optional[str] = None
+
+    def __post_init__(self):
+        if not isinstance(self.findings, tuple) or not all(
+            isinstance(finding, ProposedFinding) for finding in self.findings
+        ):
+            raise ValueError(
+                "findings must be a tuple of ProposedFinding values."
+            )
+        if not isinstance(self.needs_more_input, bool):
+            raise ValueError("needs_more_input must be a boolean.")
+        if self.needs_more_input:
+            _require_optional_text(self.context_reason, "context_reason")
+            if self.context_reason is None:
+                raise ValueError(
+                    "context_reason is required when input context is missing."
+                )
+            if self.findings:
+                raise ValueError(
+                    "Missing-input proposals cannot also contain findings."
+                )
+        elif self.context_reason is not None:
+            raise ValueError(
+                "context_reason requires needs_more_input to be true."
+            )
+
+
+@dataclass(frozen=True)
 class EvaluationDecision:
     """The evaluator's independent verdict for one proposed finding."""
 
@@ -174,6 +207,7 @@ class EvaluationResult:
     decisions: Tuple[EvaluationDecision, ...]
     needs_more_context: bool = False
     additional_queries: Tuple[SearchQuery, ...] = ()
+    context_reason: Optional[str] = None
 
     def __post_init__(self):
         if not isinstance(self.decisions, tuple) or not all(
@@ -196,11 +230,23 @@ class EvaluationResult:
         ]
         if len(decision_indices) != len(set(decision_indices)):
             raise ValueError("Each finding may have only one evaluation decision.")
-        if self.needs_more_context and not self.additional_queries:
-            raise ValueError(
-                "additional_queries are required when more context is needed."
-            )
-        if not self.needs_more_context and self.additional_queries:
-            raise ValueError(
-                "additional_queries require needs_more_context to be true."
-            )
+        if self.needs_more_context:
+            if not self.additional_queries:
+                raise ValueError(
+                    "additional_queries are required when playbook context "
+                    "is needed."
+                )
+            _require_optional_text(self.context_reason, "context_reason")
+            if self.context_reason is None:
+                raise ValueError(
+                    "context_reason is required when more context is needed."
+                )
+        else:
+            if self.additional_queries:
+                raise ValueError(
+                    "additional_queries require needs_more_context to be true."
+                )
+            if self.context_reason is not None:
+                raise ValueError(
+                    "context_reason requires needs_more_context to be true."
+                )

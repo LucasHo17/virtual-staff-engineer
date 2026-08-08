@@ -2,6 +2,7 @@ import unittest
 
 from virtual_staff_engineer.analysis.contracts import (
     AnalysisInput,
+    AnalysisProposal,
     EvaluationDecision,
     EvaluationResult,
     ProposedFinding,
@@ -61,9 +62,22 @@ class AnalysisContractTests(unittest.TestCase):
         self.assertFalse(result.needs_more_context)
         self.assertEqual(result.decisions[0].verdict, "unsupported")
 
-    def test_more_context_requires_a_query(self):
+    def test_missing_input_context_is_explicit(self):
+        proposal = AnalysisProposal(
+            findings=(),
+            needs_more_input=True,
+            context_reason="The called helper implementation is missing.",
+        )
+
+        self.assertTrue(proposal.needs_more_input)
+
+    def test_more_playbook_context_requires_a_query_and_reason(self):
         with self.assertRaisesRegex(ValueError, "additional_queries"):
-            EvaluationResult(decisions=(), needs_more_context=True)
+            EvaluationResult(
+                decisions=(),
+                needs_more_context=True,
+                context_reason="A narrower rule is required.",
+            )
 
         result = EvaluationResult(
             decisions=(),
@@ -74,6 +88,7 @@ class AnalysisContractTests(unittest.TestCase):
                     purpose="Verify whether token logging is prohibited.",
                 ),
             ),
+            context_reason="A narrower rule is required.",
         )
         self.assertTrue(result.needs_more_context)
 

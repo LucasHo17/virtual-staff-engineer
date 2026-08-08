@@ -2,6 +2,7 @@ from typing import Protocol, Sequence, Tuple
 
 from virtual_staff_engineer.analysis.contracts import (
     AnalysisInput,
+    AnalysisProposal,
     EvaluationResult,
     ProposedFinding,
     RuleEvidence,
@@ -22,8 +23,8 @@ class AnalysisReasoner(Protocol):
         self,
         analysis_input: AnalysisInput,
         evidence: Sequence[RuleEvidence],
-    ) -> Tuple[ProposedFinding, ...]:
-        """Propose zero or more findings grounded in retrieved evidence."""
+    ) -> AnalysisProposal:
+        """Propose findings or identify missing submitted-input context."""
 
     def evaluate_findings(
         self,

@@ -2,6 +2,7 @@ import unittest
 
 from virtual_staff_engineer.analysis.contracts import (
     AnalysisInput,
+    AnalysisProposal,
     EvaluationDecision,
     EvaluationResult,
     ProposedFinding,
@@ -30,7 +31,7 @@ class FakeReasoner:
     def propose_findings(self, analysis_input, evidence):
         result = self.finding_rounds[self.proposal_calls]
         self.proposal_calls += 1
-        return result
+        return AnalysisProposal(findings=tuple(result))
 
     def evaluate_findings(self, analysis_input, findings, evidence):
         result = self.evaluation_rounds[self.evaluation_calls]
@@ -152,6 +153,7 @@ class AnalysisOrchestratorTests(unittest.TestCase):
                     additional_queries=(
                         _query("SEC-01 redaction requirements"),
                     ),
+                    context_reason="More playbook evidence is required.",
                 ),
                 EvaluationResult(
                     decisions=(
@@ -184,6 +186,7 @@ class AnalysisOrchestratorTests(unittest.TestCase):
                     decisions=(),
                     needs_more_context=True,
                     additional_queries=(_query("more context"),),
+                    context_reason="More playbook evidence is required.",
                 ),
             ),
         )

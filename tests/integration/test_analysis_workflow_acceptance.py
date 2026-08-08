@@ -3,6 +3,7 @@ from pathlib import Path
 
 from virtual_staff_engineer.analysis.contracts import (
     AnalysisInput,
+    AnalysisProposal,
     EvaluationDecision,
     EvaluationResult,
     ProposedFinding,
@@ -25,7 +26,7 @@ class ScriptedAcceptanceReasoner:
 
     def __init__(self, case):
         self.case = case
-        self.rule_key = case.relevant_rule_keys[0]
+        self.rule_key = case.candidate_rule_keys[0]
         self.evaluation_calls = 0
 
     def plan_queries(self, analysis_input):
@@ -38,9 +39,15 @@ class ScriptedAcceptanceReasoner:
 
     def propose_findings(self, analysis_input, evidence):
         if self.case.case_type == "irrelevant":
-            return ()
-        return (
-            ProposedFinding(
+            return AnalysisProposal(findings=())
+        if self.case.case_type == "ambiguous":
+            return AnalysisProposal(
+                findings=(),
+                needs_more_input=True,
+                context_reason=self.case.notes,
+            )
+        return AnalysisProposal(
+            findings=(ProposedFinding(
                 rule_key=self.rule_key,
                 playbook_chunk_id=f"chunk-{self.rule_key}",
                 source_path=analysis_input.source_path,
@@ -50,7 +57,7 @@ class ScriptedAcceptanceReasoner:
                 explanation="Scripted proposal for workflow acceptance.",
                 severity="high",
                 confidence=0.9,
-            ),
+            ),),
         )
 
     def evaluate_findings(self, analysis_input, findings, evidence):
@@ -75,17 +82,7 @@ class ScriptedAcceptanceReasoner:
                     ),
                 )
             )
-        return EvaluationResult(
-            decisions=(),
-            needs_more_context=True,
-            additional_queries=(
-                SearchQuery(
-                    f"{self.rule_key} missing context "
-                    f"{self.evaluation_calls}",
-                    "Try to resolve the deliberately ambiguous input.",
-                ),
-            ),
-        )
+        raise AssertionError("Ambiguous input must stop before evaluation.")
 
 
 class ScriptedRetrievalTool:
@@ -118,7 +115,7 @@ class AnalysisWorkflowAcceptanceTests(unittest.TestCase):
                 reasoner = ScriptedAcceptanceReasoner(case)
                 orchestrator = BoundedAnalysisOrchestrator(
                     reasoner,
-                    ScriptedRetrievalTool(case.relevant_rule_keys[0]),
+                    ScriptedRetrievalTool(case.candidate_rule_keys[0]),
                 )
                 result = orchestrator.run(
                     AnalysisInput(
@@ -136,8 +133,10 @@ class AnalysisWorkflowAcceptanceTests(unittest.TestCase):
                 self.assertEqual(result.rejected_findings, ())
 
                 if case.case_type == "ambiguous":
-                    self.assertEqual(result.iterations, 2)
-                    self.assertEqual(len(result.queries), 2)
+                    self.assertEqual(result.iterations, 1)
+                    self.assertEqual(len(result.queries), 1)
+                    self.assertEqual(reasoner.evaluation_calls, 0)
+                    self.assertEqual(result.inconclusive_reason, case.notes)
                 elif case.case_type == "irrelevant":
                     self.assertEqual(reasoner.evaluation_calls, 0)
                 else:
