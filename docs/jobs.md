@@ -12,7 +12,8 @@ leases, retry timing, checkpoints, and terminal failure.
 queued
   └─→ analyzing
         ├─→ completed                         no supported violations
-        └─→ generating_patch
+        └─→ queued [resume: generating_patch]
+              └─→ generating_patch
               └─→ validating_patch
                     └─→ awaiting_approval
                           ├─→ rejected
@@ -143,6 +144,43 @@ job = repository.claim_next("worker-01", lease_seconds=60)
 job = repository.heartbeat(job.workflow_job_id, job.lease_token)
 ```
 
+## Phase 3C retry and analysis execution
+
+Temporary failures use bounded exponential backoff with jitter. With the
+default policy, attempts wait approximately 5, 10, 20, 40, and 80 seconds,
+up to a five-minute cap. The ±20% jitter prevents many failed jobs from
+retrying at the same instant. The attempt budget remains authoritative: a
+retryable failure becomes terminal when no attempt remains.
+
+`AnalysisWorker.run_once` performs one safe polling cycle:
+
+```text
+claim analyzing job
+→ load immutable analysis input
+→ renew lease in the background
+→ execute bounded Phase 2 orchestrator
+→ atomically persist result + analysis_completed checkpoint
+→ completed (clean/inconclusive) OR queued for generating_patch (violations)
+```
+
+The worker claims only jobs whose `resume_state` is `analyzing`, so this first
+worker cannot accidentally consume patch or GitHub work before those stage
+handlers exist. A background heartbeat keeps ownership alive during model and
+retrieval calls.
+
+Analysis completion is idempotent and transactional. The result audit rows,
+violations, terminal `analysis_runs` status, workflow checkpoint, and next job
+state commit together. If any write fails, all writes roll back. A repeated
+completion after a lost response observes the durable checkpoint and does not
+insert duplicate audit rows.
+
+Every failure is converted to a `JobFailure` before persistence. Provider
+timeouts, rate limits, and network failures are retryable; malformed model
+contracts are permanent. `schedule_failure` requires the current unexpired
+lease token, clears the lease, preserves the active resume stage, and either
+schedules the calculated delay or terminates an exhausted job. A stale worker
+cannot commit output or schedule a failure after another worker owns the job.
+
 ## Trade-offs
 
 PostgreSQL is the initial queue because it already owns the workflow's durable
@@ -172,6 +210,9 @@ produce one job and one analysis record, concurrent workers to claim each job
 at most once, priority ordering, token-guarded heartbeat renewal, same-stage
 recovery, and terminal failure after attempt exhaustion.
 
-Phase 3C will add explicit operational failure scheduling with exponential
-backoff and jitter, idempotent stage completion, and a worker loop that executes
-the claimed analysis stage.
+Phase 3C acceptance additionally requires bounded exponential backoff and
+jitter, explicit retryable/permanent failure behavior, background lease
+renewal, analysis-only claims, and atomic idempotent analysis completion.
+Migration `007_workflow_stage_handoff.sql` additionally guarantees that an
+analysis-to-patch handoff advances the checkpoint, records
+`resume_state=generating_patch`, and releases the analysis worker's lease.

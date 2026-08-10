@@ -5,8 +5,16 @@ from datetime import datetime
 from typing import Optional
 
 from virtual_staff_engineer.analysis.contracts import AnalysisInput
+from virtual_staff_engineer.analysis.orchestrator import AnalysisResult
+from virtual_staff_engineer.analysis.repository import AnalysisRepository
 from virtual_staff_engineer.database.connection import connect
-from virtual_staff_engineer.jobs.lifecycle import JobCheckpoint, JobState
+from virtual_staff_engineer.jobs.lifecycle import (
+    ACTIVE_JOB_STATES,
+    FailureDisposition,
+    JobCheckpoint,
+    JobFailure,
+    JobState,
+)
 
 
 ACTIVE_STATUS_VALUES = tuple(
@@ -236,11 +244,12 @@ class WorkflowJobRepository:
                 row = cur.fetchone()
         return None if row is None else _row_to_job(row)
 
-    def claim_next(self, worker_id, lease_seconds=60):
+    def claim_next(self, worker_id, lease_seconds=60, resume_states=None):
         worker = _require_text(worker_id, "worker_id")
         if len(worker) > 255:
             raise ValueError("worker_id must contain at most 255 characters.")
         _require_integer(lease_seconds, "lease_seconds", 1, 86400)
+        normalized_states = _normalize_resume_states(resume_states)
         lease_token = uuid.uuid4()
 
         with connect(self.database_url) as conn:
@@ -254,6 +263,7 @@ class WorkflowJobRepository:
                         WHERE status = 'queued'
                           AND available_at <= CURRENT_TIMESTAMP
                           AND attempt_count < max_attempts
+                          AND resume_state = ANY(%s::varchar[])
                         ORDER BY priority DESC, available_at, created_at
                         FOR UPDATE SKIP LOCKED
                         LIMIT 1
@@ -271,7 +281,12 @@ class WorkflowJobRepository:
                     WHERE job.workflow_job_id = candidate.workflow_job_id
                     RETURNING {', '.join('job.' + name for name in _job_column_names())};
                     """,
-                    (worker, lease_token, lease_seconds),
+                    (
+                        list(normalized_states),
+                        worker,
+                        lease_token,
+                        lease_seconds,
+                    ),
                 )
                 row = cur.fetchone()
         return None if row is None else _row_to_job(row)
@@ -312,6 +327,186 @@ class WorkflowJobRepository:
                 "worker."
             )
         return _row_to_job(row)
+
+    def begin_analysis(self, workflow_job_id, lease_token):
+        """Load a claimed input and mark its audit run as analyzing."""
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                job = self._lock_owned_active_job(
+                    cur,
+                    workflow_job_id,
+                    normalized_token,
+                    expected_state=JobState.ANALYZING,
+                )
+                cur.execute(
+                    """
+                    UPDATE analysis_runs
+                    SET status = 'analyzing',
+                        started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
+                        completed_at = NULL,
+                        error_message = NULL
+                    WHERE analysis_run_id = %s
+                      AND status IN ('queued', 'analyzing')
+                    RETURNING input_type, input_content, source_path, commit_id;
+                    """,
+                    (job.analysis_run_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise ValueError(
+                        "Analysis run is missing or already terminal."
+                    )
+        return AnalysisInput(
+            input_type=row[0],
+            content=row[1],
+            source_path=row[2],
+            commit_id=_normalize_uuid(row[3]),
+        )
+
+    def complete_analysis(
+        self,
+        workflow_job_id,
+        lease_token,
+        result,
+        input_tokens=0,
+        output_tokens=0,
+    ):
+        """Atomically persist analysis output and advance its workflow job."""
+        if not isinstance(result, AnalysisResult):
+            raise TypeError("result must be an AnalysisResult.")
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    SELECT {JOB_COLUMNS}
+                    FROM workflow_jobs
+                    WHERE workflow_job_id = %s
+                    FOR UPDATE;
+                    """,
+                    (workflow_job_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise LeaseLostError("Workflow job does not exist.")
+                job = _row_to_job(row)
+                if job.checkpoint is not JobCheckpoint.SUBMITTED:
+                    return job
+                self._require_owned_active_job(
+                    job,
+                    normalized_token,
+                    expected_state=JobState.ANALYZING,
+                )
+                AnalysisRepository(self.database_url).persist_result(
+                    cur,
+                    job.analysis_run_id,
+                    result,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
+                target = (
+                    JobState.QUEUED
+                    if result.status == "review_required"
+                    else JobState.COMPLETED
+                )
+                cur.execute(
+                    f"""
+                    UPDATE workflow_jobs
+                    SET status = %s,
+                        checkpoint = 'analysis_completed',
+                        resume_state = CASE
+                            WHEN %s THEN 'generating_patch' ELSE resume_state
+                        END,
+                        lease_owner = NULL,
+                        lease_token = NULL,
+                        lease_expires_at = NULL,
+                        heartbeat_at = NULL
+                    WHERE workflow_job_id = %s
+                    RETURNING {JOB_COLUMNS};
+                    """,
+                    (
+                        target.value,
+                        result.status == "review_required",
+                        workflow_job_id,
+                    ),
+                )
+                return _row_to_job(cur.fetchone())
+
+    def schedule_failure(
+        self,
+        workflow_job_id,
+        lease_token,
+        failure,
+        delay_seconds=0,
+    ):
+        """Persist an explicit failure, retrying only within the budget."""
+        if not isinstance(failure, JobFailure):
+            raise TypeError("failure must be a JobFailure.")
+        if (
+            isinstance(delay_seconds, bool)
+            or not isinstance(delay_seconds, (int, float))
+            or delay_seconds < 0
+            or delay_seconds > 86400
+        ):
+            raise ValueError("delay_seconds must be from 0 to 86400.")
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                job = self._lock_owned_active_job(
+                    cur, workflow_job_id, normalized_token
+                )
+                retry = (
+                    failure.disposition is FailureDisposition.RETRYABLE
+                    and job.attempt_count < job.max_attempts
+                )
+                target = (
+                    JobState.RETRY_SCHEDULED if retry else JobState.FAILED
+                )
+                cur.execute(
+                    f"""
+                    UPDATE workflow_jobs
+                    SET status = %s,
+                        available_at = CASE
+                            WHEN %s THEN (
+                                CURRENT_TIMESTAMP + %s * INTERVAL '1 second'
+                            )
+                            ELSE available_at
+                        END,
+                        lease_owner = NULL,
+                        lease_token = NULL,
+                        lease_expires_at = NULL,
+                        heartbeat_at = NULL,
+                        failure_code = %s,
+                        failure_disposition = %s,
+                        error_message = %s
+                    WHERE workflow_job_id = %s
+                    RETURNING {JOB_COLUMNS};
+                    """,
+                    (
+                        target.value,
+                        retry,
+                        float(delay_seconds),
+                        failure.code.value,
+                        failure.disposition.value,
+                        failure.message[:4000],
+                        workflow_job_id,
+                    ),
+                )
+                updated = _row_to_job(cur.fetchone())
+                if target is JobState.FAILED and job.status is JobState.ANALYZING:
+                    cur.execute(
+                        """
+                        UPDATE analysis_runs
+                        SET status = 'failed',
+                            completed_at = CURRENT_TIMESTAMP,
+                            error_message = %s
+                        WHERE analysis_run_id = %s
+                          AND status IN ('queued', 'analyzing');
+                        """,
+                        (failure.message[:4000], job.analysis_run_id),
+                    )
+                return updated
 
     def promote_due_retries(self, limit=100):
         _require_integer(limit, "limit", 1, 10000)
@@ -356,7 +551,70 @@ class WorkflowJobRepository:
                     (list(ACTIVE_STATUS_VALUES), limit),
                 )
                 rows = cur.fetchall()
+                failed_analysis_run_ids = tuple(
+                    str(row[1])
+                    for row in rows
+                    if row[3] == JobState.FAILED.value
+                    and row[10] == JobState.ANALYZING.value
+                )
+                if failed_analysis_run_ids:
+                    cur.execute(
+                        """
+                        UPDATE analysis_runs
+                        SET status = 'failed',
+                            completed_at = CURRENT_TIMESTAMP,
+                            error_message = (
+                                'Worker lease expired and the attempt budget '
+                                'was exhausted.'
+                            )
+                        WHERE analysis_run_id = ANY(%s::uuid[])
+                          AND status IN ('queued', 'analyzing');
+                        """,
+                        (list(failed_analysis_run_ids),),
+                    )
         return tuple(_row_to_job(row) for row in rows)
+
+    def _lock_owned_active_job(
+        self,
+        cur,
+        workflow_job_id,
+        lease_token,
+        expected_state=None,
+    ):
+        cur.execute(
+            f"""
+            SELECT {JOB_COLUMNS}
+            FROM workflow_jobs
+            WHERE workflow_job_id = %s
+            FOR UPDATE;
+            """,
+            (workflow_job_id,),
+        )
+        row = cur.fetchone()
+        if row is None:
+            raise LeaseLostError("Workflow job does not exist.")
+        job = _row_to_job(row)
+        self._require_owned_active_job(job, lease_token, expected_state)
+        return job
+
+    @staticmethod
+    def _require_owned_active_job(job, lease_token, expected_state=None):
+        now = (
+            datetime.now(job.lease_expires_at.tzinfo)
+            if job.lease_expires_at
+            else None
+        )
+        if (
+            job.status not in ACTIVE_JOB_STATES
+            or (expected_state is not None and job.status is not expected_state)
+            or job.lease_token != str(lease_token)
+            or job.lease_expires_at is None
+            or job.lease_expires_at <= now
+        ):
+            raise LeaseLostError(
+                "Workflow job lease is missing, expired, in the wrong stage, "
+                "or owned by another worker."
+            )
 
     @staticmethod
     def _promote_due_retries(cur, limit):
@@ -441,3 +699,22 @@ def _require_integer(value, field_name, minimum, maximum):
         raise ValueError(
             f"{field_name} must be an integer from {minimum} to {maximum}."
         )
+
+
+def _normalize_lease_token(lease_token):
+    try:
+        return uuid.UUID(str(lease_token))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("lease_token must be a UUID.") from exc
+
+
+def _normalize_resume_states(resume_states):
+    if resume_states is None:
+        return ACTIVE_STATUS_VALUES
+    try:
+        states = tuple(JobState(value) for value in resume_states)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("resume_states contains an unknown job state.") from exc
+    if not states or any(state not in ACTIVE_JOB_STATES for state in states):
+        raise ValueError("resume_states must contain active job states.")
+    return tuple(state.value for state in states)

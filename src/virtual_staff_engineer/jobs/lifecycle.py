@@ -75,6 +75,7 @@ ALLOWED_JOB_TRANSITIONS = {
     ),
     JobState.ANALYZING: frozenset(
         {
+            JobState.QUEUED,
             JobState.GENERATING_PATCH,
             JobState.COMPLETED,
             JobState.RETRY_SCHEDULED,

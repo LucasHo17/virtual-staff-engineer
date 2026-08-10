@@ -49,9 +49,9 @@ holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
 found every violation and handled every ambiguous and irrelevant case correctly,
 with one false positive on ownership-scoped authorization code.
 
-Phase 3A and 3B are complete: the lifecycle and database invariants now have a
-concurrency-tested PostgreSQL queue repository. Phase 3C will add exponential
-backoff/jitter, idempotent stage completion, and the first analysis worker loop.
+Phase 3A–3C are complete: the lifecycle and database invariants now have a
+concurrency-tested PostgreSQL queue, classified exponential retries, heartbeat
+leases, atomic analysis completion, and a safe handoff to patch generation.
 
 ## Architecture
 
@@ -178,6 +178,11 @@ Run tests:
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+The Phase 3 analysis worker now executes submitted analysis jobs with durable
+leases, heartbeat renewal, classified retries, exponential backoff with jitter,
+and atomic result/checkpoint persistence. Patch generation remains the next
+workflow stage and is not executed automatically yet.
 
 See [tests/README.md](tests/README.md) for test coverage, database isolation,
 and commands for running individual test suites.

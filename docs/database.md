@@ -70,5 +70,7 @@ must not retain one. `retry_scheduled` requires a retryable failure, while
 [jobs.md](jobs.md) for the complete lifecycle and trade-offs.
 
 `006_workflow_resume_state.sql` adds the active stage a retried job must resume.
+`007_workflow_stage_handoff.sql` lets completed analysis release its lease and
+queue patch generation without pretending that the handoff is a retry.
 The queue repository uses this value with `FOR UPDATE SKIP LOCKED`, preventing
 recovery from replaying already completed analysis, patch, or approval work.

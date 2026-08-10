@@ -74,6 +74,25 @@ class AnalysisRepository:
         input_tokens=0,
         output_tokens=0,
     ):
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                self.persist_result(
+                    cur,
+                    analysis_run_id,
+                    result,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                )
+
+    def persist_result(
+        self,
+        cur,
+        analysis_run_id,
+        result,
+        input_tokens=0,
+        output_tokens=0,
+    ):
+        """Persist a result using the caller's existing transaction."""
         if not isinstance(result, AnalysisResult):
             raise TypeError("result must be an AnalysisResult.")
         self._validate_result_consistency(result)
@@ -85,68 +104,58 @@ class AnalysisRepository:
             decision.finding_index: decision for decision in result.decisions
         }
 
-        with connect(self.database_url) as conn:
-            with conn.cursor() as cur:
-                query_ids = self._insert_queries(
-                    cur, analysis_run_id, result.queries
-                )
-                self._insert_retrieval_evidence(
-                    cur,
-                    query_ids,
-                    result.evidence,
-                )
-                self._insert_playbook_versions(
-                    cur,
-                    analysis_run_id,
-                    result.evidence,
-                )
-                finding_ids = self._insert_finding_reviews(
-                    cur,
-                    analysis_run_id,
-                    result.evaluated_findings,
-                    decision_by_index,
-                )
-                self._insert_violations(
-                    cur,
-                    analysis_run_id,
-                    result.evaluated_findings,
-                    decision_by_index,
-                    finding_ids,
-                    evidence_by_chunk,
-                    persist_supported=result.status == "review_required",
-                )
-                self._insert_rejections(
-                    cur,
-                    analysis_run_id,
-                    result.rejected_findings,
-                )
-                cur.execute(
-                    """
-                    UPDATE analysis_runs
-                    SET
-                        status = %s,
-                        completed_at = CURRENT_TIMESTAMP,
-                        input_tokens = %s,
-                        output_tokens = %s,
-                        tool_call_count = %s,
-                        inconclusive_reason = %s,
-                        error_message = NULL
-                    WHERE analysis_run_id = %s
-                      AND status = 'analyzing';
-                    """,
-                    (
-                        result.status,
-                        input_tokens,
-                        output_tokens,
-                        len(result.queries),
-                        result.inconclusive_reason,
-                        analysis_run_id,
-                    ),
-                )
-                if cur.rowcount != 1:
-                    raise ValueError(
-                        "Analysis run is missing or is not in analyzing state."
-                    )
+        query_ids = self._insert_queries(
+            cur, analysis_run_id, result.queries
+        )
+        self._insert_retrieval_evidence(cur, query_ids, result.evidence)
+        self._insert_playbook_versions(
+            cur, analysis_run_id, result.evidence
+        )
+        finding_ids = self._insert_finding_reviews(
+            cur,
+            analysis_run_id,
+            result.evaluated_findings,
+            decision_by_index,
+        )
+        self._insert_violations(
+            cur,
+            analysis_run_id,
+            result.evaluated_findings,
+            decision_by_index,
+            finding_ids,
+            evidence_by_chunk,
+            persist_supported=result.status == "review_required",
+        )
+        self._insert_rejections(
+            cur, analysis_run_id, result.rejected_findings
+        )
+        cur.execute(
+            """
+            UPDATE analysis_runs
+            SET
+                status = %s,
+                completed_at = CURRENT_TIMESTAMP,
+                input_tokens = %s,
+                output_tokens = %s,
+                tool_call_count = %s,
+                inconclusive_reason = %s,
+                error_message = NULL
+            WHERE analysis_run_id = %s
+              AND status = 'analyzing';
+            """,
+            (
+                result.status,
+                input_tokens,
+                output_tokens,
+                len(result.queries),
+                result.inconclusive_reason,
+                analysis_run_id,
+            ),
+        )
+        if cur.rowcount != 1:
+            raise ValueError(
+                "Analysis run is missing or is not in analyzing state."
+            )
 
     def fail_run(self, analysis_run_id, error_message):
         with connect(self.database_url) as conn:

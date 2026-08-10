@@ -26,6 +26,11 @@ Run only the unit tests:
 python -m unittest discover -s tests/unit -v
 ```
 
+Phase 3 unit coverage includes lifecycle validation, exponential retry timing,
+failure classification, and analysis-worker polling behavior. The job
+repository integration suite additionally verifies transactional completion
+and retry/permanent failure persistence against PostgreSQL.
+
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
 

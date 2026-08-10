@@ -20,6 +20,12 @@ from virtual_staff_engineer.jobs.repository import (
     WorkflowJobRecord,
     WorkflowJobRepository,
 )
+from virtual_staff_engineer.jobs.retry import ExponentialBackoffPolicy
+from virtual_staff_engineer.jobs.worker import (
+    AnalysisWorker,
+    WorkerExecution,
+    classify_failure,
+)
 
 __all__ = [
     "ACTIVE_JOB_STATES",
@@ -36,6 +42,10 @@ __all__ = [
     "SubmissionResult",
     "WorkflowJobRecord",
     "WorkflowJobRepository",
+    "ExponentialBackoffPolicy",
+    "AnalysisWorker",
+    "WorkerExecution",
+    "classify_failure",
     "validate_checkpoint_advance",
     "validate_transition",
 ]
