@@ -24,6 +24,11 @@ from virtual_staff_engineer.jobs.repository import (
     LeaseLostError,
     WorkflowJobRepository,
 )
+from virtual_staff_engineer.remediation.contracts import (
+    GeneratedPatch,
+    PatchGenerationContext,
+    SourceSnapshot,
+)
 
 
 try:
@@ -61,14 +66,16 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT workflow_job_id, analysis_run_id
+                    SELECT workflow_job_id,
+                           analysis_run_id,
+                           remediation_action_id
                     FROM workflow_jobs
                     WHERE idempotency_key LIKE %s;
                     """,
                     (f"{self.idempotency_prefix}%",),
                 )
                 rows = cur.fetchall()
-                for workflow_job_id, _ in rows:
+                for workflow_job_id, _, remediation_action_id in rows:
                     cur.execute(
                         """
                         DELETE FROM workflow_job_transitions
@@ -76,6 +83,32 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                         """,
                         (workflow_job_id,),
                     )
+                    if remediation_action_id is not None:
+                        cur.execute(
+                            """
+                            DELETE FROM patch_proposal_rules
+                            WHERE patch_proposal_id IN (
+                                SELECT patch_proposal_id
+                                FROM patch_proposals
+                                WHERE remediation_action_id = %s
+                            );
+                            """,
+                            (remediation_action_id,),
+                        )
+                        cur.execute(
+                            """
+                            DELETE FROM patch_proposals
+                            WHERE remediation_action_id = %s;
+                            """,
+                            (remediation_action_id,),
+                        )
+                        cur.execute(
+                            """
+                            DELETE FROM remediation_action_violations
+                            WHERE remediation_action_id = %s;
+                            """,
+                            (remediation_action_id,),
+                        )
                 cur.execute(
                     """
                     DELETE FROM workflow_jobs
@@ -83,7 +116,16 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                     """,
                     (f"{self.idempotency_prefix}%",),
                 )
-                for _, analysis_run_id in rows:
+                for _, _, remediation_action_id in rows:
+                    if remediation_action_id is not None:
+                        cur.execute(
+                            """
+                            DELETE FROM remediation_actions
+                            WHERE remediation_action_id = %s;
+                            """,
+                            (remediation_action_id,),
+                        )
+                for _, analysis_run_id, _ in rows:
                     cur.execute(
                         """
                         DELETE FROM violation_evidence
@@ -459,6 +501,102 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
         patch_claim = self.repository.claim_next("patch-worker")
         self.assertEqual(patch_claim.workflow_job_id, submitted.workflow_job_id)
         self.assertEqual(patch_claim.status, JobState.GENERATING_PATCH)
+        seed = self.repository.begin_patch_generation(
+            patch_claim.workflow_job_id, patch_claim.lease_token
+        )
+        context = PatchGenerationContext(
+            source=SourceSnapshot(
+                source_path=seed.source_path,
+                content="unsafe_call()\n",
+                revision=seed.source_revision,
+            ),
+            violations=seed.violations,
+        )
+        generated = GeneratedPatch(
+            unified_diff=(
+                "--- a/worker.py\n"
+                "+++ b/worker.py\n"
+                "@@ -1 +1 @@\n"
+                "-unsafe_call()\n"
+                "+safe_call()"
+            ),
+            explanation="Replace the unsafe behavior.",
+            addressed_violation_ids=tuple(
+                violation.violation_id for violation in seed.violations
+            ),
+            addressed_rule_keys=tuple(
+                sorted(
+                    {
+                        item.rule_key
+                        for violation in seed.violations
+                        for item in violation.evidence
+                    }
+                )
+            ),
+        )
+
+        validation_ready = self.repository.complete_patch_generation(
+            patch_claim.workflow_job_id,
+            patch_claim.lease_token,
+            context,
+            generated,
+            model_name="test-patch-model",
+            prompt_version="patch-v1",
+        )
+        repeated = self.repository.complete_patch_generation(
+            patch_claim.workflow_job_id,
+            patch_claim.lease_token,
+            context,
+            generated,
+            model_name="test-patch-model",
+            prompt_version="patch-v1",
+        )
+
+        self.assertEqual(validation_ready.status, JobState.QUEUED)
+        self.assertEqual(
+            validation_ready.resume_state, JobState.VALIDATING_PATCH
+        )
+        self.assertEqual(
+            validation_ready.checkpoint.value, "patch_generated"
+        )
+        self.assertIsNone(validation_ready.lease_token)
+        self.assertIsNotNone(validation_ready.remediation_action_id)
+        self.assertEqual(
+            repeated.remediation_action_id,
+            validation_ready.remediation_action_id,
+        )
+        with psycopg.connect(TEST_DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT pp.source_path,
+                           pp.original_content,
+                           pp.original_sha256,
+                           pp.unified_diff,
+                           pp.explanation,
+                           pp.model_name,
+                           pp.prompt_version,
+                           (SELECT count(*)
+                            FROM remediation_action_violations AS rav
+                            WHERE rav.remediation_action_id =
+                                  pp.remediation_action_id),
+                           (SELECT count(*)
+                            FROM patch_proposal_rules AS ppr
+                            WHERE ppr.patch_proposal_id = pp.patch_proposal_id)
+                    FROM patch_proposals AS pp
+                    WHERE pp.remediation_action_id = %s;
+                    """,
+                    (validation_ready.remediation_action_id,),
+                )
+                proposal = cur.fetchone()
+        self.assertEqual(proposal[0], "worker.py")
+        self.assertEqual(proposal[1], "unsafe_call()\n")
+        self.assertEqual(len(proposal[2]), 64)
+        self.assertEqual(proposal[3], generated.unified_diff)
+        self.assertEqual(proposal[4], generated.explanation)
+        self.assertEqual(proposal[5:7], ("test-patch-model", "patch-v1"))
+        self.assertEqual(proposal[7], len(seed.violations))
+        self.assertGreaterEqual(proposal[8], 1)
 
     def _submit(
         self,

@@ -23,8 +23,10 @@ from virtual_staff_engineer.jobs.repository import (
 from virtual_staff_engineer.jobs.retry import ExponentialBackoffPolicy
 from virtual_staff_engineer.jobs.worker import (
     AnalysisWorker,
+    PatchGenerationWorker,
     WorkerExecution,
     classify_failure,
+    classify_patch_failure,
 )
 
 __all__ = [
@@ -44,8 +46,10 @@ __all__ = [
     "WorkflowJobRepository",
     "ExponentialBackoffPolicy",
     "AnalysisWorker",
+    "PatchGenerationWorker",
     "WorkerExecution",
     "classify_failure",
+    "classify_patch_failure",
     "validate_checkpoint_advance",
     "validate_transition",
 ]

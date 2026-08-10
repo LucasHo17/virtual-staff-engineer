@@ -15,6 +15,12 @@ from virtual_staff_engineer.jobs.lifecycle import (
     JobFailure,
     JobState,
 )
+from virtual_staff_engineer.remediation.contracts import (
+    PatchGenerationSeed,
+    PatchRuleEvidence,
+    PatchViolation,
+    validate_generated_patch,
+)
 
 
 ACTIVE_STATUS_VALUES = tuple(
@@ -508,6 +514,284 @@ class WorkflowJobRepository:
                     )
                 return updated
 
+    def begin_patch_generation(self, workflow_job_id, lease_token):
+        """Load persisted validated violations for an owned patch stage."""
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                job = self._lock_owned_active_job(
+                    cur,
+                    workflow_job_id,
+                    normalized_token,
+                    expected_state=JobState.GENERATING_PATCH,
+                )
+                if job.checkpoint is not JobCheckpoint.ANALYSIS_COMPLETED:
+                    raise ValueError(
+                        "Patch generation requires analysis_completed."
+                    )
+                cur.execute(
+                    """
+                    SELECT ar.source_path, c.commit_sha
+                    FROM analysis_runs AS ar
+                    LEFT JOIN commits AS c ON c.commit_id = ar.commit_id
+                    WHERE ar.analysis_run_id = %s
+                      AND ar.status = 'review_required';
+                    """,
+                    (job.analysis_run_id,),
+                )
+                run = cur.fetchone()
+                if run is None:
+                    raise ValueError(
+                        "Patch generation requires a review_required analysis."
+                    )
+                source_path, source_revision = run
+                if not source_path or source_path == "<input>":
+                    raise ValueError(
+                        "Patch generation requires an exact source path."
+                    )
+                cur.execute(
+                    """
+                    SELECT v.violation_id,
+                           v.file_path,
+                           v.start_line,
+                           v.end_line,
+                           v.input_excerpt,
+                           v.explanation,
+                           ve.playbook_chunk_id,
+                           pc.rule_key,
+                           ve.rule_snapshot
+                    FROM violations AS v
+                    JOIN violation_evidence AS ve
+                      ON ve.violation_id = v.violation_id
+                    JOIN playbook_chunks AS pc
+                      ON pc.playbook_chunk_id = ve.playbook_chunk_id
+                    WHERE v.analysis_run_id = %s
+                      AND v.validation_status = 'valid'
+                    ORDER BY v.file_path, v.start_line, v.violation_id,
+                             pc.rule_key;
+                    """,
+                    (job.analysis_run_id,),
+                )
+                rows = cur.fetchall()
+        if not rows:
+            raise ValueError(
+                "Patch generation requires at least one validated violation."
+            )
+        violations = _rows_to_patch_violations(rows)
+        return PatchGenerationSeed(
+            source_path=source_path,
+            source_revision=source_revision,
+            violations=violations,
+        )
+
+    def complete_patch_generation(
+        self,
+        workflow_job_id,
+        lease_token,
+        context,
+        patch,
+        model_name,
+        prompt_version,
+    ):
+        """Persist a proposal and hand the job to validation atomically."""
+        validate_generated_patch(context, patch)
+        model = _require_text(model_name, "model_name")
+        prompt = _require_text(prompt_version, "prompt_version")
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    SELECT {JOB_COLUMNS}
+                    FROM workflow_jobs
+                    WHERE workflow_job_id = %s
+                    FOR UPDATE;
+                    """,
+                    (workflow_job_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise LeaseLostError("Workflow job does not exist.")
+                job = _row_to_job(row)
+                if job.checkpoint is not JobCheckpoint.ANALYSIS_COMPLETED:
+                    if job.checkpoint is JobCheckpoint.PATCH_GENERATED:
+                        return job
+                    raise ValueError(
+                        "Patch generation requires analysis_completed."
+                    )
+                self._require_owned_active_job(
+                    job,
+                    normalized_token,
+                    expected_state=JobState.GENERATING_PATCH,
+                )
+                violation_ids = tuple(
+                    item.violation_id for item in context.violations
+                )
+                cur.execute(
+                    """
+                    SELECT violation_id::text, file_path
+                    FROM violations
+                    WHERE analysis_run_id = %s
+                      AND validation_status = 'valid'
+                    ORDER BY violation_id;
+                    """,
+                    (job.analysis_run_id,),
+                )
+                persisted = cur.fetchall()
+                if {row[0] for row in persisted} != set(violation_ids):
+                    raise ValueError(
+                        "Patch context does not match persisted violations."
+                    )
+                if any(row[1] != context.source.source_path for row in persisted):
+                    raise ValueError(
+                        "Patch context source path does not match violations."
+                    )
+                cur.execute(
+                    """
+                    SELECT ar.source_path, c.commit_sha
+                    FROM analysis_runs AS ar
+                    LEFT JOIN commits AS c ON c.commit_id = ar.commit_id
+                    WHERE ar.analysis_run_id = %s;
+                    """,
+                    (job.analysis_run_id,),
+                )
+                source_identity = cur.fetchone()
+                normalized_source_identity = (
+                    source_identity[0],
+                    source_identity[1].lower()
+                    if source_identity[1] is not None
+                    else None,
+                )
+                if normalized_source_identity != (
+                    context.source.source_path,
+                    context.source.revision,
+                ):
+                    raise ValueError(
+                        "Patch source identity does not match the analysis."
+                    )
+                cur.execute(
+                    """
+                    SELECT ve.playbook_chunk_id::text,
+                           pc.rule_key,
+                           ve.rule_snapshot
+                    FROM violation_evidence AS ve
+                    JOIN violations AS v
+                      ON v.violation_id = ve.violation_id
+                    JOIN playbook_chunks AS pc
+                      ON pc.playbook_chunk_id = ve.playbook_chunk_id
+                    WHERE v.analysis_run_id = %s
+                    ORDER BY ve.playbook_chunk_id;
+                    """,
+                    (job.analysis_run_id,),
+                )
+                persisted_evidence = set(cur.fetchall())
+                context_evidence = {
+                    (
+                        evidence.playbook_chunk_id,
+                        evidence.rule_key,
+                        evidence.rule_snapshot,
+                    )
+                    for violation in context.violations
+                    for evidence in violation.evidence
+                }
+                if context_evidence != persisted_evidence:
+                    raise ValueError(
+                        "Patch rule evidence does not match persisted evidence."
+                    )
+                cur.execute(
+                    """
+                    INSERT INTO remediation_actions (
+                        analysis_run_id,
+                        status,
+                        idempotency_key
+                    )
+                    VALUES (%s, 'proposed', %s)
+                    RETURNING remediation_action_id;
+                    """,
+                    (job.analysis_run_id, f"patch:{workflow_job_id}"),
+                )
+                remediation_action_id = cur.fetchone()[0]
+                for violation_id in sorted(violation_ids):
+                    cur.execute(
+                        """
+                        INSERT INTO remediation_action_violations (
+                            remediation_action_id, violation_id
+                        )
+                        VALUES (%s, %s);
+                        """,
+                        (remediation_action_id, violation_id),
+                    )
+                cur.execute(
+                    """
+                    INSERT INTO patch_proposals (
+                        remediation_action_id,
+                        source_path,
+                        source_revision,
+                        original_content,
+                        original_sha256,
+                        unified_diff,
+                        explanation,
+                        model_name,
+                        prompt_version
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING patch_proposal_id;
+                    """,
+                    (
+                        remediation_action_id,
+                        context.source.source_path,
+                        context.source.revision,
+                        context.source.content,
+                        context.source.content_sha256,
+                        patch.unified_diff,
+                        patch.explanation,
+                        model,
+                        prompt,
+                    ),
+                )
+                patch_proposal_id = cur.fetchone()[0]
+                evidence_by_chunk = {
+                    evidence.playbook_chunk_id: evidence
+                    for violation in context.violations
+                    for evidence in violation.evidence
+                }
+                for chunk_id in sorted(evidence_by_chunk):
+                    evidence = evidence_by_chunk[chunk_id]
+                    cur.execute(
+                        """
+                        INSERT INTO patch_proposal_rules (
+                            patch_proposal_id,
+                            playbook_chunk_id,
+                            rule_key,
+                            rule_snapshot
+                        )
+                        VALUES (%s, %s, %s, %s);
+                        """,
+                        (
+                            patch_proposal_id,
+                            evidence.playbook_chunk_id,
+                            evidence.rule_key,
+                            evidence.rule_snapshot,
+                        ),
+                    )
+                cur.execute(
+                    f"""
+                    UPDATE workflow_jobs
+                    SET remediation_action_id = %s,
+                        status = 'queued',
+                        checkpoint = 'patch_generated',
+                        resume_state = 'validating_patch',
+                        lease_owner = NULL,
+                        lease_token = NULL,
+                        lease_expires_at = NULL,
+                        heartbeat_at = NULL
+                    WHERE workflow_job_id = %s
+                    RETURNING {JOB_COLUMNS};
+                    """,
+                    (remediation_action_id, workflow_job_id),
+                )
+                return _row_to_job(cur.fetchone())
+
     def promote_due_retries(self, limit=100):
         _require_integer(limit, "limit", 1, 10000)
         with connect(self.database_url) as conn:
@@ -718,3 +1002,39 @@ def _normalize_resume_states(resume_states):
     if not states or any(state not in ACTIVE_JOB_STATES for state in states):
         raise ValueError("resume_states must contain active job states.")
     return tuple(state.value for state in states)
+
+
+def _rows_to_patch_violations(rows):
+    grouped = {}
+    order = []
+    for row in rows:
+        violation_id = str(row[0])
+        if violation_id not in grouped:
+            grouped[violation_id] = {
+                "source_path": row[1],
+                "start_line": row[2],
+                "end_line": row[3],
+                "input_excerpt": row[4],
+                "explanation": row[5],
+                "evidence": [],
+            }
+            order.append(violation_id)
+        grouped[violation_id]["evidence"].append(
+            PatchRuleEvidence(
+                playbook_chunk_id=str(row[6]),
+                rule_key=row[7],
+                rule_snapshot=row[8],
+            )
+        )
+    return tuple(
+        PatchViolation(
+            violation_id=violation_id,
+            source_path=grouped[violation_id]["source_path"],
+            start_line=grouped[violation_id]["start_line"],
+            end_line=grouped[violation_id]["end_line"],
+            input_excerpt=grouped[violation_id]["input_excerpt"],
+            explanation=grouped[violation_id]["explanation"],
+            evidence=tuple(grouped[violation_id]["evidence"]),
+        )
+        for violation_id in order
+    )

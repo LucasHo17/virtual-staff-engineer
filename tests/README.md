@@ -30,6 +30,9 @@ Phase 3 unit coverage includes lifecycle validation, exponential retry timing,
 failure classification, and analysis-worker polling behavior. The job
 repository integration suite additionally verifies transactional completion
 and retry/permanent failure persistence against PostgreSQL.
+Patch-generation coverage verifies exact source boundaries, structured Gemini
+output, rule/violation identity checks, immutable proposal persistence, and the
+lease-free handoff to validation.
 
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.

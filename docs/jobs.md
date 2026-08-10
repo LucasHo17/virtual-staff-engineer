@@ -216,3 +216,9 @@ renewal, analysis-only claims, and atomic idempotent analysis completion.
 Migration `007_workflow_stage_handoff.sql` additionally guarantees that an
 analysis-to-patch handoff advances the checkpoint, records
 `resume_state=generating_patch`, and releases the analysis worker's lease.
+
+Patch generation now performs the next durable boundary. Its worker claims
+only `generating_patch`, renews its lease during the model call, atomically
+stores an immutable proposal and its evidence links, advances to
+`patch_generated`, releases the lease, and queues `validating_patch`. See
+[remediation.md](remediation.md) for its source and safety contracts.

@@ -14,6 +14,8 @@ ingestion ─────→ PostgreSQL + pgvector
 input ──→ analysis ──→ retrieval
              │             ↓
              └──────→ PostgreSQL ←──── jobs
+                          ↑
+                     remediation
                            ↑
                        evaluation
 ```
@@ -26,7 +28,9 @@ input ──→ analysis ──→ retrieval
 - `analysis` owns reasoning contracts, bounded orchestration, deterministic
   evidence validation, provider adapters, and analysis persistence.
 - `jobs` owns the durable Phase 3 lifecycle, legal transitions, checkpoints,
-  and failure taxonomy. Database-level queue operations arrive in Phase 3B.
+  queue leases, workers, and failure taxonomy.
+- `remediation` owns structured patch contracts, provider-backed read-only
+  source snapshots, patch generation, and deterministic proposal checks.
 - `scripts` contains only command-line argument handling and calls into the
   application package.
 
