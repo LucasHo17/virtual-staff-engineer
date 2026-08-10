@@ -49,9 +49,9 @@ holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
 found every violation and handled every ambiguous and irrelevant case correctly,
 with one false positive on ownership-scoped authorization code.
 
-Phase 3A–3C and the patch-generation checkpoint are complete: the system has a
-concurrency-tested PostgreSQL queue, classified exponential retries, heartbeat
-leases, atomic analysis and patch persistence, and safe worker handoffs.
+Phase 3A–3C plus patch generation and deterministic validation are complete:
+the system has a concurrency-tested PostgreSQL queue, classified exponential
+retries, heartbeat leases, atomic checkpoints, and safe worker handoffs.
 
 ## Architecture
 
@@ -179,10 +179,10 @@ Run tests:
 python -m unittest discover -s tests -v
 ```
 
-The Phase 3 workers now execute analysis and structured patch generation with
-durable leases, heartbeat renewal, classified retries, atomic checkpoints, and
-safe stage handoffs. Generated patches are persisted proposals only; applying
-and validating them is the next workflow stage.
+The Phase 3 workers now execute analysis, structured patch generation, and
+read-only deterministic validation with durable leases, classified retries,
+atomic checkpoints, and safe stage handoffs. Valid proposals stop at the human
+approval boundary; no source or GitHub mutation occurs.
 
 See [tests/README.md](tests/README.md) for test coverage, database isolation,
 and commands for running individual test suites.

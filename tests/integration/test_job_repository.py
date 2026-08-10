@@ -29,6 +29,9 @@ from virtual_staff_engineer.remediation.contracts import (
     PatchGenerationContext,
     SourceSnapshot,
 )
+from virtual_staff_engineer.remediation.validation import (
+    DeterministicPatchValidator,
+)
 
 
 try:
@@ -84,6 +87,31 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                         (workflow_job_id,),
                     )
                     if remediation_action_id is not None:
+                        cur.execute(
+                            """
+                            DELETE FROM patch_validation_checks
+                            WHERE patch_validation_id IN (
+                                SELECT pvr.patch_validation_id
+                                FROM patch_validation_runs AS pvr
+                                JOIN patch_proposals AS pp
+                                  ON pp.patch_proposal_id =
+                                     pvr.patch_proposal_id
+                                WHERE pp.remediation_action_id = %s
+                            );
+                            """,
+                            (remediation_action_id,),
+                        )
+                        cur.execute(
+                            """
+                            DELETE FROM patch_validation_runs
+                            WHERE patch_proposal_id IN (
+                                SELECT patch_proposal_id
+                                FROM patch_proposals
+                                WHERE remediation_action_id = %s
+                            );
+                            """,
+                            (remediation_action_id,),
+                        )
                         cur.execute(
                             """
                             DELETE FROM patch_proposal_rules
@@ -597,6 +625,72 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
         self.assertEqual(proposal[5:7], ("test-patch-model", "patch-v1"))
         self.assertEqual(proposal[7], len(seed.violations))
         self.assertGreaterEqual(proposal[8], 1)
+
+        validation_claim = self.repository.claim_next("validation-worker")
+        self.assertEqual(
+            validation_claim.workflow_job_id, submitted.workflow_job_id
+        )
+        self.assertEqual(
+            validation_claim.status, JobState.VALIDATING_PATCH
+        )
+        persisted_proposal = self.repository.begin_patch_validation(
+            validation_claim.workflow_job_id,
+            validation_claim.lease_token,
+        )
+        validator = DeterministicPatchValidator()
+        validation_result = validator.validate(
+            persisted_proposal,
+            SourceSnapshot("worker.py", "unsafe_call()\n"),
+        )
+        approval_ready = self.repository.complete_patch_validation(
+            validation_claim.workflow_job_id,
+            validation_claim.lease_token,
+            persisted_proposal,
+            validation_result,
+            validator_version=validator.version,
+        )
+        repeated_validation = self.repository.complete_patch_validation(
+            validation_claim.workflow_job_id,
+            validation_claim.lease_token,
+            persisted_proposal,
+            validation_result,
+            validator_version=validator.version,
+        )
+
+        self.assertEqual(
+            approval_ready.status, JobState.AWAITING_APPROVAL
+        )
+        self.assertEqual(
+            approval_ready.checkpoint.value, "patch_validated"
+        )
+        self.assertIsNone(approval_ready.lease_token)
+        self.assertEqual(
+            repeated_validation.workflow_job_id,
+            approval_ready.workflow_job_id,
+        )
+        with psycopg.connect(TEST_DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT pvr.status,
+                           pvr.validator_version,
+                           pvr.changed_lines,
+                           pvr.resulting_sha256,
+                           count(pvc.check_name)
+                    FROM patch_validation_runs AS pvr
+                    JOIN patch_validation_checks AS pvc
+                      ON pvc.patch_validation_id = pvr.patch_validation_id
+                    WHERE pvr.patch_proposal_id = %s
+                    GROUP BY pvr.patch_validation_id;
+                    """,
+                    (persisted_proposal.patch_proposal_id,),
+                )
+                validation_row = cur.fetchone()
+        self.assertEqual(validation_row[0], "valid")
+        self.assertEqual(validation_row[1], "deterministic-v1")
+        self.assertEqual(validation_row[2], 2)
+        self.assertEqual(len(validation_row[3]), 64)
+        self.assertEqual(validation_row[4], 5)
 
     def _submit(
         self,

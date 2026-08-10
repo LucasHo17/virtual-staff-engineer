@@ -222,3 +222,8 @@ only `generating_patch`, renews its lease during the model call, atomically
 stores an immutable proposal and its evidence links, advances to
 `patch_generated`, releases the lease, and queues `validating_patch`. See
 [remediation.md](remediation.md) for its source and safety contracts.
+
+Patch validation claims only `validating_patch` work. Its result and every
+deterministic check commit atomically with `patch_validated`. Valid proposals
+release their lease in `awaiting_approval`; invalid proposals terminate with
+the permanent `patch_invalid` failure code. Neither path mutates source files.

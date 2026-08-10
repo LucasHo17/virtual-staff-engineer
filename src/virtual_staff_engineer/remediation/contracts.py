@@ -185,3 +185,84 @@ def validate_generated_patch(context, patch):
     if sum(line.startswith("+++ ") for line in lines) != 1:
         raise ValueError("Generated patch may modify only one source file.")
     return patch
+
+
+@dataclass(frozen=True)
+class PersistedPatchProposal:
+    patch_proposal_id: str
+    remediation_action_id: str
+    source_path: str
+    source_revision: Optional[str]
+    original_content: str
+    original_sha256: str
+    unified_diff: str
+
+    def __post_init__(self):
+        for field_name in (
+            "patch_proposal_id",
+            "remediation_action_id",
+            "source_path",
+            "original_sha256",
+            "unified_diff",
+        ):
+            _require_text(getattr(self, field_name), field_name)
+        if self.source_revision is not None:
+            _require_text(self.source_revision, "source_revision")
+        if not isinstance(self.original_content, str):
+            raise TypeError("original_content must be a string.")
+        if (
+            len(self.original_sha256) != 64
+            or any(character not in "0123456789abcdef" for character in self.original_sha256)
+        ):
+            raise ValueError("original_sha256 must be a lowercase SHA-256.")
+
+
+@dataclass(frozen=True)
+class PatchValidationCheck:
+    name: str
+    status: str
+    details: str
+
+    def __post_init__(self):
+        _require_text(self.name, "name")
+        _require_text(self.details, "details")
+        if self.status not in {"passed", "failed", "skipped"}:
+            raise ValueError("check status must be passed, failed, or skipped.")
+
+
+@dataclass(frozen=True)
+class PatchValidationResult:
+    status: str
+    checks: Tuple[PatchValidationCheck, ...]
+    changed_lines: int
+    resulting_sha256: Optional[str]
+
+    def __post_init__(self):
+        if self.status not in {"valid", "invalid"}:
+            raise ValueError("validation status must be valid or invalid.")
+        if not isinstance(self.checks, tuple) or not self.checks:
+            raise ValueError("checks must contain validation results.")
+        if not all(isinstance(item, PatchValidationCheck) for item in self.checks):
+            raise TypeError("checks must contain PatchValidationCheck values.")
+        if len({item.name for item in self.checks}) != len(self.checks):
+            raise ValueError("validation check names must be unique.")
+        if (
+            isinstance(self.changed_lines, bool)
+            or not isinstance(self.changed_lines, int)
+            or self.changed_lines < 0
+        ):
+            raise ValueError("changed_lines must be a non-negative integer.")
+        has_failure = any(item.status == "failed" for item in self.checks)
+        if (self.status == "invalid") != has_failure:
+            raise ValueError("validation status must match failed checks.")
+        if self.resulting_sha256 is not None:
+            if (
+                len(self.resulting_sha256) != 64
+                or any(
+                    character not in "0123456789abcdef"
+                    for character in self.resulting_sha256
+                )
+            ):
+                raise ValueError(
+                    "resulting_sha256 must be a lowercase SHA-256."
+                )

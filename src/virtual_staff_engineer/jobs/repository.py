@@ -17,8 +17,10 @@ from virtual_staff_engineer.jobs.lifecycle import (
 )
 from virtual_staff_engineer.remediation.contracts import (
     PatchGenerationSeed,
+    PatchValidationResult,
     PatchRuleEvidence,
     PatchViolation,
+    PersistedPatchProposal,
     validate_generated_patch,
 )
 
@@ -798,6 +800,198 @@ class WorkflowJobRepository:
             with conn.cursor() as cur:
                 rows = self._promote_due_retries(cur, limit)
         return tuple(_row_to_job(row) for row in rows)
+
+    def begin_patch_validation(self, workflow_job_id, lease_token):
+        """Load an immutable proposal for an owned validation stage."""
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                job = self._lock_owned_active_job(
+                    cur,
+                    workflow_job_id,
+                    normalized_token,
+                    expected_state=JobState.VALIDATING_PATCH,
+                )
+                if job.checkpoint is not JobCheckpoint.PATCH_GENERATED:
+                    raise ValueError(
+                        "Patch validation requires patch_generated."
+                    )
+                cur.execute(
+                    """
+                    SELECT pp.patch_proposal_id,
+                           pp.remediation_action_id,
+                           pp.source_path,
+                           pp.source_revision,
+                           pp.original_content,
+                           pp.original_sha256,
+                           pp.unified_diff
+                    FROM patch_proposals AS pp
+                    WHERE pp.remediation_action_id = %s;
+                    """,
+                    (job.remediation_action_id,),
+                )
+                row = cur.fetchone()
+        if row is None:
+            raise ValueError("Workflow job has no persisted patch proposal.")
+        return PersistedPatchProposal(
+            patch_proposal_id=str(row[0]),
+            remediation_action_id=str(row[1]),
+            source_path=row[2],
+            source_revision=row[3],
+            original_content=row[4],
+            original_sha256=row[5],
+            unified_diff=row[6],
+        )
+
+    def complete_patch_validation(
+        self,
+        workflow_job_id,
+        lease_token,
+        proposal,
+        result,
+        validator_version,
+    ):
+        """Persist validation checks and advance or fail atomically."""
+        if not isinstance(proposal, PersistedPatchProposal):
+            raise TypeError("proposal must be a PersistedPatchProposal.")
+        if not isinstance(result, PatchValidationResult):
+            raise TypeError("result must be a PatchValidationResult.")
+        version = _require_text(validator_version, "validator_version")
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    SELECT {JOB_COLUMNS}
+                    FROM workflow_jobs
+                    WHERE workflow_job_id = %s
+                    FOR UPDATE;
+                    """,
+                    (workflow_job_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise LeaseLostError("Workflow job does not exist.")
+                job = _row_to_job(row)
+                if job.checkpoint is not JobCheckpoint.PATCH_GENERATED:
+                    if job.checkpoint is JobCheckpoint.PATCH_VALIDATED:
+                        return job
+                    raise ValueError(
+                        "Patch validation requires patch_generated."
+                    )
+                self._require_owned_active_job(
+                    job,
+                    normalized_token,
+                    expected_state=JobState.VALIDATING_PATCH,
+                )
+                if (
+                    proposal.remediation_action_id
+                    != job.remediation_action_id
+                ):
+                    raise ValueError(
+                        "Patch proposal does not belong to the workflow job."
+                    )
+                cur.execute(
+                    """
+                    SELECT 1
+                    FROM patch_proposals
+                    WHERE patch_proposal_id = %s
+                      AND remediation_action_id = %s;
+                    """,
+                    (
+                        proposal.patch_proposal_id,
+                        job.remediation_action_id,
+                    ),
+                )
+                if cur.fetchone() is None:
+                    raise ValueError("Persisted patch proposal identity changed.")
+                cur.execute(
+                    """
+                    INSERT INTO patch_validation_runs (
+                        patch_proposal_id,
+                        status,
+                        validator_version,
+                        changed_lines,
+                        resulting_sha256
+                    )
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING patch_validation_id;
+                    """,
+                    (
+                        proposal.patch_proposal_id,
+                        result.status,
+                        version,
+                        result.changed_lines,
+                        result.resulting_sha256,
+                    ),
+                )
+                validation_id = cur.fetchone()[0]
+                for sequence, check in enumerate(result.checks, start=1):
+                    cur.execute(
+                        """
+                        INSERT INTO patch_validation_checks (
+                            patch_validation_id,
+                            check_sequence,
+                            check_name,
+                            status,
+                            details
+                        )
+                        VALUES (%s, %s, %s, %s, %s);
+                        """,
+                        (
+                            validation_id,
+                            sequence,
+                            check.name,
+                            check.status,
+                            check.details,
+                        ),
+                    )
+                valid = result.status == "valid"
+                error_message = None
+                if not valid:
+                    error_message = "; ".join(
+                        check.details
+                        for check in result.checks
+                        if check.status == "failed"
+                    )[:4000]
+                    cur.execute(
+                        """
+                        UPDATE remediation_actions
+                        SET status = 'failed',
+                            error_message = %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE remediation_action_id = %s;
+                        """,
+                        (error_message, job.remediation_action_id),
+                    )
+                cur.execute(
+                    f"""
+                    UPDATE workflow_jobs
+                    SET status = %s,
+                        checkpoint = 'patch_validated',
+                        lease_owner = NULL,
+                        lease_token = NULL,
+                        lease_expires_at = NULL,
+                        heartbeat_at = NULL,
+                        failure_code = %s,
+                        failure_disposition = %s,
+                        error_message = %s
+                    WHERE workflow_job_id = %s
+                    RETURNING {JOB_COLUMNS};
+                    """,
+                    (
+                        (
+                            JobState.AWAITING_APPROVAL.value
+                            if valid
+                            else JobState.FAILED.value
+                        ),
+                        None if valid else "patch_invalid",
+                        None if valid else "permanent",
+                        error_message,
+                        workflow_job_id,
+                    ),
+                )
+                return _row_to_job(cur.fetchone())
 
     def recover_expired_leases(self, limit=100):
         _require_integer(limit, "limit", 1, 10000)

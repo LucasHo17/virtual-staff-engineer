@@ -233,6 +233,109 @@ class PatchGenerationWorker:
             return WorkerExecution(claimed=True, job=scheduled)
 
 
+class PatchValidationWorker:
+    """Validate persisted proposals without modifying the source tree."""
+
+    def __init__(
+        self,
+        worker_id,
+        validator,
+        source_provider,
+        repository,
+        lease_seconds=60,
+        heartbeat_interval_seconds=None,
+        backoff_policy=None,
+        failure_classifier=None,
+        random_source=None,
+    ):
+        if not isinstance(worker_id, str) or not worker_id.strip():
+            raise ValueError("worker_id must be a non-empty string.")
+        if (
+            isinstance(lease_seconds, bool)
+            or not isinstance(lease_seconds, int)
+            or lease_seconds < 3
+        ):
+            raise ValueError("lease_seconds must be an integer of at least 3.")
+        interval = (
+            max(1, lease_seconds // 3)
+            if heartbeat_interval_seconds is None
+            else heartbeat_interval_seconds
+        )
+        if (
+            isinstance(interval, bool)
+            or not isinstance(interval, (int, float))
+            or interval <= 0
+            or interval >= lease_seconds
+        ):
+            raise ValueError(
+                "heartbeat interval must be positive and shorter than lease."
+            )
+        version = getattr(validator, "version", None)
+        if not isinstance(version, str) or not version.strip():
+            raise ValueError("validator.version must be a non-empty string.")
+        self.worker_id = worker_id.strip()
+        self.validator = validator
+        self.source_provider = source_provider
+        self.repository = repository
+        self.lease_seconds = lease_seconds
+        self.heartbeat_interval_seconds = interval
+        self.backoff_policy = backoff_policy or ExponentialBackoffPolicy()
+        self.failure_classifier = (
+            failure_classifier or classify_patch_failure
+        )
+        self.random_source = random_source
+
+    def run_once(self):
+        job = self.repository.claim_next(
+            self.worker_id,
+            lease_seconds=self.lease_seconds,
+            resume_states=(JobState.VALIDATING_PATCH,),
+        )
+        if job is None:
+            return WorkerExecution(claimed=False)
+        try:
+            proposal = self.repository.begin_patch_validation(
+                job.workflow_job_id, job.lease_token
+            )
+            current_source = self.source_provider.load(proposal.source_path)
+            heartbeat = _LeaseHeartbeat(
+                repository=self.repository,
+                workflow_job_id=job.workflow_job_id,
+                lease_token=job.lease_token,
+                lease_seconds=self.lease_seconds,
+                interval_seconds=self.heartbeat_interval_seconds,
+            )
+            with heartbeat:
+                result = self.validator.validate(proposal, current_source)
+            if heartbeat.error is not None:
+                raise heartbeat.error
+            completed = self.repository.complete_patch_validation(
+                job.workflow_job_id,
+                job.lease_token,
+                proposal,
+                result,
+                validator_version=self.validator.version,
+            )
+            return WorkerExecution(claimed=True, job=completed)
+        except LeaseLostError:
+            raise
+        except Exception as exc:
+            failure = self.failure_classifier(exc)
+            delay = 0
+            if failure.disposition is FailureDisposition.RETRYABLE:
+                delay = self.backoff_policy.delay_seconds(
+                    job.attempt_count,
+                    random_source=self.random_source,
+                )
+            scheduled = self.repository.schedule_failure(
+                job.workflow_job_id,
+                job.lease_token,
+                failure,
+                delay_seconds=delay,
+            )
+            return WorkerExecution(claimed=True, job=scheduled)
+
+
 def classify_failure(error):
     """Map operational exceptions to the explicit workflow taxonomy."""
     message = str(error).strip() or error.__class__.__name__

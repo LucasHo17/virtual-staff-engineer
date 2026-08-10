@@ -74,5 +74,7 @@ must not retain one. `retry_scheduled` requires a retryable failure, while
 queue patch generation without pretending that the handoff is a retry.
 `008_patch_proposals.sql` stores immutable patch content and rule provenance,
 then permits a lease-free handoff from generation to validation.
+`009_patch_validation.sql` stores validation summaries and ordered checks, and
+prevents updates to persisted patch proposal provenance.
 The queue repository uses this value with `FOR UPDATE SKIP LOCKED`, preventing
 recovery from replaying already completed analysis, patch, or approval work.

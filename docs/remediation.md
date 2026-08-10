@@ -53,14 +53,39 @@ Before persistence, the application requires:
 - every and only the persisted cited rule keys and snapshots; and
 - matching source path and commit revision.
 
-These checks validate the proposal contract, not whether the patch applies,
-compiles, passes tests, or remains within an acceptable semantic scope. Those
-belong to the next `validating_patch` stage. No file or GitHub mutation occurs
-during generation.
+Generation checks validate the proposal contract, not whether the patch
+applies, parses, compiles, or passes tests. The deterministic validation stage
+below handles safe application and supported syntax checks. No file or GitHub
+mutation occurs during either stage.
+
+## Deterministic patch validation
+
+Migration `009_patch_validation.sql` stores one immutable validation run per
+proposal and its ordered individual check results. The validation worker:
+
+```text
+queued [resume: validating_patch]
+  → compare stored content with stored SHA-256
+  → compare current working-tree source with generation baseline
+  → parse and apply the unified diff in memory
+  → enforce the configured changed-line budget
+  → parse Python or JSON syntax when supported
+  → save every result + patch_validated checkpoint atomically
+  → awaiting_approval OR failed [patch_invalid]
+```
+
+The worker never writes the reconstructed content to disk. A stale file,
+mismatched hunk, excessive patch, or syntax error becomes a persisted invalid
+validation rather than a retry. Infrastructure timeouts remain retryable.
+
+The current validator performs deterministic Python and JSON parsing. It does
+not yet compile arbitrary languages or run repository test commands; those
+require an isolated execution policy with explicit allowlisted commands,
+resource limits, and timeouts.
 
 ## Framework decision
 
 The existing custom Python/PostgreSQL state machine still provides the needed
-checkpoint, retry, lease, and handoff behavior directly. Patch generation did
-not create a recovery problem that LangGraph would materially simplify, so no
-agent framework is added at this stage.
+checkpoint, retry, lease, and handoff behavior directly. Patch generation and
+validation did not create a recovery problem that LangGraph would materially
+simplify, so no agent framework is added at this stage.
