@@ -23,6 +23,7 @@ class JobLifecycleTests(unittest.TestCase):
             (JobState.APPROVED, JobState.CREATING_PR),
             (JobState.CREATING_PR, JobState.COMPLETED),
             (JobState.ANALYZING, JobState.COMPLETED),
+            (JobState.QUEUED, JobState.VALIDATING_PATCH),
         )
 
         for current, target in transitions:

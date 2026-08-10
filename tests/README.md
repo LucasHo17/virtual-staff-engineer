@@ -99,6 +99,12 @@ skips, checkpoint regression, active work without a lease, and unclassified
 retries. It also verifies a retry/requeue cycle and the automatically ordered
 transition audit history.
 
+`integration/test_job_repository.py` verifies transactional idempotent
+submission, conflicting key rejection, priority ordering, concurrent
+`SKIP LOCKED` claims, lease-token heartbeat ownership, same-stage recovery, and
+attempt exhaustion. Its concurrency tests use independent PostgreSQL
+connections and never call external model APIs.
+
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project
 migrations applied.

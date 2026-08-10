@@ -13,6 +13,13 @@ from virtual_staff_engineer.jobs.lifecycle import (
     validate_checkpoint_advance,
     validate_transition,
 )
+from virtual_staff_engineer.jobs.repository import (
+    IdempotencyConflictError,
+    LeaseLostError,
+    SubmissionResult,
+    WorkflowJobRecord,
+    WorkflowJobRepository,
+)
 
 __all__ = [
     "ACTIVE_JOB_STATES",
@@ -24,6 +31,11 @@ __all__ = [
     "JobFailure",
     "JobState",
     "JobTransition",
+    "IdempotencyConflictError",
+    "LeaseLostError",
+    "SubmissionResult",
+    "WorkflowJobRecord",
+    "WorkflowJobRepository",
     "validate_checkpoint_advance",
     "validate_transition",
 ]

@@ -65,7 +65,13 @@ FAILURE_DISPOSITIONS = {
 
 ALLOWED_JOB_TRANSITIONS = {
     JobState.QUEUED: frozenset(
-        {JobState.ANALYZING, JobState.CANCELLED}
+        {
+            JobState.ANALYZING,
+            JobState.GENERATING_PATCH,
+            JobState.VALIDATING_PATCH,
+            JobState.CREATING_PR,
+            JobState.CANCELLED,
+        }
     ),
     JobState.ANALYZING: frozenset(
         {

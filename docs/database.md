@@ -68,3 +68,7 @@ Active worker states require a complete lease. Waiting and terminal states
 must not retain one. `retry_scheduled` requires a retryable failure, while
 `failed` accepts a permanent failure or an exhausted retryable failure. See
 [jobs.md](jobs.md) for the complete lifecycle and trade-offs.
+
+`006_workflow_resume_state.sql` adds the active stage a retried job must resume.
+The queue repository uses this value with `FOR UPDATE SKIP LOCKED`, preventing
+recovery from replaying already completed analysis, patch, or approval work.

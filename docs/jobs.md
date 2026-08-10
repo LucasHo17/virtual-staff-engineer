@@ -81,6 +81,12 @@ They describe durable completed work, not the operation currently executing.
 After a retry, a worker reads the checkpoint and resumes at the next boundary
 instead of repeating every model or external call.
 
+`resume_state` records the active stage that must be reclaimed. A new job starts
+with `analyzing`. When a lease expires or active work schedules a retry, the
+database preserves that active state. The next claim can therefore enter
+`generating_patch`, `validating_patch`, or `creating_pr` directly instead of
+replaying completed stages.
+
 ## Database invariants
 
 Migration `005_workflow_jobs.sql` creates `workflow_jobs` and the append-only
@@ -100,6 +106,42 @@ enforce:
 - automatic transition-history rows even when SQL bypasses application code.
 
 Historical foreign keys use `ON DELETE RESTRICT`.
+
+Migration `006_workflow_resume_state.sql` adds the durable resume target and
+updates the transition trigger so a queued retry may enter only its recorded
+active stage.
+
+## Phase 3B repository operations
+
+`WorkflowJobRepository` provides the queue's transactional boundary:
+
+- `submit` creates the queued analysis record and job in one transaction. A
+  repeated idempotency key returns the original job only when the full logical
+  request identity matches; reusing the key for different content fails.
+- `claim_next` promotes due retries and atomically claims the highest-priority
+  ready job with `FOR UPDATE SKIP LOCKED`. The claim increments the attempt and
+  issues a unique lease token.
+- `heartbeat` renews only an active, unexpired lease with the exact token.
+- `recover_expired_leases` moves abandoned active work to an immediate retry,
+  preserving its resume state, or to terminal failure when no attempt remains.
+- `promote_due_retries` clears the previous transient failure and returns due
+  work to `queued`.
+
+The lease token is the ownership credential. A stale worker cannot renew or,
+in later steps, commit stage output after recovery assigns a new token.
+
+```python
+repository = WorkflowJobRepository()
+submission = repository.submit(
+    analysis_input,
+    idempotency_key="repo:commit:playbook-version",
+    model_name="gemini-3.5-flash-lite",
+    workflow_version="phase3-v1",
+    prompt_version="phase2-v1",
+)
+job = repository.claim_next("worker-01", lease_seconds=60)
+job = repository.heartbeat(job.workflow_job_id, job.lease_token)
+```
 
 ## Trade-offs
 
@@ -125,5 +167,11 @@ human-interrupt branching become a measured maintenance bottleneck.
 - Every status change creates an ordered audit row.
 - Existing Phase 1 and Phase 2 tests remain green.
 
-Phase 3B will add the repository operations that atomically enqueue and claim
-jobs using `FOR UPDATE SKIP LOCKED`, renew leases, and recover expired claims.
+Phase 3B acceptance additionally requires concurrent duplicate submissions to
+produce one job and one analysis record, concurrent workers to claim each job
+at most once, priority ordering, token-guarded heartbeat renewal, same-stage
+recovery, and terminal failure after attempt exhaustion.
+
+Phase 3C will add explicit operational failure scheduling with exponential
+backoff and jitter, idempotent stage completion, and a worker loop that executes
+the claimed analysis stage.

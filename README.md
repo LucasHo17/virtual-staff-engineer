@@ -34,6 +34,8 @@ Implemented:
 - Durable PostgreSQL workflow job state machine with idempotency identity,
   attempts, leases, retry scheduling, monotonic checkpoints, and transition
   audit history
+- Atomic idempotent job submission, priority-aware `SKIP LOCKED` claiming,
+  token-guarded heartbeats, and same-stage expired-lease recovery
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
@@ -47,9 +49,9 @@ holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
 found every violation and handled every ambiguous and irrelevant case correctly,
 with one false positive on ownership-scoped authorization code.
 
-Phase 3A is complete: the job lifecycle, failure taxonomy, database invariants,
-and acceptance tests are implemented. Phase 3B will add atomic job submission,
-worker claiming, heartbeats, and expired-lease recovery.
+Phase 3A and 3B are complete: the lifecycle and database invariants now have a
+concurrency-tested PostgreSQL queue repository. Phase 3C will add exponential
+backoff/jitter, idempotent stage completion, and the first analysis worker loop.
 
 ## Architecture
 
