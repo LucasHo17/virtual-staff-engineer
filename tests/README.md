@@ -1,7 +1,7 @@
 # Tests
 
 The test suite contains fast unit tests and PostgreSQL integration tests for
-Phase 1 retrieval and the Phase 2 analysis workflow.
+Phase 1 retrieval, Phase 2 analysis, and the Phase 3 durable job lifecycle.
 
 ## Run all tests
 
@@ -47,6 +47,10 @@ structured Gemini responses, deterministic citation validation, duplicate
 suppression, evaluator decisions, and successful/failed persistence lifecycle
 handling. They use fake reasoners and clients and make no model API calls.
 
+`unit/test_job_lifecycle.py` verifies legal and illegal job transitions, fixed
+failure classification, retry requirements, terminal behavior, and monotonic
+idempotent checkpoints without PostgreSQL.
+
 ## PostgreSQL integration tests
 
 `integration/test_ingestion.py` verifies:
@@ -89,6 +93,11 @@ supported violation.
 retrieval, analyst, validation, and evaluator flow across 20 labeled workflow
 scenarios. It uses scripted components rather than PostgreSQL or Gemini, so it
 tests cross-module behavior without claiming model quality.
+
+`integration/test_workflow_jobs.py` verifies the database rejects illegal state
+skips, checkpoint regression, active work without a lease, and unclassified
+retries. It also verifies a retry/requeue cycle and the automatically ordered
+transition audit history.
 
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project

@@ -7,7 +7,7 @@ and create remediation pull requests safely.
 
 ## Current status
 
-The project is currently in **Phase 2: Evidence-Grounded Analysis**.
+The project is currently in **Phase 3: Reliability and Safe Execution**.
 
 Implemented:
 
@@ -31,6 +31,9 @@ Implemented:
 - Balanced 20-case deterministic workflow acceptance suite
 - Frozen 20-case live-agent benchmark with quality, safety, latency, usage, and
   estimated-cost reporting
+- Durable PostgreSQL workflow job state machine with idempotency identity,
+  attempts, leases, retry scheduling, monotonic checkpoints, and transition
+  audit history
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
@@ -43,6 +46,10 @@ holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
 `0.909`, exact-rule accuracy `0.95`, and terminal-status accuracy `0.95`. It
 found every violation and handled every ambiguous and irrelevant case correctly,
 with one false positive on ownership-scoped authorization code.
+
+Phase 3A is complete: the job lifecycle, failure taxonomy, database invariants,
+and acceptance tests are implemented. Phase 3B will add atomic job submission,
+worker claiming, heartbeats, and expired-lease recovery.
 
 ## Architecture
 
@@ -188,7 +195,8 @@ src/virtual_staff_engineer/
 ├── ingestion/      Markdown parsing, embeddings, and versioned ingestion
 ├── retrieval/      Semantic, lexical, and hybrid retrieval
 ├── evaluation/     Retrieval datasets, metrics, and benchmarks
-└── analysis/       Agent contracts, orchestration, validation, and persistence
+├── analysis/       Agent contracts, orchestration, validation, and persistence
+└── jobs/           Durable lifecycle, checkpoints, and failure taxonomy
 
 scripts/            Thin command-line entry points
 tests/unit/         Fast tests without infrastructure
@@ -201,4 +209,5 @@ See [docs/architecture.md](docs/architecture.md) for module boundaries,
 [docs/retrieval.md](docs/retrieval.md) for retrieval behavior. The benchmark
 workflow and metric definitions are in [docs/evaluation.md](docs/evaluation.md).
 The Phase 2 workflow and safety boundaries are in
-[docs/analysis.md](docs/analysis.md).
+[docs/analysis.md](docs/analysis.md). The Phase 3 job lifecycle and reliability
+decisions are in [docs/jobs.md](docs/jobs.md).

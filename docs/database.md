@@ -52,3 +52,19 @@ code diff or design document as well as a stored commit. It adds
 Supported reviews create `violations` linked back to the reviewed proposal.
 Unsupported and malformed proposals remain auditable but never become
 violations. All historical foreign keys continue to use `ON DELETE RESTRICT`.
+
+## Phase 3 durable workflow jobs
+
+`005_workflow_jobs.sql` adds a durable execution envelope around analysis and
+remediation records:
+
+- `workflow_jobs` stores queue priority, idempotency identity, attempts,
+  availability, checkpoint, lease, classified failure, and terminal timing;
+- `workflow_job_transitions` stores the ordered status history; and
+- database triggers independently enforce legal transitions, immutable job
+  identity, and monotonic checkpoints.
+
+Active worker states require a complete lease. Waiting and terminal states
+must not retain one. `retry_scheduled` requires a retryable failure, while
+`failed` accepts a permanent failure or an exhausted retryable failure. See
+[jobs.md](jobs.md) for the complete lifecycle and trade-offs.

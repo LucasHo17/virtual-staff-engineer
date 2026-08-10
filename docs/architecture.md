@@ -13,7 +13,7 @@ ingestion ─────→ PostgreSQL + pgvector
                        ↑
 input ──→ analysis ──→ retrieval
              │             ↓
-             └──────→ PostgreSQL
+             └──────→ PostgreSQL ←──── jobs
                            ↑
                        evaluation
 ```
@@ -25,6 +25,8 @@ input ──→ analysis ──→ retrieval
 - `evaluation` owns datasets, quality metrics, and benchmark execution.
 - `analysis` owns reasoning contracts, bounded orchestration, deterministic
   evidence validation, provider adapters, and analysis persistence.
+- `jobs` owns the durable Phase 3 lifecycle, legal transitions, checkpoints,
+  and failure taxonomy. Database-level queue operations arrive in Phase 3B.
 - `scripts` contains only command-line argument handling and calls into the
   application package.
 
@@ -32,6 +34,10 @@ The Phase 2 agent consumes retrieval through a tool boundary. Retrieval does
 not depend on agent orchestration, and orchestration does not contain SQL.
 `AnalysisService` coordinates the in-memory workflow with the repository so
 the reasoning and persistence layers remain independently testable.
+
+The Phase 3 job is deliberately separate from `analysis_runs` and
+`remediation_actions`: those tables describe domain outcomes, while the job
+describes how work is scheduled, leased, retried, resumed, and completed.
 
 ## Why a modular monolith
 
