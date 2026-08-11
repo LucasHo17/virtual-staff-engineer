@@ -26,9 +26,11 @@ from virtual_staff_engineer.jobs.worker import (
     AnalysisWorker,
     PatchGenerationWorker,
     PatchValidationWorker,
+    GitHubPullRequestWorker,
     WorkerExecution,
     classify_failure,
     classify_patch_failure,
+    classify_github_failure,
 )
 
 __all__ = [
@@ -51,9 +53,11 @@ __all__ = [
     "AnalysisWorker",
     "PatchGenerationWorker",
     "PatchValidationWorker",
+    "GitHubPullRequestWorker",
     "WorkerExecution",
     "classify_failure",
     "classify_patch_failure",
+    "classify_github_failure",
     "validate_checkpoint_advance",
     "validate_transition",
 ]

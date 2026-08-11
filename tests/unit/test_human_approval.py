@@ -27,6 +27,24 @@ class HumanApprovalContractTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             HumanDecision("rejected", "reviewer", " ")
 
+    def test_authenticated_decision_requires_complete_identity_provenance(self):
+        decision = HumanDecision(
+            "approved",
+            "octocat",
+            authentication_method="github_token",
+            authenticated_subject="42",
+            authentication_issuer="https://github.com",
+        )
+        self.assertEqual(decision.authenticated_subject, "42")
+        with self.assertRaisesRegex(ValueError, "subject and issuer"):
+            HumanDecision(
+                "approved", "octocat", authentication_method="github_token"
+            )
+        with self.assertRaisesRegex(ValueError, "cannot claim"):
+            HumanDecision(
+                "approved", "octocat", authenticated_subject="42"
+            )
+
     def test_approval_request_requires_valid_result_and_review_evidence(self):
         with self.assertRaisesRegex(ValueError, "Only valid"):
             ApprovalRequest(

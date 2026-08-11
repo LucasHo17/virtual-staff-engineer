@@ -34,6 +34,7 @@ from virtual_staff_engineer.remediation.contracts import (
 from virtual_staff_engineer.remediation.validation import (
     DeterministicPatchValidator,
 )
+from virtual_staff_engineer.github import GitHubPullRequestResult
 
 
 try:
@@ -81,6 +82,13 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                 )
                 rows = cur.fetchall()
                 for workflow_job_id, _, remediation_action_id in rows:
+                    cur.execute(
+                        """
+                        DELETE FROM github_pr_operations
+                        WHERE workflow_job_id = %s;
+                        """,
+                        (workflow_job_id,),
+                    )
                     cur.execute(
                         """
                         DELETE FROM remediation_approval_decisions
@@ -213,6 +221,20 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                         "DELETE FROM analysis_runs WHERE analysis_run_id = %s;",
                         (analysis_run_id,),
                     )
+                cur.execute(
+                    """
+                    DELETE FROM commits
+                    WHERE repository_id IN (
+                        SELECT repository_id FROM repositories
+                        WHERE owner LIKE %s
+                    );
+                    """,
+                    (f"{self.idempotency_prefix}%",),
+                )
+                cur.execute(
+                    "DELETE FROM repositories WHERE owner LIKE %s;",
+                    (f"{self.idempotency_prefix}%",),
+                )
 
     def test_submit_is_idempotent_and_rejects_key_reuse(self):
         key = f"{self.idempotency_prefix}-same-request"
@@ -816,6 +838,75 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                 rejection_job_id,
                 HumanDecision("approved", "reviewer@example.com"),
             )
+        self.assertIsNone(
+            self.repository.claim_pr_next(
+                "manual-approval-must-not-mutate", lease_seconds=30
+            )
+        )
+
+        with psycopg.connect(TEST_DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO repositories (owner, name, github_url)
+                    VALUES (%s, 'service', 'https://github.com/acme/service')
+                    RETURNING repository_id;
+                    """,
+                    (f"{self.idempotency_prefix}-owner",),
+                )
+                repository_id = cur.fetchone()[0]
+                commit_sha = "a" * 40
+                cur.execute(
+                    """
+                    INSERT INTO commits (
+                        repository_id, commit_sha, author, message
+                    )
+                    VALUES (%s, %s, 'tester', 'fixture')
+                    RETURNING commit_id;
+                    """,
+                    (repository_id, commit_sha),
+                )
+                commit_id = cur.fetchone()[0]
+        authenticated_job_id = self._clone_approval_ready_job(
+            approval_ready.workflow_job_id,
+            suffix="authenticated-clone",
+            commit_id=commit_id,
+            source_revision=commit_sha,
+        )
+        authenticated = HumanDecision(
+            "approved",
+            "octocat",
+            "GitHub-authenticated approval.",
+            authentication_method="github_token",
+            authenticated_subject="42",
+            authentication_issuer="https://github.com",
+        )
+        self.repository.record_human_decision(
+            authenticated_job_id, authenticated
+        )
+        pr_claim = self.repository.claim_pr_next(
+            "github-pr-worker", lease_seconds=30
+        )
+        self.assertEqual(pr_claim.workflow_job_id, str(authenticated_job_id))
+        pr_context = self.repository.begin_pr_creation(
+            pr_claim.workflow_job_id, pr_claim.lease_token
+        )
+        self.assertEqual(pr_context.base_commit_sha, commit_sha)
+        self.assertTrue(pr_context.head_branch.startswith("vse/remediation-"))
+        pr_result = GitHubPullRequestResult(
+            pr_context.head_branch,
+            "b" * 40,
+            17,
+            "https://github.com/acme/service/pull/17",
+        )
+        pr_completed = self.repository.complete_pr_creation(
+            pr_claim.workflow_job_id,
+            pr_claim.lease_token,
+            pr_context,
+            pr_result,
+        )
+        self.assertEqual(pr_completed.status, JobState.COMPLETED)
+        self.assertEqual(pr_completed.checkpoint.value, "pr_created")
 
     def _submit(
         self,
@@ -912,8 +1003,14 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
             semantic_rank=1,
         )
 
-    def _clone_approval_ready_job(self, source_job_id):
-        clone_key = f"{self.idempotency_prefix}-rejection-clone"
+    def _clone_approval_ready_job(
+        self,
+        source_job_id,
+        suffix="rejection-clone",
+        commit_id=None,
+        source_revision=None,
+    ):
+        clone_key = f"{self.idempotency_prefix}-{suffix}"
         with psycopg.connect(TEST_DATABASE_URL) as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -931,7 +1028,7 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                         input_content,
                         input_checksum
                     )
-                    SELECT ar.commit_id,
+                    SELECT COALESCE(%s, ar.commit_id),
                            'review_required',
                            ar.model_name,
                            ar.workflow_version,
@@ -948,7 +1045,7 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                     WHERE j.workflow_job_id = %s
                     RETURNING analysis_run_id;
                     """,
-                    (source_job_id,),
+                    (commit_id, source_job_id),
                 )
                 analysis_run_id = cur.fetchone()[0]
                 cur.execute(
@@ -977,7 +1074,7 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                     )
                     SELECT %s,
                            pp.source_path,
-                           pp.source_revision,
+                           COALESCE(%s, pp.source_revision),
                            pp.original_content,
                            pp.original_sha256,
                            pp.unified_diff,
@@ -990,7 +1087,7 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                     WHERE j.workflow_job_id = %s
                     RETURNING patch_proposal_id;
                     """,
-                    (action_id, source_job_id),
+                    (action_id, source_revision, source_job_id),
                 )
                 proposal_id = cur.fetchone()[0]
                 cur.execute(
@@ -1069,9 +1166,10 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                     INSERT INTO workflow_jobs (
                         analysis_run_id,
                         remediation_action_id,
-                        idempotency_key
+                        idempotency_key,
+                        max_attempts
                     )
-                    VALUES (%s, %s, %s)
+                    VALUES (%s, %s, %s, 5)
                     RETURNING workflow_job_id;
                     """,
                     (analysis_run_id, action_id, clone_key),

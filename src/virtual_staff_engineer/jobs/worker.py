@@ -9,6 +9,10 @@ from virtual_staff_engineer.jobs.lifecycle import (
 )
 from virtual_staff_engineer.jobs.repository import LeaseLostError
 from virtual_staff_engineer.jobs.retry import ExponentialBackoffPolicy
+from virtual_staff_engineer.github.client import (
+    GitHubApiError,
+    GitHubStaleSourceError,
+)
 from virtual_staff_engineer.remediation.contracts import (
     PatchGenerationContext,
     validate_generated_patch,
@@ -336,6 +340,87 @@ class PatchValidationWorker:
             return WorkerExecution(claimed=True, job=scheduled)
 
 
+class GitHubPullRequestWorker:
+    """Create only the exact approved patch on an isolated GitHub branch."""
+
+    def __init__(
+        self,
+        worker_id,
+        github_client,
+        repository,
+        lease_seconds=60,
+        heartbeat_interval_seconds=None,
+        backoff_policy=None,
+        random_source=None,
+    ):
+        if not isinstance(worker_id, str) or not worker_id.strip():
+            raise ValueError("worker_id must be a non-empty string.")
+        if (
+            isinstance(lease_seconds, bool)
+            or not isinstance(lease_seconds, int)
+            or lease_seconds < 3
+        ):
+            raise ValueError("lease_seconds must be an integer of at least 3.")
+        interval = (
+            max(1, lease_seconds // 3)
+            if heartbeat_interval_seconds is None
+            else heartbeat_interval_seconds
+        )
+        if interval <= 0 or interval >= lease_seconds:
+            raise ValueError(
+                "heartbeat interval must be positive and shorter than lease."
+            )
+        self.worker_id = worker_id.strip()
+        self.github_client = github_client
+        self.repository = repository
+        self.lease_seconds = lease_seconds
+        self.heartbeat_interval_seconds = interval
+        self.backoff_policy = backoff_policy or ExponentialBackoffPolicy()
+        self.random_source = random_source
+
+    def run_once(self):
+        job = self.repository.claim_pr_next(
+            self.worker_id, lease_seconds=self.lease_seconds
+        )
+        if job is None:
+            return WorkerExecution(claimed=False)
+        try:
+            context = self.repository.begin_pr_creation(
+                job.workflow_job_id, job.lease_token
+            )
+            heartbeat = _LeaseHeartbeat(
+                repository=self.repository,
+                workflow_job_id=job.workflow_job_id,
+                lease_token=job.lease_token,
+                lease_seconds=self.lease_seconds,
+                interval_seconds=self.heartbeat_interval_seconds,
+            )
+            with heartbeat:
+                result = self.github_client.ensure_pull_request(context)
+            if heartbeat.error is not None:
+                raise heartbeat.error
+            completed = self.repository.complete_pr_creation(
+                job.workflow_job_id, job.lease_token, context, result
+            )
+            return WorkerExecution(claimed=True, job=completed)
+        except LeaseLostError:
+            raise
+        except Exception as exc:
+            failure = classify_github_failure(exc)
+            delay = 0
+            if failure.disposition is FailureDisposition.RETRYABLE:
+                delay = self.backoff_policy.delay_seconds(
+                    job.attempt_count, random_source=self.random_source
+                )
+            scheduled = self.repository.schedule_failure(
+                job.workflow_job_id,
+                job.lease_token,
+                failure,
+                delay_seconds=delay,
+            )
+            return WorkerExecution(claimed=True, job=scheduled)
+
+
 def classify_failure(error):
     """Map operational exceptions to the explicit workflow taxonomy."""
     message = str(error).strip() or error.__class__.__name__
@@ -363,6 +448,26 @@ def classify_patch_failure(error):
         else FailureCode.PATCH_INVALID
     )
     return JobFailure(code=code, message=message)
+
+
+def classify_github_failure(error):
+    message = str(error).strip() or error.__class__.__name__
+    if isinstance(error, GitHubStaleSourceError):
+        return JobFailure(code=FailureCode.STALE_SOURCE, message=message)
+    if isinstance(error, (ConnectionError, TimeoutError)):
+        return JobFailure(code=FailureCode.GITHUB_UNAVAILABLE, message=message)
+    if isinstance(error, GitHubApiError):
+        code = (
+            FailureCode.RATE_LIMITED
+            if error.status_code in {403, 429}
+            else FailureCode.GITHUB_UNAVAILABLE
+            if error.status_code is None or error.status_code >= 500
+            else FailureCode.UNSUPPORTED_REPOSITORY_STATE
+        )
+        return JobFailure(code=code, message=message)
+    return JobFailure(
+        code=FailureCode.UNSUPPORTED_REPOSITORY_STATE, message=message
+    )
 
 
 class _LeaseHeartbeat:

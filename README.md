@@ -36,6 +36,8 @@ Implemented:
   audit history
 - Atomic idempotent job submission, priority-aware `SKIP LOCKED` claiming,
   token-guarded heartbeats, and same-stage expired-lease recovery
+- GitHub-authenticated human approvals and retry-safe branch, commit, and pull
+  request reconciliation
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
@@ -49,9 +51,9 @@ holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
 found every violation and handled every ambiguous and irrelevant case correctly,
 with one false positive on ownership-scoped authorization code.
 
-Phase 3A–3C plus patch generation, deterministic validation, and human approval
-are complete: the system has a concurrency-tested PostgreSQL queue, classified
-retries, heartbeat leases, atomic checkpoints, and safe worker handoffs.
+Phase 3A–3D are complete: the system has a concurrency-tested PostgreSQL queue,
+classified retries, heartbeat leases, atomic checkpoints, authenticated human
+approval, and idempotent GitHub pull-request creation.
 
 ## Architecture
 
@@ -92,6 +94,7 @@ Copy `.env.example` to `.env`, then provide local credentials:
 GEMINI_API_KEY=your_api_key
 GEMINI_REASONING_MODEL=your_reasoning_model
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/staff_engineer_db
+GITHUB_TOKEN=your_fine_grained_github_token
 ```
 
 Start PostgreSQL with `pgvector`, then apply all pending migrations:
@@ -179,10 +182,9 @@ Run tests:
 python -m unittest discover -s tests -v
 ```
 
-The Phase 3 workers now execute analysis, structured patch generation, and
-read-only deterministic validation with durable leases, classified retries,
-atomic checkpoints, and safe stage handoffs. Valid proposals stop at the human
-approval boundary; no source or GitHub mutation occurs.
+The Phase 3 workers execute analysis, structured patch generation, read-only
+deterministic validation, authenticated approval, and isolated GitHub PR
+creation. They never write to the default branch directly.
 
 Inspect or decide a validated proposal with:
 
@@ -191,6 +193,19 @@ python scripts/review_patch.py <workflow-job-id>
 python scripts/review_patch.py <workflow-job-id> \
   --decision approved --actor reviewer@example.com
 ```
+
+`--actor` is a manually asserted audit identity and cannot authorize GitHub
+mutation. To approve with the identity authenticated by `GITHUB_TOKEN`, then run
+one PR worker cycle:
+
+```bash
+python scripts/review_patch.py <workflow-job-id> \
+  --decision approved --github-auth
+python scripts/run_github_pr_worker.py
+```
+
+The PR worker reconciles the deterministic branch and existing PR before every
+write, so a retry after a timeout does not intentionally create duplicates.
 
 See [tests/README.md](tests/README.md) for test coverage, database isolation,
 and commands for running individual test suites.
@@ -211,6 +226,7 @@ src/virtual_staff_engineer/
 ├── retrieval/      Semantic, lexical, and hybrid retrieval
 ├── evaluation/     Retrieval datasets, metrics, and benchmarks
 ├── analysis/       Agent contracts, orchestration, validation, and persistence
+├── github/         Authenticated, idempotent GitHub REST mutation adapter
 └── jobs/           Durable lifecycle, checkpoints, and failure taxonomy
 
 scripts/            Thin command-line entry points

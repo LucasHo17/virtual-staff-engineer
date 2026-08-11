@@ -18,6 +18,9 @@ class HumanDecision:
     decision: str
     actor: str
     comment: Optional[str] = None
+    authentication_method: str = "development_cli"
+    authenticated_subject: Optional[str] = None
+    authentication_issuer: Optional[str] = None
 
     def __post_init__(self):
         if self.decision not in {"approved", "rejected"}:
@@ -28,6 +31,34 @@ class HumanDecision:
                 self,
                 "comment",
                 _require_text(self.comment, "comment", 4000),
+            )
+        method = _require_text(
+            self.authentication_method, "authentication_method", 100
+        )
+        object.__setattr__(self, "authentication_method", method)
+        authenticated = method != "development_cli"
+        if authenticated:
+            if self.authenticated_subject is None or self.authentication_issuer is None:
+                raise ValueError(
+                    "Authenticated decisions require a subject and issuer."
+                )
+            object.__setattr__(
+                self,
+                "authenticated_subject",
+                _require_text(
+                    self.authenticated_subject, "authenticated_subject", 255
+                ),
+            )
+            object.__setattr__(
+                self,
+                "authentication_issuer",
+                _require_text(
+                    self.authentication_issuer, "authentication_issuer", 255
+                ),
+            )
+        elif self.authenticated_subject is not None or self.authentication_issuer is not None:
+            raise ValueError(
+                "Development CLI decisions cannot claim authenticated identity."
             )
 
 

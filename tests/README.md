@@ -36,6 +36,10 @@ lease-free handoff to validation.
 Validation coverage verifies baseline hashes, stale-source detection, in-memory
 unified-diff application, change budgets, Python/JSON syntax checks, durable
 check persistence, idempotent completion, and the approval boundary.
+
+GitHub boundary tests use an in-memory fake transport. They verify authenticated
+reviewer identity, exact validated-diff application, stale-source rejection,
+and retry reconciliation without contacting or mutating a real repository.
 Human-decision coverage verifies complete review packages, immutable artifact
 pinning, approval and rejection paths, idempotent repeats, and conflict handling.
 

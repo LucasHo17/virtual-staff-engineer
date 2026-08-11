@@ -30,6 +30,8 @@ from virtual_staff_engineer.remediation.approval import (
     HumanDecision,
     HumanDecisionResult,
 )
+from virtual_staff_engineer.github.contracts import GitHubPullRequestContext
+from virtual_staff_engineer.github.client import GitHubPullRequestResult
 
 
 ACTIVE_STATUS_VALUES = tuple(
@@ -310,6 +312,56 @@ class WorkflowJobRepository:
                 row = cur.fetchone()
         return None if row is None else _row_to_job(row)
 
+    def claim_pr_next(self, worker_id, lease_seconds=60):
+        """Claim an authenticated approval or a queued PR retry."""
+        worker = _require_text(worker_id, "worker_id")
+        _require_integer(lease_seconds, "lease_seconds", 1, 86400)
+        lease_token = uuid.uuid4()
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                self._promote_due_retries(cur, limit=100)
+                cur.execute(
+                    f"""
+                    WITH candidate AS (
+                        SELECT j.workflow_job_id
+                        FROM workflow_jobs AS j
+                        JOIN remediation_approval_decisions AS d
+                          ON d.workflow_job_id = j.workflow_job_id
+                        WHERE j.attempt_count < j.max_attempts
+                          AND j.available_at <= CURRENT_TIMESTAMP
+                          AND d.decision = 'approved'
+                          AND d.authentication_method = 'github_token'
+                          AND d.authenticated_subject IS NOT NULL
+                          AND (
+                              j.status = 'approved'
+                              OR (
+                                  j.status = 'queued'
+                                  AND j.resume_state = 'creating_pr'
+                              )
+                          )
+                        ORDER BY j.priority DESC, j.available_at, j.created_at
+                        FOR UPDATE OF j SKIP LOCKED
+                        LIMIT 1
+                    )
+                    UPDATE workflow_jobs AS job
+                    SET status = 'creating_pr',
+                        resume_state = 'creating_pr',
+                        attempt_count = job.attempt_count + 1,
+                        lease_owner = %s,
+                        lease_token = %s,
+                        heartbeat_at = CURRENT_TIMESTAMP,
+                        lease_expires_at = (
+                            CURRENT_TIMESTAMP + %s * INTERVAL '1 second'
+                        )
+                    FROM candidate
+                    WHERE job.workflow_job_id = candidate.workflow_job_id
+                    RETURNING {', '.join('job.' + name for name in _job_column_names())};
+                    """,
+                    (worker, lease_token, lease_seconds),
+                )
+                row = cur.fetchone()
+        return None if row is None else _row_to_job(row)
+
     def heartbeat(self, workflow_job_id, lease_token, lease_seconds=60):
         _require_integer(lease_seconds, "lease_seconds", 1, 86400)
         try:
@@ -524,6 +576,25 @@ class WorkflowJobRepository:
                           AND status IN ('queued', 'analyzing');
                         """,
                         (failure.message[:4000], job.analysis_run_id),
+                    )
+                if (
+                    target is JobState.FAILED
+                    and job.status is JobState.CREATING_PR
+                    and job.remediation_action_id is not None
+                ):
+                    cur.execute(
+                        """
+                        UPDATE remediation_actions
+                        SET status = 'failed',
+                            error_message = %s,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE remediation_action_id = %s
+                          AND status = 'approved';
+                        """,
+                        (
+                            failure.message[:4000],
+                            job.remediation_action_id,
+                        ),
                     )
                 return updated
 
@@ -1136,6 +1207,170 @@ class WorkflowJobRepository:
             checks=checks,
         )
 
+    def begin_pr_creation(self, workflow_job_id, lease_token):
+        """Load the exact authenticated, approved and validated mutation."""
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                job = self._lock_owned_active_job(
+                    cur,
+                    workflow_job_id,
+                    normalized_token,
+                    expected_state=JobState.CREATING_PR,
+                )
+                if job.checkpoint is not JobCheckpoint.APPROVAL_RECORDED:
+                    raise ValueError("PR creation requires recorded approval.")
+                cur.execute(
+                    """
+                    SELECT r.owner,
+                           r.name,
+                           c.commit_sha,
+                           pp.source_path,
+                           pp.source_revision,
+                           pp.original_content,
+                           pp.original_sha256,
+                           pp.unified_diff,
+                           pp.explanation,
+                           pvr.resulting_sha256,
+                           d.actor,
+                           d.authentication_method,
+                           d.authenticated_subject,
+                           array_agg(DISTINCT ppr.rule_key ORDER BY ppr.rule_key)
+                    FROM workflow_jobs AS j
+                    JOIN analysis_runs AS ar
+                      ON ar.analysis_run_id = j.analysis_run_id
+                    JOIN commits AS c ON c.commit_id = ar.commit_id
+                    JOIN repositories AS r ON r.repository_id = c.repository_id
+                    JOIN remediation_approval_decisions AS d
+                      ON d.workflow_job_id = j.workflow_job_id
+                    JOIN patch_proposals AS pp
+                      ON pp.patch_proposal_id = d.patch_proposal_id
+                    JOIN patch_validation_runs AS pvr
+                      ON pvr.patch_validation_id = d.patch_validation_id
+                    JOIN patch_proposal_rules AS ppr
+                      ON ppr.patch_proposal_id = pp.patch_proposal_id
+                    WHERE j.workflow_job_id = %s
+                      AND d.decision = 'approved'
+                      AND d.authentication_method = 'github_token'
+                      AND d.authenticated_subject IS NOT NULL
+                      AND pvr.status = 'valid'
+                    GROUP BY r.owner, r.name, c.commit_sha,
+                             pp.patch_proposal_id, pvr.patch_validation_id,
+                             d.approval_decision_id;
+                    """,
+                    (workflow_job_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise ValueError(
+                        "PR creation requires repository metadata and an "
+                        "authenticated approval."
+                    )
+                if not row[4] or row[4].lower() != row[2].lower():
+                    raise ValueError(
+                        "Approved patch revision must equal the analyzed commit."
+                    )
+                branch = "vse/remediation-" + job.remediation_action_id
+                cur.execute(
+                    """
+                    INSERT INTO github_pr_operations (
+                        workflow_job_id, remediation_action_id,
+                        repository_owner, repository_name, base_commit_sha,
+                        head_branch, attempt_count
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, 1)
+                    ON CONFLICT (workflow_job_id) DO UPDATE
+                    SET attempt_count = github_pr_operations.attempt_count + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING github_pr_operation_id;
+                    """,
+                    (
+                        workflow_job_id, job.remediation_action_id,
+                        row[0], row[1], row[2], branch,
+                    ),
+                )
+                operation_id = str(cur.fetchone()[0])
+        return GitHubPullRequestContext(
+            workflow_job_id=str(workflow_job_id),
+            remediation_action_id=job.remediation_action_id,
+            operation_id=operation_id,
+            owner=row[0],
+            repository=row[1],
+            base_commit_sha=row[2],
+            head_branch=branch,
+            source_path=row[3],
+            original_content=row[5],
+            original_sha256=row[6],
+            unified_diff=row[7],
+            explanation=row[8],
+            resulting_sha256=row[9],
+            approved_by=row[10],
+            rule_keys=tuple(row[13]),
+        )
+
+    def complete_pr_creation(self, workflow_job_id, lease_token, context, result):
+        """Atomically persist the reconciled GitHub PR and finish the job."""
+        if not isinstance(context, GitHubPullRequestContext):
+            raise TypeError("context must be a GitHubPullRequestContext.")
+        if not isinstance(result, GitHubPullRequestResult):
+            raise TypeError("result must be a GitHubPullRequestResult.")
+        normalized_token = _normalize_lease_token(lease_token)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                job = self._lock_owned_active_job(
+                    cur, workflow_job_id, normalized_token,
+                    expected_state=JobState.CREATING_PR,
+                )
+                if job.remediation_action_id != context.remediation_action_id:
+                    raise ValueError("PR result belongs to another remediation.")
+                cur.execute(
+                    """
+                    UPDATE github_pr_operations
+                    SET status = 'completed', commit_sha = %s,
+                        pr_number = %s, pr_url = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE github_pr_operation_id = %s
+                      AND workflow_job_id = %s;
+                    """,
+                    (
+                        result.commit_sha, result.pr_number, result.pr_url,
+                        context.operation_id, workflow_job_id,
+                    ),
+                )
+                if cur.rowcount != 1:
+                    raise ValueError("GitHub PR operation is missing.")
+                cur.execute(
+                    """
+                    UPDATE remediation_actions
+                    SET status = 'pr_created', branch_name = %s,
+                        pr_number = %s, pr_url = %s, error_message = NULL,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE remediation_action_id = %s
+                      AND status = 'approved';
+                    """,
+                    (
+                        result.branch_name, result.pr_number, result.pr_url,
+                        context.remediation_action_id,
+                    ),
+                )
+                if cur.rowcount != 1:
+                    raise ValueError("Remediation action is not approved.")
+                cur.execute(
+                    f"""
+                    UPDATE workflow_jobs
+                    SET status = 'completed', checkpoint = 'pr_created',
+                        lease_owner = NULL, lease_token = NULL,
+                        lease_expires_at = NULL, heartbeat_at = NULL,
+                        failure_code = NULL, failure_disposition = NULL,
+                        error_message = NULL,
+                        completed_at = CURRENT_TIMESTAMP
+                    WHERE workflow_job_id = %s
+                    RETURNING {JOB_COLUMNS};
+                    """,
+                    (workflow_job_id,),
+                )
+                return _row_to_job(cur.fetchone())
+
     def record_human_decision(self, workflow_job_id, decision):
         """Audit an idempotent decision over the exact validated proposal."""
         if not isinstance(decision, HumanDecision):
@@ -1158,7 +1393,10 @@ class WorkflowJobRepository:
                 if job.checkpoint is JobCheckpoint.APPROVAL_RECORDED:
                     cur.execute(
                         """
-                        SELECT decision, actor, comment
+                        SELECT decision, actor, comment,
+                               authentication_method,
+                               authenticated_subject,
+                               authentication_issuer
                         FROM remediation_approval_decisions
                         WHERE workflow_job_id = %s;
                         """,
@@ -1169,6 +1407,9 @@ class WorkflowJobRepository:
                         decision.decision,
                         decision.actor,
                         decision.comment,
+                        decision.authentication_method,
+                        decision.authenticated_subject,
+                        decision.authentication_issuer,
                     )
                     if existing == requested:
                         return HumanDecisionResult(job=job, created=False)
@@ -1208,9 +1449,12 @@ class WorkflowJobRepository:
                         patch_validation_id,
                         decision,
                         actor,
-                        comment
+                        comment,
+                        authentication_method,
+                        authenticated_subject,
+                        authentication_issuer
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
                     """,
                     (
                         workflow_job_id,
@@ -1220,6 +1464,9 @@ class WorkflowJobRepository:
                         decision.decision,
                         decision.actor,
                         decision.comment,
+                        decision.authentication_method,
+                        decision.authenticated_subject,
+                        decision.authentication_issuer,
                     ),
                 )
                 approved = decision.decision == "approved"
