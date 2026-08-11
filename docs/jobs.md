@@ -230,6 +230,15 @@ the permanent `patch_invalid` failure code. Neither path mutates source files.
 
 Human approval is a non-worker transition with no lease. The reviewer sees the
 exact immutable proposal, rules, and validation checks. Approval records the
-`approval_recorded` checkpoint and leaves the job in `approved` for the future
-GitHub worker; rejection records the same checkpoint and terminates in
+`approval_recorded` checkpoint and leaves the job in `approved` for the GitHub
+worker; rejection records the same checkpoint and terminates in
 `rejected`. A different second decision cannot overwrite the audit record.
+
+Phase 3D acceptance additionally requires GitHub-authenticated reviewer
+provenance, manual-approval exclusion from the mutation queue, an isolated
+deterministic branch created from the analyzed commit, exact validated-result
+hash verification, stale-source rejection, and reconciliation before branch,
+file, or PR creation. `github_pr_operations` persists the external operation so
+a retry after an uncertain response converges on the existing branch and pull
+request. See [phase3-closeout.md](phase3-closeout.md) for the verified boundary
+and the operational metrics that remain to be measured.

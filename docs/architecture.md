@@ -15,7 +15,7 @@ input ──→ analysis ──→ retrieval
              │             ↓
              └──────→ PostgreSQL ←──── jobs
                           ↑
-                     remediation
+             github ← remediation
                            ↑
                        evaluation
 ```
@@ -31,6 +31,8 @@ input ──→ analysis ──→ retrieval
   queue leases, workers, and failure taxonomy.
 - `remediation` owns structured patch contracts, provider-backed read-only
   source snapshots, patch generation, and deterministic proposal checks.
+- `github` owns reviewer authentication and retry-safe external branch, file,
+  and pull-request reconciliation.
 - `scripts` contains only command-line argument handling and calls into the
   application package.
 

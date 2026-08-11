@@ -80,5 +80,7 @@ prevents updates to persisted patch proposal provenance.
 workflow job, remediation action, proposal, and successful validation run.
 `011_immutable_validation_evidence.sql` prevents direct updates to validation
 summaries and checks after they become eligible for human approval.
+`012_github_pr_operations.sql` records authenticated reviewer provenance and
+durable GitHub branch, commit, and pull-request reconciliation state.
 The queue repository uses this value with `FOR UPDATE SKIP LOCKED`, preventing
 recovery from replaying already completed analysis, patch, or approval work.

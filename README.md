@@ -7,7 +7,8 @@ and create remediation pull requests safely.
 
 ## Current status
 
-The project is currently in **Phase 3: Reliability and Safe Execution**.
+**Phase 3: Reliability and Safe Execution is complete.** The next target is a
+measured Phase 4 baseline for observability, load, and optimization.
 
 Implemented:
 
@@ -241,4 +242,6 @@ See [docs/architecture.md](docs/architecture.md) for module boundaries,
 workflow and metric definitions are in [docs/evaluation.md](docs/evaluation.md).
 The Phase 2 workflow and safety boundaries are in
 [docs/analysis.md](docs/analysis.md). The Phase 3 job lifecycle and reliability
-decisions are in [docs/jobs.md](docs/jobs.md).
+decisions are in [docs/jobs.md](docs/jobs.md). The verified Phase 3 acceptance
+boundary and still-unmeasured operational metrics are in
+[docs/phase3-closeout.md](docs/phase3-closeout.md).

@@ -94,7 +94,7 @@ changing state:
 python scripts/review_patch.py <workflow-job-id>
 ```
 
-An explicit decision requires the reviewer identity:
+An explicit manual decision requires a reviewer label:
 
 ```bash
 python scripts/review_patch.py <workflow-job-id> \
@@ -105,12 +105,24 @@ python scripts/review_patch.py <workflow-job-id> \
 
 Use `--decision rejected` to reject it. Identical repeated decisions are
 idempotent; changing a recorded decision is a conflict. Approval moves the job
-to `approved`, ready for the future GitHub worker. Rejection moves it to the
-terminal `rejected` state. Neither decision creates a branch or pull request.
+to `approved`; rejection moves it to the terminal `rejected` state. A manually
+asserted `--actor` remains audit evidence but cannot authorize GitHub mutation.
 
-The CLI accepts an actor string but is not an authentication system. A future
-API/UI must derive that identity from authenticated session claims rather than
-trusting user-submitted text.
+For a mutation-eligible approval, `--github-auth` resolves the reviewer from
+GitHub's authenticated `/user` response using `GITHUB_TOKEN`:
+
+```bash
+python scripts/review_patch.py <workflow-job-id> \
+  --decision approved --github-auth
+python scripts/run_github_pr_worker.py
+```
+
+Migration `012_github_pr_operations.sql` adds authenticated identity provenance
+and durable GitHub operation state. The PR worker accepts only a
+`github_token`-authenticated approval, creates a deterministic branch from the
+analyzed commit, verifies the approved source and result hashes, and reconciles
+the branch and PR before each mutation. It never writes directly to the default
+branch.
 
 ## Framework decision
 
