@@ -23,6 +23,13 @@ from virtual_staff_engineer.remediation.contracts import (
     PersistedPatchProposal,
     validate_generated_patch,
 )
+from virtual_staff_engineer.remediation.approval import (
+    ApprovalCheck,
+    ApprovalRequest,
+    ApprovalRule,
+    HumanDecision,
+    HumanDecisionResult,
+)
 
 
 ACTIVE_STATUS_VALUES = tuple(
@@ -67,6 +74,10 @@ class IdempotencyConflictError(ValueError):
 
 class LeaseLostError(RuntimeError):
     """A worker attempted to renew a lease it no longer owns."""
+
+
+class ApprovalConflictError(ValueError):
+    """A completed human decision was repeated with different details."""
 
 
 @dataclass(frozen=True)
@@ -1051,6 +1062,208 @@ class WorkflowJobRepository:
                         (list(failed_analysis_run_ids),),
                     )
         return tuple(_row_to_job(row) for row in rows)
+
+    def get_approval_request(self, workflow_job_id):
+        """Return the exact validated proposal a human must review."""
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT j.workflow_job_id,
+                           j.remediation_action_id,
+                           pp.patch_proposal_id,
+                           pp.source_path,
+                           pp.source_revision,
+                           pp.original_sha256,
+                           pp.unified_diff,
+                           pp.explanation,
+                           pvr.patch_validation_id,
+                           pvr.status,
+                           pvr.resulting_sha256
+                    FROM workflow_jobs AS j
+                    JOIN patch_proposals AS pp
+                      ON pp.remediation_action_id = j.remediation_action_id
+                    JOIN patch_validation_runs AS pvr
+                      ON pvr.patch_proposal_id = pp.patch_proposal_id
+                    WHERE j.workflow_job_id = %s
+                      AND j.status = 'awaiting_approval'
+                      AND j.checkpoint = 'patch_validated'
+                      AND pvr.status = 'valid';
+                    """,
+                    (workflow_job_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    return None
+                cur.execute(
+                    """
+                    SELECT rule_key, rule_snapshot
+                    FROM patch_proposal_rules
+                    WHERE patch_proposal_id = %s
+                    ORDER BY rule_key, playbook_chunk_id;
+                    """,
+                    (row[2],),
+                )
+                rules = tuple(
+                    ApprovalRule(rule_key=item[0], rule_snapshot=item[1])
+                    for item in cur.fetchall()
+                )
+                cur.execute(
+                    """
+                    SELECT check_name, status, details
+                    FROM patch_validation_checks
+                    WHERE patch_validation_id = %s
+                    ORDER BY check_sequence;
+                    """,
+                    (row[8],),
+                )
+                checks = tuple(
+                    ApprovalCheck(name=item[0], status=item[1], details=item[2])
+                    for item in cur.fetchall()
+                )
+        return ApprovalRequest(
+            workflow_job_id=str(row[0]),
+            remediation_action_id=str(row[1]),
+            patch_proposal_id=str(row[2]),
+            source_path=row[3],
+            source_revision=row[4],
+            original_sha256=row[5],
+            unified_diff=row[6],
+            explanation=row[7],
+            rules=rules,
+            validation_status=row[9],
+            resulting_sha256=row[10],
+            checks=checks,
+        )
+
+    def record_human_decision(self, workflow_job_id, decision):
+        """Audit an idempotent decision over the exact validated proposal."""
+        if not isinstance(decision, HumanDecision):
+            raise TypeError("decision must be a HumanDecision.")
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    f"""
+                    SELECT {JOB_COLUMNS}
+                    FROM workflow_jobs
+                    WHERE workflow_job_id = %s
+                    FOR UPDATE;
+                    """,
+                    (workflow_job_id,),
+                )
+                row = cur.fetchone()
+                if row is None:
+                    raise ValueError("Workflow job does not exist.")
+                job = _row_to_job(row)
+                if job.checkpoint is JobCheckpoint.APPROVAL_RECORDED:
+                    cur.execute(
+                        """
+                        SELECT decision, actor, comment
+                        FROM remediation_approval_decisions
+                        WHERE workflow_job_id = %s;
+                        """,
+                        (workflow_job_id,),
+                    )
+                    existing = cur.fetchone()
+                    requested = (
+                        decision.decision,
+                        decision.actor,
+                        decision.comment,
+                    )
+                    if existing == requested:
+                        return HumanDecisionResult(job=job, created=False)
+                    raise ApprovalConflictError(
+                        "Workflow job already has a different human decision."
+                    )
+                if (
+                    job.status is not JobState.AWAITING_APPROVAL
+                    or job.checkpoint is not JobCheckpoint.PATCH_VALIDATED
+                ):
+                    raise ValueError(
+                        "Workflow job is not awaiting patch approval."
+                    )
+                cur.execute(
+                    """
+                    SELECT pp.patch_proposal_id,
+                           pvr.patch_validation_id
+                    FROM patch_proposals AS pp
+                    JOIN patch_validation_runs AS pvr
+                      ON pvr.patch_proposal_id = pp.patch_proposal_id
+                    WHERE pp.remediation_action_id = %s
+                      AND pvr.status = 'valid';
+                    """,
+                    (job.remediation_action_id,),
+                )
+                artifact = cur.fetchone()
+                if artifact is None:
+                    raise ValueError(
+                        "Approval requires one successfully validated proposal."
+                    )
+                cur.execute(
+                    """
+                    INSERT INTO remediation_approval_decisions (
+                        workflow_job_id,
+                        remediation_action_id,
+                        patch_proposal_id,
+                        patch_validation_id,
+                        decision,
+                        actor,
+                        comment
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                    """,
+                    (
+                        workflow_job_id,
+                        job.remediation_action_id,
+                        artifact[0],
+                        artifact[1],
+                        decision.decision,
+                        decision.actor,
+                        decision.comment,
+                    ),
+                )
+                approved = decision.decision == "approved"
+                cur.execute(
+                    """
+                    UPDATE remediation_actions
+                    SET status = %s,
+                        approved_by = CASE WHEN %s THEN %s ELSE NULL END,
+                        approved_at = CASE
+                            WHEN %s THEN CURRENT_TIMESTAMP ELSE NULL
+                        END,
+                        rejected_at = CASE
+                            WHEN %s THEN NULL ELSE CURRENT_TIMESTAMP
+                        END,
+                        error_message = NULL,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE remediation_action_id = %s
+                      AND status = 'proposed';
+                    """,
+                    (
+                        decision.decision,
+                        approved,
+                        decision.actor,
+                        approved,
+                        approved,
+                        job.remediation_action_id,
+                    ),
+                )
+                if cur.rowcount != 1:
+                    raise ValueError(
+                        "Remediation action is no longer awaiting a decision."
+                    )
+                cur.execute(
+                    f"""
+                    UPDATE workflow_jobs
+                    SET status = %s,
+                        checkpoint = 'approval_recorded'
+                    WHERE workflow_job_id = %s
+                    RETURNING {JOB_COLUMNS};
+                    """,
+                    (decision.decision, workflow_job_id),
+                )
+                updated = _row_to_job(cur.fetchone())
+                return HumanDecisionResult(job=updated, created=True)
 
     def _lock_owned_active_job(
         self,

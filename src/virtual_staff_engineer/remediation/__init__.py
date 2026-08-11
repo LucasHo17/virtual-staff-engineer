@@ -1,5 +1,13 @@
 """Structured, evidence-grounded remediation proposals."""
 
+from virtual_staff_engineer.remediation.approval import (
+    ApprovalCheck,
+    ApprovalRequest,
+    ApprovalRule,
+    HumanDecision,
+    HumanDecisionResult,
+)
+
 from virtual_staff_engineer.remediation.contracts import (
     GeneratedPatch,
     PatchGenerationContext,
@@ -25,8 +33,13 @@ from virtual_staff_engineer.remediation.validation import (
 
 __all__ = [
     "FilesystemSourceProvider",
+    "ApprovalCheck",
+    "ApprovalRequest",
+    "ApprovalRule",
     "GeneratedPatch",
     "GitSourceProvider",
+    "HumanDecision",
+    "HumanDecisionResult",
     "GeminiPatchGenerator",
     "PatchGenerationContext",
     "PatchGenerationSeed",

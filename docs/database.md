@@ -76,5 +76,9 @@ queue patch generation without pretending that the handoff is a retry.
 then permits a lease-free handoff from generation to validation.
 `009_patch_validation.sql` stores validation summaries and ordered checks, and
 prevents updates to persisted patch proposal provenance.
+`010_human_approval.sql` stores an immutable reviewer decision pinned to the
+workflow job, remediation action, proposal, and successful validation run.
+`011_immutable_validation_evidence.sql` prevents direct updates to validation
+summaries and checks after they become eligible for human approval.
 The queue repository uses this value with `FOR UPDATE SKIP LOCKED`, preventing
 recovery from replaying already completed analysis, patch, or approval work.

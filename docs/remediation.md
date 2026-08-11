@@ -83,6 +83,35 @@ not yet compile arbitrary languages or run repository test commands; those
 require an isolated execution policy with explicit allowlisted commands,
 resource limits, and timeouts.
 
+## Human approval boundary
+
+Migration `010_human_approval.sql` stores one immutable decision tied to the
+exact workflow job, remediation action, patch proposal, and successful
+validation run. A reviewer can inspect the complete review package without
+changing state:
+
+```bash
+python scripts/review_patch.py <workflow-job-id>
+```
+
+An explicit decision requires the reviewer identity:
+
+```bash
+python scripts/review_patch.py <workflow-job-id> \
+  --decision approved \
+  --actor reviewer@example.com \
+  --comment "Validated patch is safe to propose."
+```
+
+Use `--decision rejected` to reject it. Identical repeated decisions are
+idempotent; changing a recorded decision is a conflict. Approval moves the job
+to `approved`, ready for the future GitHub worker. Rejection moves it to the
+terminal `rejected` state. Neither decision creates a branch or pull request.
+
+The CLI accepts an actor string but is not an authentication system. A future
+API/UI must derive that identity from authenticated session claims rather than
+trusting user-submitted text.
+
 ## Framework decision
 
 The existing custom Python/PostgreSQL state machine still provides the needed

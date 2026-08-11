@@ -14,6 +14,7 @@ from virtual_staff_engineer.jobs.lifecycle import (
     validate_transition,
 )
 from virtual_staff_engineer.jobs.repository import (
+    ApprovalConflictError,
     IdempotencyConflictError,
     LeaseLostError,
     SubmissionResult,
@@ -33,6 +34,7 @@ from virtual_staff_engineer.jobs.worker import (
 __all__ = [
     "ACTIVE_JOB_STATES",
     "ALLOWED_JOB_TRANSITIONS",
+    "ApprovalConflictError",
     "TERMINAL_JOB_STATES",
     "FailureCode",
     "FailureDisposition",

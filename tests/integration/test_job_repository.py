@@ -20,10 +20,12 @@ from virtual_staff_engineer.jobs.lifecycle import (
     JobState,
 )
 from virtual_staff_engineer.jobs.repository import (
+    ApprovalConflictError,
     IdempotencyConflictError,
     LeaseLostError,
     WorkflowJobRepository,
 )
+from virtual_staff_engineer.remediation.approval import HumanDecision
 from virtual_staff_engineer.remediation.contracts import (
     GeneratedPatch,
     PatchGenerationContext,
@@ -79,6 +81,13 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
                 )
                 rows = cur.fetchall()
                 for workflow_job_id, _, remediation_action_id in rows:
+                    cur.execute(
+                        """
+                        DELETE FROM remediation_approval_decisions
+                        WHERE workflow_job_id = %s;
+                        """,
+                        (workflow_job_id,),
+                    )
                     cur.execute(
                         """
                         DELETE FROM workflow_job_transitions
@@ -692,6 +701,122 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
         self.assertEqual(len(validation_row[3]), 64)
         self.assertEqual(validation_row[4], 5)
 
+        approval_request = self.repository.get_approval_request(
+            approval_ready.workflow_job_id
+        )
+        rejection_job_id = self._clone_approval_ready_job(
+            approval_ready.workflow_job_id
+        )
+        self.assertEqual(
+            approval_request.patch_proposal_id,
+            persisted_proposal.patch_proposal_id,
+        )
+        self.assertEqual(approval_request.unified_diff, generated.unified_diff)
+        self.assertGreaterEqual(len(approval_request.rules), 1)
+        self.assertEqual(len(approval_request.checks), 5)
+        human_decision = HumanDecision(
+            "approved",
+            "reviewer@example.com",
+            "Validated patch is safe to propose.",
+        )
+
+        approved = self.repository.record_human_decision(
+            approval_ready.workflow_job_id, human_decision
+        )
+        repeated_approval = self.repository.record_human_decision(
+            approval_ready.workflow_job_id, human_decision
+        )
+
+        self.assertTrue(approved.created)
+        self.assertFalse(repeated_approval.created)
+        self.assertEqual(approved.job.status, JobState.APPROVED)
+        self.assertEqual(
+            approved.job.checkpoint.value, "approval_recorded"
+        )
+        with self.assertRaises(ApprovalConflictError):
+            self.repository.record_human_decision(
+                approval_ready.workflow_job_id,
+                HumanDecision("rejected", "reviewer@example.com"),
+            )
+        with psycopg.connect(TEST_DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT rad.decision,
+                           rad.actor,
+                           rad.comment,
+                           ra.status,
+                           ra.approved_by,
+                           rad.patch_proposal_id::text,
+                           rad.patch_validation_id::text
+                    FROM remediation_approval_decisions AS rad
+                    JOIN remediation_actions AS ra
+                      ON ra.remediation_action_id = rad.remediation_action_id
+                    WHERE rad.workflow_job_id = %s;
+                    """,
+                    (approval_ready.workflow_job_id,),
+                )
+                decision_row = cur.fetchone()
+        self.assertEqual(
+            decision_row[:5],
+            (
+                "approved",
+                "reviewer@example.com",
+                "Validated patch is safe to propose.",
+                "approved",
+                "reviewer@example.com",
+            ),
+        )
+        self.assertEqual(
+            decision_row[5], persisted_proposal.patch_proposal_id
+        )
+        self.assertIsNotNone(decision_row[6])
+        with self.assertRaises(psycopg.errors.CheckViolation):
+            with psycopg.connect(TEST_DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        UPDATE patch_validation_runs
+                        SET validator_version = 'rewritten'
+                        WHERE patch_validation_id = %s;
+                        """,
+                        (decision_row[6],),
+                    )
+        with self.assertRaises(psycopg.errors.CheckViolation):
+            with psycopg.connect(TEST_DATABASE_URL) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        UPDATE remediation_approval_decisions
+                        SET actor = 'different-reviewer@example.com'
+                        WHERE workflow_job_id = %s;
+                        """,
+                        (approval_ready.workflow_job_id,),
+                    )
+
+        rejection = HumanDecision(
+            "rejected",
+            "reviewer@example.com",
+            "Patch changes more behavior than intended.",
+        )
+        rejected = self.repository.record_human_decision(
+            rejection_job_id, rejection
+        )
+        repeated_rejection = self.repository.record_human_decision(
+            rejection_job_id, rejection
+        )
+
+        self.assertTrue(rejected.created)
+        self.assertFalse(repeated_rejection.created)
+        self.assertEqual(rejected.job.status, JobState.REJECTED)
+        self.assertEqual(rejected.job.checkpoint.value, "approval_recorded")
+        self.assertIsNotNone(rejected.job.completed_at)
+        with self.assertRaises(ApprovalConflictError):
+            self.repository.record_human_decision(
+                rejection_job_id,
+                HumanDecision("approved", "reviewer@example.com"),
+            )
+
     def _submit(
         self,
         key,
@@ -786,6 +911,234 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
             retrieval_score=1.0,
             semantic_rank=1,
         )
+
+    def _clone_approval_ready_job(self, source_job_id):
+        clone_key = f"{self.idempotency_prefix}-rejection-clone"
+        with psycopg.connect(TEST_DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO analysis_runs (
+                        commit_id,
+                        status,
+                        model_name,
+                        workflow_version,
+                        prompt_version,
+                        started_at,
+                        completed_at,
+                        input_type,
+                        source_path,
+                        input_content,
+                        input_checksum
+                    )
+                    SELECT ar.commit_id,
+                           'review_required',
+                           ar.model_name,
+                           ar.workflow_version,
+                           ar.prompt_version,
+                           CURRENT_TIMESTAMP,
+                           CURRENT_TIMESTAMP,
+                           ar.input_type,
+                           ar.source_path,
+                           ar.input_content,
+                           ar.input_checksum
+                    FROM analysis_runs AS ar
+                    JOIN workflow_jobs AS j
+                      ON j.analysis_run_id = ar.analysis_run_id
+                    WHERE j.workflow_job_id = %s
+                    RETURNING analysis_run_id;
+                    """,
+                    (source_job_id,),
+                )
+                analysis_run_id = cur.fetchone()[0]
+                cur.execute(
+                    """
+                    INSERT INTO remediation_actions (
+                        analysis_run_id, status, idempotency_key
+                    )
+                    VALUES (%s, 'proposed', %s)
+                    RETURNING remediation_action_id;
+                    """,
+                    (analysis_run_id, f"action:{clone_key}"),
+                )
+                action_id = cur.fetchone()[0]
+                cur.execute(
+                    """
+                    INSERT INTO patch_proposals (
+                        remediation_action_id,
+                        source_path,
+                        source_revision,
+                        original_content,
+                        original_sha256,
+                        unified_diff,
+                        explanation,
+                        model_name,
+                        prompt_version
+                    )
+                    SELECT %s,
+                           pp.source_path,
+                           pp.source_revision,
+                           pp.original_content,
+                           pp.original_sha256,
+                           pp.unified_diff,
+                           pp.explanation,
+                           pp.model_name,
+                           pp.prompt_version
+                    FROM patch_proposals AS pp
+                    JOIN workflow_jobs AS j
+                      ON j.remediation_action_id = pp.remediation_action_id
+                    WHERE j.workflow_job_id = %s
+                    RETURNING patch_proposal_id;
+                    """,
+                    (action_id, source_job_id),
+                )
+                proposal_id = cur.fetchone()[0]
+                cur.execute(
+                    """
+                    INSERT INTO patch_proposal_rules (
+                        patch_proposal_id,
+                        playbook_chunk_id,
+                        rule_key,
+                        rule_snapshot
+                    )
+                    SELECT %s,
+                           ppr.playbook_chunk_id,
+                           ppr.rule_key,
+                           ppr.rule_snapshot
+                    FROM patch_proposal_rules AS ppr
+                    JOIN patch_proposals AS pp
+                      ON pp.patch_proposal_id = ppr.patch_proposal_id
+                    JOIN workflow_jobs AS j
+                      ON j.remediation_action_id = pp.remediation_action_id
+                    WHERE j.workflow_job_id = %s;
+                    """,
+                    (proposal_id, source_job_id),
+                )
+                cur.execute(
+                    """
+                    INSERT INTO patch_validation_runs (
+                        patch_proposal_id,
+                        status,
+                        validator_version,
+                        changed_lines,
+                        resulting_sha256
+                    )
+                    SELECT %s,
+                           pvr.status,
+                           pvr.validator_version,
+                           pvr.changed_lines,
+                           pvr.resulting_sha256
+                    FROM patch_validation_runs AS pvr
+                    JOIN patch_proposals AS pp
+                      ON pp.patch_proposal_id = pvr.patch_proposal_id
+                    JOIN workflow_jobs AS j
+                      ON j.remediation_action_id = pp.remediation_action_id
+                    WHERE j.workflow_job_id = %s
+                    RETURNING patch_validation_id;
+                    """,
+                    (proposal_id, source_job_id),
+                )
+                validation_id = cur.fetchone()[0]
+                cur.execute(
+                    """
+                    INSERT INTO patch_validation_checks (
+                        patch_validation_id,
+                        check_sequence,
+                        check_name,
+                        status,
+                        details
+                    )
+                    SELECT %s,
+                           pvc.check_sequence,
+                           pvc.check_name,
+                           pvc.status,
+                           pvc.details
+                    FROM patch_validation_checks AS pvc
+                    JOIN patch_validation_runs AS pvr
+                      ON pvr.patch_validation_id = pvc.patch_validation_id
+                    JOIN patch_proposals AS pp
+                      ON pp.patch_proposal_id = pvr.patch_proposal_id
+                    JOIN workflow_jobs AS j
+                      ON j.remediation_action_id = pp.remediation_action_id
+                    WHERE j.workflow_job_id = %s;
+                    """,
+                    (validation_id, source_job_id),
+                )
+                cur.execute(
+                    """
+                    INSERT INTO workflow_jobs (
+                        analysis_run_id,
+                        remediation_action_id,
+                        idempotency_key
+                    )
+                    VALUES (%s, %s, %s)
+                    RETURNING workflow_job_id;
+                    """,
+                    (analysis_run_id, action_id, clone_key),
+                )
+                job_id = cur.fetchone()[0]
+                active_updates = (
+                    ("analyzing", "submitted", "analyzing"),
+                    ("generating_patch", "analysis_completed", "generating_patch"),
+                    ("validating_patch", "patch_generated", "validating_patch"),
+                )
+                for state, checkpoint, resume_state in active_updates:
+                    cur.execute(
+                        """
+                        UPDATE workflow_jobs
+                        SET status = %s,
+                            checkpoint = %s,
+                            resume_state = %s,
+                            attempt_count = attempt_count + 1,
+                            lease_owner = 'clone-builder',
+                            lease_token = uuid_generate_v4(),
+                            heartbeat_at = CURRENT_TIMESTAMP,
+                            lease_expires_at = (
+                                CURRENT_TIMESTAMP + INTERVAL '1 minute'
+                            )
+                        WHERE workflow_job_id = %s;
+                        """,
+                        (state, checkpoint, resume_state, job_id),
+                    )
+                    if state != "validating_patch":
+                        next_checkpoint = (
+                            "analysis_completed"
+                            if state == "analyzing"
+                            else "patch_generated"
+                        )
+                        next_resume = (
+                            "generating_patch"
+                            if state == "analyzing"
+                            else "validating_patch"
+                        )
+                        cur.execute(
+                            """
+                            UPDATE workflow_jobs
+                            SET status = 'queued',
+                                checkpoint = %s,
+                                resume_state = %s,
+                                lease_owner = NULL,
+                                lease_token = NULL,
+                                heartbeat_at = NULL,
+                                lease_expires_at = NULL
+                            WHERE workflow_job_id = %s;
+                            """,
+                            (next_checkpoint, next_resume, job_id),
+                        )
+                cur.execute(
+                    """
+                    UPDATE workflow_jobs
+                    SET status = 'awaiting_approval',
+                        checkpoint = 'patch_validated',
+                        lease_owner = NULL,
+                        lease_token = NULL,
+                        heartbeat_at = NULL,
+                        lease_expires_at = NULL
+                    WHERE workflow_job_id = %s;
+                    """,
+                    (job_id,),
+                )
+        return str(job_id)
 
 
 if __name__ == "__main__":

@@ -49,8 +49,8 @@ holdout was then run once with no tuning: precision `0.833`, recall `1.00`, F1
 found every violation and handled every ambiguous and irrelevant case correctly,
 with one false positive on ownership-scoped authorization code.
 
-Phase 3A–3C plus patch generation and deterministic validation are complete:
-the system has a concurrency-tested PostgreSQL queue, classified exponential
+Phase 3A–3C plus patch generation, deterministic validation, and human approval
+are complete: the system has a concurrency-tested PostgreSQL queue, classified
 retries, heartbeat leases, atomic checkpoints, and safe worker handoffs.
 
 ## Architecture
@@ -183,6 +183,14 @@ The Phase 3 workers now execute analysis, structured patch generation, and
 read-only deterministic validation with durable leases, classified retries,
 atomic checkpoints, and safe stage handoffs. Valid proposals stop at the human
 approval boundary; no source or GitHub mutation occurs.
+
+Inspect or decide a validated proposal with:
+
+```bash
+python scripts/review_patch.py <workflow-job-id>
+python scripts/review_patch.py <workflow-job-id> \
+  --decision approved --actor reviewer@example.com
+```
 
 See [tests/README.md](tests/README.md) for test coverage, database isolation,
 and commands for running individual test suites.

@@ -36,6 +36,8 @@ lease-free handoff to validation.
 Validation coverage verifies baseline hashes, stale-source detection, in-memory
 unified-diff application, change budgets, Python/JSON syntax checks, durable
 check persistence, idempotent completion, and the approval boundary.
+Human-decision coverage verifies complete review packages, immutable artifact
+pinning, approval and rejection paths, idempotent repeats, and conflict handling.
 
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
