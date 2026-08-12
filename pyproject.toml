@@ -9,9 +9,11 @@ description = "A human-supervised agent for evidence-backed code governance."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "fastapi",
     "google-genai",
     "psycopg[binary]",
     "python-dotenv",
+    "uvicorn[standard]",
 ]
 
 [tool.setuptools.packages.find]

@@ -244,6 +244,7 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
 
         first = self._submit(key, analysis_input)
         second = self._submit(key, analysis_input)
+        observation = self.repository.observe(first.job.workflow_job_id)
 
         self.assertTrue(first.created)
         self.assertFalse(second.created)
@@ -262,6 +263,11 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
             )
         self.assertEqual(self._job_count(key), 1)
         self.assertEqual(self._analysis_count(analysis_input.content), 1)
+        self.assertEqual(
+            observation.job.workflow_job_id, first.job.workflow_job_id
+        )
+        self.assertEqual(len(observation.events), 1)
+        self.assertEqual(observation.events[0].to_status, "queued")
 
     def test_concurrent_duplicate_submission_creates_one_job_and_run(self):
         key = f"{self.idempotency_prefix}-concurrent-submit"
@@ -877,9 +883,9 @@ class WorkflowJobRepositoryIntegrationTests(unittest.TestCase):
             "approved",
             "octocat",
             "GitHub-authenticated approval.",
-            authentication_method="github_token",
+            authentication_method="api_key",
             authenticated_subject="42",
-            authentication_issuer="https://github.com",
+            authentication_issuer="vse-api-key",
         )
         self.repository.record_human_decision(
             authenticated_job_id, authenticated

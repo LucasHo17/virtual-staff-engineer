@@ -43,6 +43,11 @@ and retry reconciliation without contacting or mutating a real repository.
 Human-decision coverage verifies complete review packages, immutable artifact
 pinning, approval and rejection paths, idempotent repeats, and conflict handling.
 
+Phase 4 API unit tests verify asynchronous submission, authentication and role
+separation, authenticated reviewer provenance, safe SSE events, and per-job
+timing responses. Observability tests verify queue, active-stage, human-wait,
+automated, and end-to-end duration calculations.
+
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
 

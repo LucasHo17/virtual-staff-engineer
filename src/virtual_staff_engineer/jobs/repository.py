@@ -32,6 +32,10 @@ from virtual_staff_engineer.remediation.approval import (
 )
 from virtual_staff_engineer.github.contracts import GitHubPullRequestContext
 from virtual_staff_engineer.github.client import GitHubPullRequestResult
+from virtual_staff_engineer.jobs.observability import (
+    WorkflowEvent,
+    build_observation,
+)
 
 
 ACTIVE_STATUS_VALUES = tuple(
@@ -265,6 +269,48 @@ class WorkflowJobRepository:
                 row = cur.fetchone()
         return None if row is None else _row_to_job(row)
 
+    def list_events(self, workflow_job_id, after_sequence=0):
+        _require_integer(after_sequence, "after_sequence", 0, 2147483647)
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT transition_sequence, from_status, to_status,
+                           attempt_count, checkpoint, failure_code,
+                           error_message, created_at
+                    FROM workflow_job_transitions
+                    WHERE workflow_job_id = %s
+                      AND transition_sequence > %s
+                    ORDER BY transition_sequence;
+                    """,
+                    (workflow_job_id, after_sequence),
+                )
+                rows = cur.fetchall()
+        return tuple(WorkflowEvent(*row) for row in rows)
+
+    def observe(self, workflow_job_id):
+        job = self.get(workflow_job_id)
+        if job is None:
+            return None
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT input_tokens, output_tokens, tool_call_count
+                    FROM analysis_runs
+                    WHERE analysis_run_id = %s;
+                    """,
+                    (job.analysis_run_id,),
+                )
+                usage = cur.fetchone() or (0, 0, 0)
+        return build_observation(
+            job,
+            self.list_events(workflow_job_id),
+            input_tokens=usage[0],
+            output_tokens=usage[1],
+            tool_call_count=usage[2],
+        )
+
     def claim_next(self, worker_id, lease_seconds=60, resume_states=None):
         worker = _require_text(worker_id, "worker_id")
         if len(worker) > 255:
@@ -330,7 +376,7 @@ class WorkflowJobRepository:
                         WHERE j.attempt_count < j.max_attempts
                           AND j.available_at <= CURRENT_TIMESTAMP
                           AND d.decision = 'approved'
-                          AND d.authentication_method = 'github_token'
+                          AND d.authentication_method IN ('github_token', 'api_key')
                           AND d.authenticated_subject IS NOT NULL
                           AND (
                               j.status = 'approved'
@@ -1251,7 +1297,7 @@ class WorkflowJobRepository:
                       ON ppr.patch_proposal_id = pp.patch_proposal_id
                     WHERE j.workflow_job_id = %s
                       AND d.decision = 'approved'
-                      AND d.authentication_method = 'github_token'
+                      AND d.authentication_method IN ('github_token', 'api_key')
                       AND d.authenticated_subject IS NOT NULL
                       AND pvr.status = 'valid'
                     GROUP BY r.owner, r.name, c.commit_sha,

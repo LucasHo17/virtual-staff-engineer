@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!frontend/.env.example
 
 # Python virtual environments
 venv/
@@ -25,6 +26,12 @@ build/
 dist/
 *.egg-info/
 .eggs/
+
+# Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
 
 # Logs and local runtime files
 *.log

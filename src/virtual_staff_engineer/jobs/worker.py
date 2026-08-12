@@ -88,6 +88,7 @@ class AnalysisWorker:
             analysis_input = self.repository.begin_analysis(
                 job.workflow_job_id, job.lease_token
             )
+            usage_before = _usage_snapshot(self.orchestrator)
             heartbeat = _LeaseHeartbeat(
                 repository=self.repository,
                 workflow_job_id=job.workflow_job_id,
@@ -99,10 +100,17 @@ class AnalysisWorker:
                 result = self.orchestrator.run(analysis_input)
             if heartbeat.error is not None:
                 raise heartbeat.error
+            usage_after = _usage_snapshot(self.orchestrator)
             completed = self.repository.complete_analysis(
                 job.workflow_job_id,
                 job.lease_token,
                 result,
+                input_tokens=max(
+                    0, usage_after[0] - usage_before[0]
+                ),
+                output_tokens=max(
+                    0, usage_after[1] - usage_before[1]
+                ),
             )
             return WorkerExecution(claimed=True, job=completed)
         except LeaseLostError:
@@ -467,6 +475,18 @@ def classify_github_failure(error):
         return JobFailure(code=code, message=message)
     return JobFailure(
         code=FailureCode.UNSUPPORTED_REPOSITORY_STATE, message=message
+    )
+
+
+def _usage_snapshot(orchestrator):
+    reasoner = getattr(orchestrator, "reasoner", None)
+    snapshot = getattr(reasoner, "usage_snapshot", None)
+    if not callable(snapshot):
+        return (0, 0)
+    usage = snapshot()
+    return (
+        int(usage.get("input_tokens", 0) or 0),
+        int(usage.get("output_tokens", 0) or 0),
     )
 
 

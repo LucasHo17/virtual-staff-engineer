@@ -22,6 +22,13 @@ from virtual_staff_engineer.jobs.repository import (
     WorkflowJobRepository,
 )
 from virtual_staff_engineer.jobs.retry import ExponentialBackoffPolicy
+from virtual_staff_engineer.jobs.observability import (
+    StageTiming,
+    WorkflowEvent,
+    WorkflowObservation,
+    build_observation,
+)
+from virtual_staff_engineer.jobs.runtime import RuntimeExecution, WorkerRuntime
 from virtual_staff_engineer.jobs.worker import (
     AnalysisWorker,
     PatchGenerationWorker,
@@ -50,6 +57,12 @@ __all__ = [
     "WorkflowJobRecord",
     "WorkflowJobRepository",
     "ExponentialBackoffPolicy",
+    "StageTiming",
+    "WorkflowEvent",
+    "WorkflowObservation",
+    "build_observation",
+    "RuntimeExecution",
+    "WorkerRuntime",
     "AnalysisWorker",
     "PatchGenerationWorker",
     "PatchValidationWorker",

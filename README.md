@@ -39,6 +39,8 @@ Implemented:
   token-guarded heartbeats, and same-stage expired-lease recovery
 - GitHub-authenticated human approvals and retry-safe branch, commit, and pull
   request reconciliation
+- Asynchronous FastAPI submission, observable job status, safe SSE workflow
+  events, and role-separated review decisions
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
@@ -183,6 +185,18 @@ Run tests:
 python -m unittest discover -s tests -v
 ```
 
+Run the Phase 4 API MVP after configuring its viewer and reviewer keys:
+
+```bash
+uvicorn virtual_staff_engineer.api.app:app --reload
+python scripts/run_workers.py
+cd frontend && npm run dev
+```
+
+The API accepts pasted code diffs and design documents, returns a durable job
+immediately, and exposes timing/status separately from worker execution. See
+[docs/api.md](docs/api.md) for endpoints, authentication, and SSE semantics.
+
 The Phase 3 workers execute analysis, structured patch generation, read-only
 deterministic validation, authenticated approval, and isolated GitHub PR
 creation. They never write to the default branch directly.
@@ -227,6 +241,7 @@ src/virtual_staff_engineer/
 ├── retrieval/      Semantic, lexical, and hybrid retrieval
 ├── evaluation/     Retrieval datasets, metrics, and benchmarks
 ├── analysis/       Agent contracts, orchestration, validation, and persistence
+├── api/            Async HTTP submission, status, SSE, review, and decisions
 ├── github/         Authenticated, idempotent GitHub REST mutation adapter
 └── jobs/           Durable lifecycle, checkpoints, and failure taxonomy
 
