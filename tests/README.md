@@ -48,6 +48,14 @@ separation, authenticated reviewer provenance, safe SSE events, and per-job
 timing responses. Observability tests verify queue, active-stage, human-wait,
 automated, and end-to-end duration calculations.
 
+`unit/test_phase4_workload.py` validates the frozen live workload, its source
+fixture, safe rejection flow, terminal mismatch handling, and unique case IDs.
+Run the workload preflight without model calls using:
+
+```bash
+python scripts/run_phase4_workload.py --dry-run
+```
+
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
 

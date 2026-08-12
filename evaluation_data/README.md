@@ -83,3 +83,16 @@ was run exactly once without tuning. The result measured 0.833 precision,
 ambiguous, and irrelevant case had the expected outcome; one clean
 ownership-scoped authorization example was falsely flagged. The result is final
 holdout evidence and must not be used for further prompt selection.
+
+## Phase 4 reproducible workload
+
+`phase4_workload_v1.json` freezes three safe live-stack cases: clean analysis,
+a validated SEC-01 patch followed by rejection, and missing-source rejection.
+The workload runner submits through FastAPI and observes the asynchronous
+workers; it does not mutate source files or invoke GitHub.
+
+Faults that should not be exposed through production HTTP switches—invalid
+patches, temporary provider failures, expired leases, and GitHub timeouts after
+mutation—are mapped to their deterministic unit/integration tests in the same
+workload file. Controlled live fault injection is deferred to Phase 4 failure
+testing.

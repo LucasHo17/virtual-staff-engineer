@@ -1,0 +1,58 @@
+{
+  "workload_id": "phase4-workload-v1",
+  "status": "frozen",
+  "required_source_files": ["app.py"],
+  "cases": [
+    {
+      "id": "live-clean-001",
+      "scenario": "clean_design",
+      "input_type": "design_document",
+      "source_path": "design.md",
+      "content": "The API validates authentication tokens and verifies resource ownership before returning customer invoices.",
+      "expected_ready_status": "completed",
+      "expected_failure_code": null,
+      "decision": null,
+      "expected_final_status": "completed"
+    },
+    {
+      "id": "live-reject-001",
+      "scenario": "validated_violation_rejected",
+      "input_type": "code_diff",
+      "source_path": "app.py",
+      "content": "--- a/app.py\n+++ b/app.py\n@@ -2,4 +2,5 @@\n \n logger = logging.getLogger(__name__)\n \n def process_request(request):\n+    logger.info(request.token)",
+      "expected_ready_status": "awaiting_approval",
+      "expected_failure_code": null,
+      "decision": "rejected",
+      "expected_final_status": "rejected"
+    },
+    {
+      "id": "live-stale-source-001",
+      "scenario": "missing_source_blocked",
+      "input_type": "code_diff",
+      "source_path": "missing.py",
+      "content": "--- a/missing.py\n+++ b/missing.py\n@@ -0,0 +1 @@\n+logger.info(request.token)",
+      "expected_ready_status": "failed",
+      "expected_failure_code": "stale_source",
+      "decision": null,
+      "expected_final_status": "failed"
+    }
+  ],
+  "deterministic_coverage": {
+    "invalid_patch": [
+      "tests/unit/test_patch_validation.py",
+      "tests/unit/test_patch_validation_worker.py"
+    ],
+    "temporary_provider_failure": [
+      "tests/unit/test_job_retry.py",
+      "tests/unit/test_patch_worker.py"
+    ],
+    "expired_lease": [
+      "tests/integration/test_job_repository.py",
+      "tests/integration/test_workflow_jobs.py"
+    ],
+    "github_timeout_after_mutation": [
+      "tests/unit/test_github_pr_worker.py",
+      "tests/unit/test_github_client.py"
+    ]
+  }
+}

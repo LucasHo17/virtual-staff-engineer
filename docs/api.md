@@ -93,3 +93,18 @@ recovery rates will be calculated by the Phase 4 benchmark workload.
 The status response also exposes analysis input/output tokens, retrieval tool
 calls, and an estimated analysis cost when model prices are configured. Patch
 generation token cost is not yet persisted and is therefore not included.
+
+## Reproducible live workload
+
+With FastAPI and the workers running, execute the frozen safe workload:
+
+```bash
+python scripts/run_phase4_workload.py \
+  --output evaluation_results/phase4_workload/run-001.json
+```
+
+The runner uses `VSE_VIEWER_API_KEY`, `VSE_REVIEWER_API_KEY`, and
+`VSE_REPOSITORY_ROOT`. It runs clean completion, validated-patch rejection, and
+stale-source blocking. It never approves a patch or calls GitHub. Use a new
+`--run-id` for an independent run; repeating the same run ID intentionally
+exercises API idempotency.
