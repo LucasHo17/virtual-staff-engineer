@@ -131,6 +131,7 @@ def run_phase4_workload(
     timeout_seconds=300,
     poll_seconds=1,
     progress_callback=None,
+    status_callback=None,
     monotonic=time.monotonic,
     sleep=time.sleep,
 ):
@@ -152,6 +153,8 @@ def run_phase4_workload(
             }
         )
         job_id = submitted["workflow_job_id"]
+        if status_callback:
+            status_callback(case.case_id, job_id, "submitted")
         ready = _wait_for_status(
             client,
             job_id,
@@ -162,6 +165,13 @@ def run_phase4_workload(
             sleep,
             alternate_status=(
                 case.expected_final_status if case.decision else None
+            ),
+            status_callback=(
+                (lambda value, case_id=case.case_id: status_callback(
+                    case_id, job_id, value
+                ))
+                if status_callback
+                else None
             ),
         )
         if ready.get("failure_code") != case.expected_failure_code:
@@ -187,6 +197,13 @@ def run_phase4_workload(
                 poll_seconds,
                 monotonic,
                 sleep,
+                status_callback=(
+                    (lambda value, case_id=case.case_id: status_callback(
+                        case_id, job_id, value
+                    ))
+                    if status_callback
+                    else None
+                ),
             )
         elif ready["status"] != case.expected_final_status:
             raise WorkloadCaseFailed(
@@ -240,11 +257,16 @@ def _wait_for_status(
     monotonic,
     sleep,
     alternate_status=None,
+    status_callback=None,
 ):
     deadline = monotonic() + timeout_seconds
+    previous = None
     while True:
         status = client.status(job_id)
         current = status["status"]
+        if current != previous and status_callback:
+            status_callback(current)
+        previous = current
         if current == expected:
             return status
         if alternate_status is not None and current == alternate_status:

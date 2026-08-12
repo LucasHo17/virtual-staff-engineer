@@ -9,7 +9,9 @@ queued [resume: generating_patch]
   → claim + lease
   → load validated violations and cited rules
   → load exact source snapshot
-  → generate structured one-file unified diff
+  → generate structured exact-text replacements
+  → verify replacements against the immutable source
+  → construct a one-file unified diff deterministically
   → verify violation, rule, and source identities
   → persist proposal and patch_generated checkpoint atomically
   → queued [resume: validating_patch]
@@ -45,7 +47,15 @@ retention policy.
 
 ## Deterministic generation checks
 
-Before persistence, the application requires:
+Gemini does not calculate unified-diff hunk locations or line counts. It
+returns minimal `old_text`/`new_text` replacements. The application requires
+each old region to appear exactly once in the immutable source, rejects
+overlapping or no-op edits, applies the replacements in memory, and constructs
+the unified diff using Python. This boundary was introduced after the Phase 4
+workload repeatedly caught semantically correct patches with invalid
+model-generated hunk counts.
+
+Before persistence, the application also requires:
 
 - a standard unified diff for exactly the requested source path;
 - exactly one modified file;

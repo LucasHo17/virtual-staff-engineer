@@ -12,7 +12,11 @@ from virtual_staff_engineer.remediation.contracts import (
     SourceSnapshot,
     validate_generated_patch,
 )
-from virtual_staff_engineer.remediation.gemini import GeminiPatchGenerator
+from virtual_staff_engineer.remediation.gemini import (
+    GeminiPatchGenerator,
+    apply_exact_replacements,
+    build_unified_diff,
+)
 from virtual_staff_engineer.remediation.source import FilesystemSourceProvider
 
 
@@ -76,7 +80,12 @@ class RemediationContractTests(unittest.TestCase):
     def test_gemini_generator_returns_structured_proposal(self):
         models = FakeModels(
             {
-                "unified_diff": _patch().unified_diff,
+                "replacements": [
+                    {
+                        "old_text": "logger.info(token)",
+                        "new_text": "logger.info('request received')",
+                    }
+                ],
                 "explanation": "Remove the sensitive log value.",
                 "addressed_violation_ids": ["violation-1"],
                 "addressed_rule_keys": ["SEC-01"],
@@ -92,9 +101,46 @@ class RemediationContractTests(unittest.TestCase):
         result = generator.generate(_context())
 
         self.assertEqual(result.addressed_rule_keys, ("SEC-01",))
+        self.assertEqual(result.unified_diff, _patch().unified_diff)
         self.assertEqual(models.calls[0]["model"], "patch-model")
         self.assertEqual(models.calls[0]["config"].temperature, 0)
         self.assertIn("proposal only", models.calls[0]["contents"])
+
+    def test_constructs_diff_deterministically_from_exact_replacement(self):
+        result = apply_exact_replacements(
+            "first\nlogger.info(token)\nlast\n",
+            [
+                {
+                    "old_text": "logger.info(token)",
+                    "new_text": "logger.info('request received')",
+                }
+            ],
+        )
+        diff = build_unified_diff(
+            "app.py", "first\nlogger.info(token)\nlast\n", result
+        )
+
+        self.assertIn("@@ -1,3 +1,3 @@", diff)
+        self.assertIn("-logger.info(token)", diff)
+        self.assertIn("+logger.info('request received')", diff)
+
+    def test_rejects_missing_ambiguous_and_overlapping_replacements(self):
+        with self.assertRaisesRegex(ValueError, "absent"):
+            apply_exact_replacements(
+                "safe()", [{"old_text": "bad()", "new_text": "safe()"}]
+            )
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            apply_exact_replacements(
+                "x x", [{"old_text": "x", "new_text": "y"}]
+            )
+        with self.assertRaisesRegex(ValueError, "overlap"):
+            apply_exact_replacements(
+                "abcdef",
+                [
+                    {"old_text": "abc", "new_text": "x"},
+                    {"old_text": "bc", "new_text": "y"},
+                ],
+            )
 
 
 def _context():

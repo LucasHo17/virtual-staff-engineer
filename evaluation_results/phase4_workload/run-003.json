@@ -1,0 +1,67 @@
+{
+  "case_count": 3,
+  "cases": [
+    {
+      "attempt_count": 1,
+      "automated_processing_ms": 3675.951,
+      "case_id": "live-clean-001",
+      "end_to_end_ms": 3675.951,
+      "estimated_analysis_cost_usd": 0.0,
+      "failure_code": null,
+      "final_status": "completed",
+      "human_wait_ms": null,
+      "input_tokens": 2713,
+      "output_tokens": 112,
+      "passed": true,
+      "queue_wait_ms": 672.797,
+      "ready_status": "completed",
+      "review_rule_keys": [],
+      "scenario": "clean_design",
+      "tool_call_count": 2,
+      "workflow_job_id": "b79fb8f3-00d3-4181-a761-f2fefbf62407"
+    },
+    {
+      "attempt_count": 3,
+      "automated_processing_ms": 5597.872,
+      "case_id": "live-reject-001",
+      "end_to_end_ms": 6378.063,
+      "estimated_analysis_cost_usd": 0.0,
+      "failure_code": null,
+      "final_status": "rejected",
+      "human_wait_ms": 780.191,
+      "input_tokens": 4154,
+      "output_tokens": 320,
+      "passed": true,
+      "queue_wait_ms": 579.634,
+      "ready_status": "awaiting_approval",
+      "review_rule_keys": [
+        "SEC-01"
+      ],
+      "scenario": "validated_violation_rejected",
+      "tool_call_count": 1,
+      "workflow_job_id": "c1490535-b09f-4065-b5c2-2f7e759b4df8"
+    },
+    {
+      "attempt_count": 2,
+      "automated_processing_ms": 4516.994,
+      "case_id": "live-stale-source-001",
+      "end_to_end_ms": 4516.994,
+      "estimated_analysis_cost_usd": 0.0,
+      "failure_code": "stale_source",
+      "final_status": "failed",
+      "human_wait_ms": null,
+      "input_tokens": 4074,
+      "output_tokens": 346,
+      "passed": true,
+      "queue_wait_ms": 227.378,
+      "ready_status": "failed",
+      "review_rule_keys": [],
+      "scenario": "missing_source_blocked",
+      "tool_call_count": 2,
+      "workflow_job_id": "b03b84d7-7a76-4e71-acd6-518a4fe6fb38"
+    }
+  ],
+  "passed_count": 3,
+  "run_id": "run-003",
+  "workload_id": "phase4-workload-v1"
+}

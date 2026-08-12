@@ -143,6 +143,9 @@ def main():
         arguments.run_id,
         timeout_seconds=arguments.timeout_seconds,
         poll_seconds=arguments.poll_seconds,
+        status_callback=lambda case_id, job_id, status: print(
+            f"   {case_id} [{job_id[:8]}]: {status}", flush=True
+        ),
         progress_callback=lambda case, completed, total: print(
             f"   [{completed}/{total}] {case['case_id']}: "
             f"{case['final_status']} ✅",
