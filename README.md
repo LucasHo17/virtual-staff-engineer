@@ -7,8 +7,11 @@ and create remediation pull requests safely.
 
 ## Current status
 
-**Phase 3: Reliability and Safe Execution is complete.** The next target is a
-measured Phase 4 baseline for observability, load, and optimization.
+**The planned four-phase implementation is complete.** The system now provides
+the measured local product path from asynchronous submission through cited
+analysis, validated remediation, authenticated approval, and retry-safe GitHub
+pull-request creation. Production deployment and a live repository acceptance
+run remain explicit follow-up work rather than unmeasured architecture changes.
 
 Implemented:
 
@@ -41,6 +44,12 @@ Implemented:
   request reconciliation
 - Asynchronous FastAPI submission, observable job status, safe SSE workflow
   events, and role-separated review decisions
+- Next.js dashboard for submission, evidence and patch review, validation
+  results, approval, failures, and pull-request links
+- Reproducible Phase 4 workload plus concurrent API, queue, worker, latency,
+  throughput, retry, and failure-injection measurements
+- Configurable concurrent analysis workers with a shared model-request limiter
+  and durable provider rate-limit recovery
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
@@ -57,6 +66,13 @@ with one false positive on ownership-scoped authorization code.
 Phase 3A–3D are complete: the system has a concurrency-tested PostgreSQL queue,
 classified retries, heartbeat leases, atomic checkpoints, authenticated human
 approval, and idempotent GitHub pull-request creation.
+
+Phase 4 is complete within the local evaluation boundary. At ten concurrent
+submissions, the final run completed 10/10 jobs with zero retries, 7.724
+jobs/min throughput, 77.314-second processing p95, and sub-4 ms health p95.
+The experiment showed that the Gemini free-tier request quota—not FastAPI or
+PostgreSQL—was the current capacity boundary. See
+[docs/phase4-closeout.md](docs/phase4-closeout.md) for scope and evidence.
 
 ## Architecture
 
@@ -240,10 +256,14 @@ and commands for running individual test suites.
 
 ## Roadmap
 
-1. Build and benchmark hybrid playbook retrieval.
-2. Build and evaluate the controlled agent workflow.
-3. Add GitHub tools, patch validation, idempotency, and approval checkpoints.
-4. Build the Next.js/FastAPI product and optimize measured bottlenecks.
+1. ✅ Build and benchmark hybrid playbook retrieval.
+2. ✅ Build and evaluate the controlled agent workflow.
+3. ✅ Add GitHub tools, patch validation, idempotency, and approval checkpoints.
+4. ✅ Build the Next.js/FastAPI product and optimize measured bottlenecks.
+
+Possible follow-up work is intentionally evidence-gated: deploy the current
+system, run an authorized real-repository PR acceptance test, upgrade the local
+Python/OpenSSL runtime, and rerun the same load test if provider quota changes.
 
 ## Project structure
 
@@ -256,8 +276,10 @@ src/virtual_staff_engineer/
 ├── analysis/       Agent contracts, orchestration, validation, and persistence
 ├── api/            Async HTTP submission, status, SSE, review, and decisions
 ├── github/         Authenticated, idempotent GitHub REST mutation adapter
-└── jobs/           Durable lifecycle, checkpoints, and failure taxonomy
+├── jobs/           Durable lifecycle, checkpoints, and failure taxonomy
+└── providers/      Shared model-provider request controls
 
+frontend/           Next.js review and approval dashboard
 scripts/            Thin command-line entry points
 tests/unit/         Fast tests without infrastructure
 tests/integration/  PostgreSQL integration tests
@@ -272,4 +294,6 @@ The Phase 2 workflow and safety boundaries are in
 [docs/analysis.md](docs/analysis.md). The Phase 3 job lifecycle and reliability
 decisions are in [docs/jobs.md](docs/jobs.md). The verified Phase 3 acceptance
 boundary and still-unmeasured operational metrics are in
-[docs/phase3-closeout.md](docs/phase3-closeout.md).
+[docs/phase3-closeout.md](docs/phase3-closeout.md). Phase 4 measurements and the
+final project boundary are recorded in
+[docs/phase4-closeout.md](docs/phase4-closeout.md).

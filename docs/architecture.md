@@ -18,6 +18,10 @@ input ──→ analysis ──→ retrieval
              github ← remediation
                            ↑
                        evaluation
+
+Next.js ──→ FastAPI ──→ PostgreSQL queue ──→ concurrent stage workers
+   ↑                                              │
+   └──────── safe SSE/status/review ──────────────┘
 ```
 
 - `database` owns PostgreSQL connections, SQL migrations, and schema assets.
@@ -33,6 +37,8 @@ input ──→ analysis ──→ retrieval
   source snapshots, patch generation, and deterministic proposal checks.
 - `github` owns reviewer authentication and retry-safe external branch, file,
   and pull-request reconciliation.
+- `providers` owns process-wide controls around model-provider requests.
+- `frontend` owns the human submission, inspection, and approval interface.
 - `scripts` contains only command-line argument handling and calls into the
   application package.
 
@@ -50,5 +56,8 @@ describes how work is scheduled, leased, retried, resumed, and completed.
 The current bottleneck is analysis correctness, not independent service
 scaling. A modular monolith provides clear ownership and test boundaries
 without adding network calls, deployment units, or distributed failure modes.
-Services such as Go gateways, Redis queues, or separate workers should be
-introduced only when measurements demonstrate the need.
+The Phase 4 level-10 load run kept FastAPI health p95 below 4 ms while the
+Gemini free-tier request quota limited total capacity. Services such as a Go
+gateway, Redis queue, or independently deployed workers would not address that
+measured constraint and should be introduced only when a future benchmark
+demonstrates the need.
