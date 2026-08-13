@@ -30,6 +30,14 @@ class FakeModels:
         return SimpleNamespace(text=json.dumps(self.payload))
 
 
+class FakeLimiter:
+    def __init__(self):
+        self.calls = 0
+
+    def acquire(self):
+        self.calls += 1
+
+
 class RemediationContractTests(unittest.TestCase):
     def test_validates_exact_evidence_grounded_single_file_patch(self):
         context = _context()
@@ -91,16 +99,19 @@ class RemediationContractTests(unittest.TestCase):
                 "addressed_rule_keys": ["SEC-01"],
             }
         )
+        limiter = FakeLimiter()
         generator = GeminiPatchGenerator(
             model="patch-model",
             prompt_version="patch-v1",
             client=SimpleNamespace(models=models),
             thinking_budget=128,
+            request_limiter=limiter,
         )
 
         result = generator.generate(_context())
 
         self.assertEqual(result.addressed_rule_keys, ("SEC-01",))
+        self.assertEqual(limiter.calls, 1)
         self.assertEqual(result.unified_diff, _patch().unified_diff)
         self.assertEqual(models.calls[0]["model"], "patch-model")
         self.assertEqual(models.calls[0]["config"].temperature, 0)

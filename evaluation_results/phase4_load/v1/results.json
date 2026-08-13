@@ -1,0 +1,276 @@
+{
+  "aborted": false,
+  "completed_at": "2026-08-13T07:48:25.269523+00:00",
+  "completed_levels": [
+    10
+  ],
+  "configured_levels": [
+    10
+  ],
+  "max_failure_rate": 0.2,
+  "run_id": "load-004",
+  "started_at": "2026-08-13T07:47:07.584735+00:00",
+  "test_id": "phase4-load-v1",
+  "waves": [
+    {
+      "api_error_count": 0,
+      "api_errors": [],
+      "automated_processing_ms": {
+        "mean": 43447.119,
+        "p50": 41281.895,
+        "p95": 77314.155,
+        "sample_count": 10
+      },
+      "completed_clean_count": 10,
+      "concurrency": 10,
+      "duration_ms": 77684.054,
+      "end_to_end_ms": {
+        "mean": 43447.119,
+        "p50": 41281.895,
+        "p95": 77314.155,
+        "sample_count": 10
+      },
+      "health_latency_ms": {
+        "mean": 2.804,
+        "p50": 2.92,
+        "p95": 3.931,
+        "sample_count": 67
+      },
+      "input_tokens": 28864,
+      "jobs": [
+        {
+          "automated_processing_ms": 29574.231,
+          "end_to_end_ms": 29574.231,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 3044,
+          "job_index": 0,
+          "output_tokens": 108,
+          "queue_wait_ms": 13590.352,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 15983.879,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 37.939,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "3983a16f-d7da-4172-adc2-87092e9b4442"
+        },
+        {
+          "automated_processing_ms": 9428.356,
+          "end_to_end_ms": 9428.356,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 2405,
+          "job_index": 1,
+          "output_tokens": 112,
+          "queue_wait_ms": 152.299,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 9276.057,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 35.452,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "935e410b-8f73-4f65-9f06-5ad300ecc405"
+        },
+        {
+          "automated_processing_ms": 25551.403,
+          "end_to_end_ms": 25551.403,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 3357,
+          "job_index": 2,
+          "output_tokens": 112,
+          "queue_wait_ms": 13585.898,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 11965.505,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 37.623,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "3d9d3ded-d83d-45b9-9533-53a996694264"
+        },
+        {
+          "automated_processing_ms": 13552.588,
+          "end_to_end_ms": 13552.588,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 3368,
+          "job_index": 3,
+          "output_tokens": 114,
+          "queue_wait_ms": 152.508,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 13400.08,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 36.806,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "0910f84c-d8bc-4072-8a18-557f98210bc7"
+        },
+        {
+          "automated_processing_ms": 45777.881,
+          "end_to_end_ms": 45777.881,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 2728,
+          "job_index": 4,
+          "output_tokens": 167,
+          "queue_wait_ms": 29642.934,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 16134.947,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 38.184,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "d6a57ad5-9aa3-4d1f-9b00-f6b705bbfeb9"
+        },
+        {
+          "automated_processing_ms": 41281.895,
+          "end_to_end_ms": 41281.895,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 3044,
+          "job_index": 5,
+          "output_tokens": 105,
+          "queue_wait_ms": 29642.024,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 11639.871,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 37.434,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "17d20039-6bbe-41fb-87d5-e31622daa89e"
+        },
+        {
+          "automated_processing_ms": 77314.155,
+          "end_to_end_ms": 77314.155,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 3039,
+          "job_index": 6,
+          "output_tokens": 98,
+          "queue_wait_ms": 61439.955,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 15874.2,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 38.219,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "5909f098-02b3-4f17-8c86-f4027b543562"
+        },
+        {
+          "automated_processing_ms": 61417.849,
+          "end_to_end_ms": 61417.849,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 2405,
+          "job_index": 7,
+          "output_tokens": 106,
+          "queue_wait_ms": 45812.952,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 15604.897,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 39.062,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "fa26ef98-f239-4111-837f-bcb328406223"
+        },
+        {
+          "automated_processing_ms": 57290.553,
+          "end_to_end_ms": 57290.553,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 2736,
+          "job_index": 8,
+          "output_tokens": 107,
+          "queue_wait_ms": 45812.686,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 11477.867,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 38.653,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "0fae50d6-5cde-4c57-963d-1c3a8b0d65b6"
+        },
+        {
+          "automated_processing_ms": 73282.276,
+          "end_to_end_ms": 73282.276,
+          "failure_code": null,
+          "final_status": "completed",
+          "input_tokens": 2738,
+          "job_index": 9,
+          "output_tokens": 112,
+          "queue_wait_ms": 61439.695,
+          "retry_count": 0,
+          "stage_timings": [
+            {
+              "duration_ms": 11842.581,
+              "stage": "analyzing"
+            }
+          ],
+          "submission_latency_ms": 38.899,
+          "tool_call_count": 2,
+          "unexpected_failure": false,
+          "workflow_job_id": "7b8817f1-2667-4cd1-b433-21b5316ffaf3"
+        }
+      ],
+      "output_tokens": 1141,
+      "queue_wait_ms": {
+        "mean": 30127.13,
+        "p50": 29642.024,
+        "p95": 61439.955,
+        "sample_count": 10
+      },
+      "retry_count": 0,
+      "submission_latency_ms": {
+        "mean": 37.827,
+        "p50": 37.939,
+        "p95": 39.062,
+        "sample_count": 10
+      },
+      "submitted_count": 10,
+      "terminal_status_counts": {
+        "completed": 10
+      },
+      "throughput_jobs_per_minute": 7.724,
+      "tool_call_count": 20,
+      "unexpected_failure_count": 0,
+      "unexpected_failure_rate": 0.0
+    }
+  ]
+}

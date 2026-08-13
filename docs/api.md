@@ -46,6 +46,19 @@ Run the asynchronous workers in another terminal:
 python scripts/run_workers.py
 ```
 
+The worker defaults to one analysis lease at a time. For the Phase 4 measured
+concurrency experiment, configure one process with:
+
+```bash
+VSE_ANALYSIS_WORKER_CONCURRENCY=2 \
+VSE_MODEL_REQUESTS_PER_MINUTE=15 \
+python scripts/run_workers.py
+```
+
+This overlaps independent jobs while smoothing Gemini generation calls. It
+does not increase the provider quota; the benchmark should show whether queue
+wait improves while total throughput remains provider-limited.
+
 `VSE_REPOSITORY_ROOT` identifies the local repository whose full source files
 may be read for patch generation. A pasted diff can be analyzed without it, but
 a supported finding cannot become a valid patch unless its `source_path`

@@ -53,6 +53,7 @@ class GeminiPatchGenerator:
         prompt_version="patch-v2",
         client=None,
         thinking_budget=None,
+        request_limiter=None,
     ):
         self.model = (
             model
@@ -79,6 +80,11 @@ class GeminiPatchGenerator:
         self.prompt_version = prompt_version.strip()
         self.client = client or genai.Client()
         self.thinking_budget = thinking_budget
+        if request_limiter is not None and not hasattr(
+            request_limiter, "acquire"
+        ):
+            raise ValueError("request_limiter must provide acquire().")
+        self.request_limiter = request_limiter
 
     def generate(self, context):
         payload = {
@@ -93,6 +99,8 @@ class GeminiPatchGenerator:
             thinking_config = types.ThinkingConfig(
                 thinking_budget=self.thinking_budget
             )
+        if self.request_limiter is not None:
+            self.request_limiter.acquire()
         response = self.client.models.generate_content(
             model=self.model,
             contents=(

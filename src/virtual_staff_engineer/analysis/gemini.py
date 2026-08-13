@@ -112,13 +112,24 @@ EVALUATION_SCHEMA = {
 class GeminiReasoner:
     """Structured Gemini adapter for planning, analysis, and evaluation."""
 
-    def __init__(self, model=None, client=None, thinking_budget=None):
+    def __init__(
+        self,
+        model=None,
+        client=None,
+        thinking_budget=None,
+        request_limiter=None,
+    ):
         self.model = model or os.getenv("GEMINI_REASONING_MODEL")
         if not self.model:
             raise RuntimeError(
                 "Set GEMINI_REASONING_MODEL or pass an explicit model."
             )
         self.client = client or genai.Client()
+        if request_limiter is not None and not hasattr(
+            request_limiter, "acquire"
+        ):
+            raise ValueError("request_limiter must provide acquire().")
+        self.request_limiter = request_limiter
         if (
             thinking_budget is not None
             and (
@@ -299,6 +310,8 @@ class GeminiReasoner:
             thinking_config = types.ThinkingConfig(
                 thinking_budget=self.thinking_budget
             )
+        if self.request_limiter is not None:
+            self.request_limiter.acquire()
         response = self.client.models.generate_content(
             model=self.model,
             contents=prompt,

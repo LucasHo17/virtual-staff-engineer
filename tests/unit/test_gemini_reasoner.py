@@ -18,6 +18,14 @@ class FakeModels:
         return SimpleNamespace(text=json.dumps(self.payloads.pop(0)))
 
 
+class FakeLimiter:
+    def __init__(self):
+        self.calls = 0
+
+    def acquire(self):
+        self.calls += 1
+
+
 class GeminiReasonerTests(unittest.TestCase):
     def test_structured_reasoning_flow(self):
         models = FakeModels(
@@ -59,10 +67,12 @@ class GeminiReasonerTests(unittest.TestCase):
                 },
             ]
         )
+        limiter = FakeLimiter()
         reasoner = GeminiReasoner(
             model="test-reasoning-model",
             client=SimpleNamespace(models=models),
             thinking_budget=512,
+            request_limiter=limiter,
         )
         analysis_input = AnalysisInput(
             "code_diff", "logger.info(token)", "app.py"
@@ -84,6 +94,7 @@ class GeminiReasonerTests(unittest.TestCase):
         )
         self.assertEqual(evaluation.decisions[0].verdict, "supported")
         self.assertEqual(len(models.calls), 3)
+        self.assertEqual(limiter.calls, 3)
         analyst_prompt = models.calls[1]["contents"]
         self.assertIn(
             "Do not assume hypothetical mitigations",

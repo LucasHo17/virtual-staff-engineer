@@ -82,6 +82,19 @@ They describe durable completed work, not the operation currently executing.
 After a retry, a worker reads the checkpoint and resumes at the next boundary
 instead of repeating every model or external call.
 
+## Worker concurrency and provider quota
+
+`VSE_ANALYSIS_WORKER_CONCURRENCY` creates independently leased analysis
+workers. PostgreSQL `FOR UPDATE SKIP LOCKED` ensures they claim different jobs;
+each worker owns a separate reasoner so per-job token accounting is not shared
+across threads. Patch generation and validation retain one worker each.
+
+`VSE_MODEL_REQUESTS_PER_MINUTE` evenly spaces Gemini generation requests from
+analysis and patch generation. This proactive limiter reduces bursts, while
+the durable `429` retry path remains the fallback when provider-side limits are
+still reached. The limiter coordinates one Python process only. Multiple worker
+processes require a future distributed limiter or a divided per-process budget.
+
 `resume_state` records the active stage that must be reclaimed. A new job starts
 with `analyzing`. When a lease expires or active work schedules a retry, the
 database preserves that active state. The next claim can therefore enter

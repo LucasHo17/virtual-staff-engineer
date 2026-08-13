@@ -1,6 +1,7 @@
 import tempfile
 import threading
 import unittest
+from pathlib import Path
 
 from virtual_staff_engineer.evaluation.load_test import (
     run_phase4_load_test,
@@ -87,6 +88,9 @@ class Phase4LoadTestTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         write_load_test_report(result, directory.name)
+        report = Path(directory.name, "report.md").read_text(encoding="utf-8")
+        self.assertIn("configured worker concurrency", report)
+        self.assertNotIn("single-worker path", report)
         with self.assertRaises(FileExistsError):
             write_load_test_report(result, directory.name)
 

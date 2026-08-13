@@ -193,6 +193,19 @@ python scripts/run_workers.py
 cd frontend && npm run dev
 ```
 
+For measured concurrent runs, one worker process can lease multiple analysis
+jobs while sharing a conservative Gemini request budget:
+
+```bash
+VSE_ANALYSIS_WORKER_CONCURRENCY=2 \
+VSE_MODEL_REQUESTS_PER_MINUTE=15 \
+python scripts/run_workers.py
+```
+
+The limiter smooths generation requests across threads in that process. It is
+not a distributed quota coordinator, so do not multiply the configured budget
+by launching several worker processes against the same provider quota.
+
 The API accepts pasted code diffs and design documents, returns a durable job
 immediately, and exposes timing/status separately from worker execution. See
 [docs/api.md](docs/api.md) for endpoints, authentication, and SSE semantics.

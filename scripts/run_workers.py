@@ -22,6 +22,21 @@ from virtual_staff_engineer.remediation import (
     FilesystemSourceProvider,
     GeminiPatchGenerator,
 )
+from virtual_staff_engineer.providers import ModelRequestRateLimiter
+
+
+def positive_int(value):
+    parsed = int(value)
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
+def positive_float(value):
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be greater than zero")
+    return parsed
 
 
 def parse_arguments():
@@ -31,6 +46,27 @@ def parse_arguments():
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--poll-seconds", type=float, default=1.0)
     parser.add_argument("--lease-seconds", type=int, default=60)
+    parser.add_argument(
+        "--analysis-concurrency",
+        type=positive_int,
+        default=positive_int(
+            os.getenv("VSE_ANALYSIS_WORKER_CONCURRENCY", "1")
+        ),
+        help="Number of independently leased analysis workers.",
+    )
+    parser.add_argument(
+        "--model-requests-per-minute",
+        type=positive_float,
+        default=(
+            positive_float(os.environ["VSE_MODEL_REQUESTS_PER_MINUTE"])
+            if os.getenv("VSE_MODEL_REQUESTS_PER_MINUTE")
+            else None
+        ),
+        help=(
+            "Shared in-process limit for Gemini generation requests; omitted "
+            "means no proactive limit."
+        ),
+    )
     parser.add_argument(
         "--repository-root",
         default=os.getenv("VSE_REPOSITORY_ROOT", "."),
@@ -44,10 +80,10 @@ def parse_arguments():
 
 def build_runtime(arguments):
     repository = WorkflowJobRepository()
-    reasoner = GeminiReasoner()
-    retrieval = HybridRetrievalTool(
-        category=os.getenv("VSE_PLAYBOOK_CATEGORY", "evaluation"),
-        ai_client=reasoner.client,
+    request_limiter = (
+        ModelRequestRateLimiter(arguments.model_requests_per_minute)
+        if arguments.model_requests_per_minute is not None
+        else None
     )
     source = FilesystemSourceProvider(Path(arguments.repository_root))
     prefix = "vse-" + socket.gethostname()
@@ -55,34 +91,45 @@ def build_runtime(arguments):
         "repository": repository,
         "lease_seconds": arguments.lease_seconds,
     }
-    workers = [
-        (
-            "analysis",
-            AnalysisWorker(
-                prefix + "-analysis",
-                BoundedAnalysisOrchestrator(reasoner, retrieval),
-                **common,
+    workers = []
+    for index in range(arguments.analysis_concurrency):
+        reasoner = GeminiReasoner(request_limiter=request_limiter)
+        retrieval = HybridRetrievalTool(
+            category=os.getenv("VSE_PLAYBOOK_CATEGORY", "evaluation"),
+            ai_client=reasoner.client,
+        )
+        workers.append(
+            (
+                "analysis-" + str(index + 1),
+                AnalysisWorker(
+                    prefix + "-analysis-" + str(index + 1),
+                    BoundedAnalysisOrchestrator(reasoner, retrieval),
+                    **common,
+                ),
+            )
+        )
+    workers.extend(
+        [
+            (
+                "patch_generation",
+                PatchGenerationWorker(
+                    prefix + "-patch",
+                    GeminiPatchGenerator(request_limiter=request_limiter),
+                    source,
+                    **common,
+                ),
             ),
-        ),
-        (
-            "patch_generation",
-            PatchGenerationWorker(
-                prefix + "-patch",
-                GeminiPatchGenerator(),
-                source,
-                **common,
+            (
+                "patch_validation",
+                PatchValidationWorker(
+                    prefix + "-validation",
+                    DeterministicPatchValidator(),
+                    source,
+                    **common,
+                ),
             ),
-        ),
-        (
-            "patch_validation",
-            PatchValidationWorker(
-                prefix + "-validation",
-                DeterministicPatchValidator(),
-                source,
-                **common,
-            ),
-        ),
-    ]
+        ]
+    )
     if os.getenv("GITHUB_TOKEN"):
         workers.append(
             (
@@ -92,12 +139,27 @@ def build_runtime(arguments):
                 ),
             )
         )
-    return WorkerRuntime(workers)
+    return WorkerRuntime(
+        workers,
+        max_parallelism=len(workers),
+    )
 
 
 def main():
     arguments = parse_arguments()
     runtime = build_runtime(arguments)
+    print(
+        json.dumps(
+            {
+                "event": "worker_runtime_started",
+                "analysis_concurrency": arguments.analysis_concurrency,
+                "model_requests_per_minute": (
+                    arguments.model_requests_per_minute
+                ),
+            }
+        ),
+        flush=True,
+    )
     while True:
         executions = runtime.run_cycle()
         for item in executions:

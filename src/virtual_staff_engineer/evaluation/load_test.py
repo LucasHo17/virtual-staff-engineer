@@ -261,9 +261,10 @@ def _render_markdown(result):
             "## Interpretation boundary",
             "",
             "The test uses clean design inputs and never approves patches or calls "
-            "GitHub. It measures the API/PostgreSQL queue/single-worker path. "
-            "Provider quotas can become the measured bottleneck and must be reported "
-            "separately from application defects.",
+            "GitHub. It measures the API, PostgreSQL queue, configured worker "
+            "concurrency, and model-provider path. Provider quotas can become the "
+            "measured bottleneck and must be reported separately from application "
+            "defects.",
             "",
         ]
     )

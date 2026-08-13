@@ -1,4 +1,5 @@
 import unittest
+import threading
 from types import SimpleNamespace
 
 from virtual_staff_engineer.jobs.runtime import WorkerRuntime
@@ -12,6 +13,15 @@ class FakeWorker:
     def run_once(self):
         self.calls += 1
         return SimpleNamespace(claimed=self.claimed)
+
+
+class BarrierWorker:
+    def __init__(self, barrier):
+        self.barrier = barrier
+
+    def run_once(self):
+        self.barrier.wait(timeout=1)
+        return SimpleNamespace(claimed=True)
 
 
 class WorkerRuntimeTests(unittest.TestCase):
@@ -30,6 +40,25 @@ class WorkerRuntimeTests(unittest.TestCase):
             WorkerRuntime(())
         with self.assertRaises(ValueError):
             WorkerRuntime((("", FakeWorker(False)),))
+
+    def test_can_poll_independent_workers_concurrently(self):
+        barrier = threading.Barrier(2)
+        results = WorkerRuntime(
+            (
+                ("analysis-1", BarrierWorker(barrier)),
+                ("analysis-2", BarrierWorker(barrier)),
+            ),
+            max_parallelism=2,
+        ).run_cycle()
+
+        self.assertEqual(
+            tuple(item.stage for item in results),
+            ("analysis-1", "analysis-2"),
+        )
+
+    def test_requires_positive_parallelism(self):
+        with self.assertRaises(ValueError):
+            WorkerRuntime((("analysis", FakeWorker(False)),), 0)
 
 
 if __name__ == "__main__":
