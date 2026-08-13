@@ -54,6 +54,7 @@ class JobStatusResponse(BaseModel):
     input_tokens: int
     output_tokens: int
     tool_call_count: int
+    retry_count: int
     estimated_analysis_cost_usd: Optional[float]
 
 

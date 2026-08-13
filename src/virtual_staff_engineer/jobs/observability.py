@@ -33,6 +33,7 @@ class WorkflowObservation:
     input_tokens: int = 0
     output_tokens: int = 0
     tool_call_count: int = 0
+    retry_count: int = 0
 
 
 def build_observation(
@@ -94,6 +95,9 @@ def build_observation(
         timings.append(
             StageTiming(event.to_status, _milliseconds(end - event.created_at))
         )
+    retry_count = sum(
+        event.to_status == "retry_scheduled" for event in events
+    )
     return WorkflowObservation(
         job=job,
         events=events,
@@ -105,6 +109,7 @@ def build_observation(
         input_tokens=input_tokens,
         output_tokens=output_tokens,
         tool_call_count=tool_call_count,
+        retry_count=retry_count,
     )
 
 

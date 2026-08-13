@@ -20,8 +20,9 @@ class WorkflowObservabilityTests(unittest.TestCase):
             _event(2, "analyzing", start + timedelta(seconds=2)),
             _event(3, "awaiting_approval", start + timedelta(seconds=8)),
             _event(4, "approved", start + timedelta(seconds=13)),
-            _event(5, "creating_pr", start + timedelta(seconds=15)),
-            _event(6, "completed", start + timedelta(seconds=20)),
+            _event(5, "retry_scheduled", start + timedelta(seconds=14)),
+            _event(6, "creating_pr", start + timedelta(seconds=15)),
+            _event(7, "completed", start + timedelta(seconds=20)),
         )
 
         observation = build_observation(job, events)
@@ -30,6 +31,7 @@ class WorkflowObservabilityTests(unittest.TestCase):
         self.assertEqual(observation.human_wait_ms, 5000.0)
         self.assertEqual(observation.end_to_end_ms, 20000.0)
         self.assertEqual(observation.automated_processing_ms, 15000.0)
+        self.assertEqual(observation.retry_count, 1)
         self.assertEqual(
             [(item.stage, item.duration_ms) for item in observation.stage_timings],
             [("analyzing", 6000.0), ("creating_pr", 5000.0)],

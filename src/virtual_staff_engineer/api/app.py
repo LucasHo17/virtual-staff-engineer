@@ -217,14 +217,19 @@ def _status_response(observation):
         input_tokens=observation.input_tokens,
         output_tokens=observation.output_tokens,
         tool_call_count=observation.tool_call_count,
+        retry_count=observation.retry_count,
         estimated_analysis_cost_usd=_estimated_cost(observation),
     )
 
 
 def _estimated_cost(observation):
+    input_value = os.getenv("VSE_INPUT_COST_PER_MILLION")
+    output_value = os.getenv("VSE_OUTPUT_COST_PER_MILLION")
+    if input_value is None or output_value is None:
+        return None
     try:
-        input_rate = float(os.getenv("VSE_INPUT_COST_PER_MILLION", "0"))
-        output_rate = float(os.getenv("VSE_OUTPUT_COST_PER_MILLION", "0"))
+        input_rate = float(input_value)
+        output_rate = float(output_value)
     except ValueError:
         return None
     if input_rate < 0 or output_rate < 0:

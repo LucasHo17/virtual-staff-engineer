@@ -1,6 +1,7 @@
 import json
 import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -139,6 +140,8 @@ def run_phase4_workload(
         raise ValueError("run_id must be a non-empty string.")
     if timeout_seconds <= 0 or poll_seconds <= 0:
         raise ValueError("timeout_seconds and poll_seconds must be positive.")
+    started_at = datetime.now(timezone.utc)
+    started_clock = monotonic()
     results = []
     for case in workload.cases:
         submitted = client.submit(
@@ -220,6 +223,7 @@ def run_phase4_workload(
             "final_status": final["status"],
             "failure_code": final.get("failure_code"),
             "attempt_count": final.get("attempt_count"),
+            "retry_count": final.get("retry_count"),
             "queue_wait_ms": final.get("queue_wait_ms"),
             "automated_processing_ms": final.get("automated_processing_ms"),
             "human_wait_ms": final.get("human_wait_ms"),
@@ -230,6 +234,7 @@ def run_phase4_workload(
             "estimated_analysis_cost_usd": final.get(
                 "estimated_analysis_cost_usd"
             ),
+            "stage_timings": final.get("stage_timings", []),
             "review_rule_keys": (
                 [item["rule_key"] for item in review.get("rules", [])]
                 if review
@@ -239,9 +244,14 @@ def run_phase4_workload(
         results.append(result)
         if progress_callback:
             progress_callback(result, len(results), len(workload.cases))
+    completed_at = datetime.now(timezone.utc)
+    duration_ms = round(max(0.0, monotonic() - started_clock) * 1000, 3)
     return {
         "workload_id": workload.workload_id,
         "run_id": run_id.strip(),
+        "started_at": started_at.isoformat(),
+        "completed_at": completed_at.isoformat(),
+        "duration_ms": duration_ms,
         "case_count": len(results),
         "passed_count": len(results),
         "cases": results,

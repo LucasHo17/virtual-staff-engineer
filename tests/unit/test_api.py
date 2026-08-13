@@ -46,6 +46,8 @@ class FakeRepository:
             human_wait_ms=None,
             automated_processing_ms=5.0,
             end_to_end_ms=5.0,
+            input_tokens=100,
+            output_tokens=50,
         )
 
     def list_events(self, workflow_job_id, after_sequence=0):
@@ -121,12 +123,31 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(options["model_name"], "test-model")
 
     def test_status_exposes_metrics_without_reasoning(self):
-        response = self.client.get(
-            "/jobs/job-1", headers={"X-API-Key": "viewer-secret"}
-        )
+        with patch.dict(os.environ, {}, clear=True):
+            response = self.client.get(
+                "/jobs/job-1", headers={"X-API-Key": "viewer-secret"}
+            )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["end_to_end_ms"], 5.0)
+        self.assertEqual(response.json()["retry_count"], 0)
+        self.assertIsNone(response.json()["estimated_analysis_cost_usd"])
         self.assertNotIn("reasoning", response.json())
+
+    def test_cost_is_estimated_only_when_both_rates_are_configured(self):
+        with patch.dict(
+            os.environ,
+            {
+                "VSE_INPUT_COST_PER_MILLION": "1",
+                "VSE_OUTPUT_COST_PER_MILLION": "2",
+            },
+            clear=True,
+        ):
+            response = self.client.get(
+                "/jobs/job-1", headers={"X-API-Key": "viewer-secret"}
+            )
+        self.assertEqual(
+            response.json()["estimated_analysis_cost_usd"], 0.0002
+        )
 
     def test_only_reviewer_can_decide_and_actor_comes_from_auth(self):
         payload = {"decision": "approved", "comment": "Ship it."}

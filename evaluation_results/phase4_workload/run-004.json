@@ -1,0 +1,103 @@
+{
+  "case_count": 3,
+  "cases": [
+    {
+      "attempt_count": 1,
+      "automated_processing_ms": 3034.983,
+      "case_id": "live-clean-001",
+      "end_to_end_ms": 3034.983,
+      "estimated_analysis_cost_usd": null,
+      "failure_code": null,
+      "final_status": "completed",
+      "human_wait_ms": null,
+      "input_tokens": 3026,
+      "output_tokens": 108,
+      "passed": true,
+      "queue_wait_ms": 201.827,
+      "ready_status": "completed",
+      "retry_count": 0,
+      "review_rule_keys": [],
+      "scenario": "clean_design",
+      "stage_timings": [
+        {
+          "duration_ms": 2833.156,
+          "stage": "analyzing"
+        }
+      ],
+      "tool_call_count": 2,
+      "workflow_job_id": "d272e902-237f-4401-bb9a-5c978dd0b132"
+    },
+    {
+      "attempt_count": 3,
+      "automated_processing_ms": 6444.367,
+      "case_id": "live-reject-001",
+      "end_to_end_ms": 7452.499,
+      "estimated_analysis_cost_usd": null,
+      "failure_code": null,
+      "final_status": "rejected",
+      "human_wait_ms": 1008.132,
+      "input_tokens": 5517,
+      "output_tokens": 330,
+      "passed": true,
+      "queue_wait_ms": 985.031,
+      "ready_status": "awaiting_approval",
+      "retry_count": 0,
+      "review_rule_keys": [
+        "SEC-01"
+      ],
+      "scenario": "validated_violation_rejected",
+      "stage_timings": [
+        {
+          "duration_ms": 4036.436,
+          "stage": "analyzing"
+        },
+        {
+          "duration_ms": 1342.587,
+          "stage": "generating_patch"
+        },
+        {
+          "duration_ms": 31.305,
+          "stage": "validating_patch"
+        }
+      ],
+      "tool_call_count": 2,
+      "workflow_job_id": "a690feac-1ca5-49b9-869f-f7f4589214f6"
+    },
+    {
+      "attempt_count": 2,
+      "automated_processing_ms": 5110.026,
+      "case_id": "live-stale-source-001",
+      "end_to_end_ms": 5110.026,
+      "estimated_analysis_cost_usd": null,
+      "failure_code": "stale_source",
+      "final_status": "failed",
+      "human_wait_ms": null,
+      "input_tokens": 5393,
+      "output_tokens": 358,
+      "passed": true,
+      "queue_wait_ms": 1037.359,
+      "ready_status": "failed",
+      "retry_count": 0,
+      "review_rule_keys": [],
+      "scenario": "missing_source_blocked",
+      "stage_timings": [
+        {
+          "duration_ms": 4010.567,
+          "stage": "analyzing"
+        },
+        {
+          "duration_ms": 31.301,
+          "stage": "generating_patch"
+        }
+      ],
+      "tool_call_count": 2,
+      "workflow_job_id": "2c1357b9-8c31-43e0-b2db-50693c498a42"
+    }
+  ],
+  "completed_at": "2026-08-12T21:48:56.310943+00:00",
+  "duration_ms": 15983.368,
+  "passed_count": 3,
+  "run_id": "run-004",
+  "started_at": "2026-08-12T21:48:40.335158+00:00",
+  "workload_id": "phase4-workload-v1"
+}

@@ -86,6 +86,10 @@ Status derives metrics from the immutable `workflow_job_transitions` history:
 - `human_wait_ms`: awaiting approval until approve/reject;
 - `automated_processing_ms`: end-to-end time excluding completed human wait;
 - `end_to_end_ms`: submission through terminal completion, including human wait.
+- `retry_count`: number of durable `retry_scheduled` transitions.
+
+`attempt_count` counts worker-stage claims, so it must not be interpreted as a
+retry count.
 
 These are per-job observations. Aggregate p50/p95, throughput, success, and
 recovery rates will be calculated by the Phase 4 benchmark workload.
@@ -93,6 +97,8 @@ recovery rates will be calculated by the Phase 4 benchmark workload.
 The status response also exposes analysis input/output tokens, retrieval tool
 calls, and an estimated analysis cost when model prices are configured. Patch
 generation token cost is not yet persisted and is therefore not included.
+If either price variable is absent, estimated cost is reported as `null`, not
+as a misleading zero. Explicit zero rates may be used for a free-tier run.
 
 ## Reproducible live workload
 
@@ -108,3 +114,15 @@ The runner uses `VSE_VIEWER_API_KEY`, `VSE_REVIEWER_API_KEY`, and
 stale-source blocking. It never approves a patch or calls GitHub. Use a new
 `--run-id` for an independent run; repeating the same run ID intentionally
 exercises API idempotency.
+
+Each new workload result includes run-level duration and per-job retry/stage
+metrics. Aggregate one or more successful runs into an offline baseline:
+
+```bash
+python scripts/summarize_phase4_baseline.py \
+  evaluation_results/phase4_workload/run-004.json \
+  --output-dir evaluation_results/phase4_baseline/v1
+```
+
+The report labels fewer than 20 jobs as an exploratory sample. It does not
+present a three-job p95 as statistically stable evidence.

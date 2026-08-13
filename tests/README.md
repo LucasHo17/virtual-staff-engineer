@@ -56,6 +56,10 @@ Run the workload preflight without model calls using:
 python scripts/run_phase4_workload.py --dry-run
 ```
 
+`unit/test_phase4_baseline.py` verifies outcome, latency, throughput, retry,
+token, tool-call, and cost aggregation. It also verifies compatibility with
+older workload results and refuses accidental report overwrites.
+
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
 

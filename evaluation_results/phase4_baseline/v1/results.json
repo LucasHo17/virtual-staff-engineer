@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-08-12T21:49:52.905090+00:00",
+  "latency_ms": {
+    "automated_processing": {
+      "mean": 4863.125,
+      "p50": 5110.026,
+      "p95": 6444.367,
+      "sample_count": 3
+    },
+    "end_to_end": {
+      "mean": 5199.169,
+      "p50": 5110.026,
+      "p95": 7452.499,
+      "sample_count": 3
+    },
+    "human_wait": {
+      "mean": 1008.132,
+      "p50": 1008.132,
+      "p95": 1008.132,
+      "sample_count": 1
+    },
+    "queue_wait": {
+      "mean": 741.406,
+      "p50": 985.031,
+      "p95": 1037.359,
+      "sample_count": 3
+    }
+  },
+  "outcomes": {
+    "expected_safety_block_count": 1,
+    "passed_count": 3,
+    "terminal_status_counts": {
+      "completed": 1,
+      "failed": 1,
+      "rejected": 1
+    },
+    "unexpected_failure_count": 0,
+    "workload_acceptance_rate": 1.0
+  },
+  "retries": {
+    "jobs_with_retry": 0,
+    "measured_job_count": 3,
+    "retry_recovery_rate": null
+  },
+  "sample": {
+    "job_count": 3,
+    "run_count": 1,
+    "small_sample_warning": true
+  },
+  "source_runs": [
+    "evaluation_results/phase4_workload/run-004.json"
+  ],
+  "throughput": {
+    "jobs_per_minute": 11.262,
+    "measured_run_count": 1
+  },
+  "usage": {
+    "costed_job_count": 0,
+    "estimated_analysis_cost_usd": null,
+    "input_tokens": 13936,
+    "output_tokens": 796,
+    "tool_calls": 6
+  },
+  "workload_id": "phase4-workload-v1"
+}
