@@ -126,3 +126,48 @@ python scripts/summarize_phase4_baseline.py \
 
 The report labels fewer than 20 jobs as an exploratory sample. It does not
 present a three-job p95 as statistically stable evidence.
+
+## Concurrent load and failure tests
+
+The load runner submits clean design reviews in increasing concurrent waves.
+Without `--execute`, it only prints the planned number of live jobs:
+
+```bash
+python scripts/run_phase4_load_test.py
+```
+
+Start with the low-risk waves while FastAPI and one worker process are running:
+
+```bash
+python scripts/run_phase4_load_test.py \
+  --levels 1,5 \
+  --run-id load-001 \
+  --output-dir evaluation_results/phase4_load/load-001 \
+  --execute
+```
+
+Inspect that report before expanding the identical workload:
+
+```bash
+python scripts/run_phase4_load_test.py \
+  --levels 1,5,10,25 \
+  --run-id load-002 \
+  --output-dir evaluation_results/phase4_load/load-002 \
+  --execute
+```
+
+The runner measures submission, health-probe, queue, processing, and end-to-end
+latency; clean completions, unexpected outcomes, throughput, retries, and token
+usage; and per-job stage timings. It stops before higher waves when the current
+wave exceeds `--max-failure-rate` (default 20%). The workload never approves a
+patch or invokes GitHub.
+
+Run controlled failure behavior without adding production fault switches:
+
+```bash
+python scripts/run_phase4_failure_tests.py
+```
+
+This deterministic suite covers bounded backoff and jitter, temporary provider
+failure, invalid/stale patches, expired job leases when PostgreSQL is available,
+and GitHub timeout reconciliation without contacting GitHub.

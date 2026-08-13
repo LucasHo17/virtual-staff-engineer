@@ -60,6 +60,12 @@ python scripts/run_phase4_workload.py --dry-run
 token, tool-call, and cost aggregation. It also verifies compatibility with
 older workload results and refuses accidental report overwrites.
 
+`unit/test_phase4_load_test.py` verifies concurrent wave execution, latency and
+usage aggregation, automatic safety abort, concurrency validation, and report
+overwrite protection. `scripts/run_phase4_failure_tests.py` runs the focused
+retry, lease, validation, and GitHub reconciliation suite without production
+fault-injection endpoints.
+
 `unit/test_semantic_retrieval.py` verifies query validation, embedding
 generation, vector validation, supported dimensions, and `top_k` boundaries.
 
