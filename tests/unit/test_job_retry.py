@@ -50,6 +50,29 @@ class ExponentialBackoffPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             ExponentialBackoffPolicy().delay_seconds(0)
 
+    def test_provider_minimum_is_a_hard_floor_after_jitter(self):
+        policy = ExponentialBackoffPolicy(
+            base_seconds=5, maximum_seconds=60, jitter_ratio=0.2
+        )
+
+        self.assertEqual(
+            policy.delay_seconds(
+                1, random_source=FixedRandom(0), minimum_seconds=24.6
+            ),
+            24.6,
+        )
+        self.assertAlmostEqual(
+            policy.delay_seconds(
+                1, random_source=FixedRandom(1), minimum_seconds=24.6
+            ),
+            29.52,
+        )
+
+        for value in (-1, 86401, True):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    policy.delay_seconds(1, minimum_seconds=value)
+
 
 if __name__ == "__main__":
     unittest.main()

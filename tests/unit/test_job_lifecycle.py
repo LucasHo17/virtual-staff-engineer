@@ -68,6 +68,20 @@ class JobLifecycleTests(unittest.TestCase):
                 FailureDisposition.RETRYABLE,
             )
 
+    def test_retry_hint_requires_retryable_failure_and_valid_bounds(self):
+        failure = JobFailure(
+            FailureCode.RATE_LIMITED,
+            "Quota exceeded.",
+            retry_after_seconds=24.6,
+        )
+        self.assertEqual(failure.retry_after_seconds, 24.6)
+        with self.assertRaises(ValueError):
+            JobFailure(
+                FailureCode.MODEL_CONTRACT_INVALID,
+                "Bad JSON.",
+                retry_after_seconds=5,
+            )
+
     def test_failed_requires_failure_details(self):
         with self.assertRaisesRegex(ValueError, "requires a JobFailure"):
             validate_transition(JobState.ANALYZING, JobState.FAILED)

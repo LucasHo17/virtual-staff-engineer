@@ -1,4 +1,5 @@
 import threading
+import re
 from dataclasses import dataclass
 
 from virtual_staff_engineer.jobs.lifecycle import (
@@ -119,9 +120,9 @@ class AnalysisWorker:
             failure = self.failure_classifier(exc)
             delay = 0
             if failure.disposition is FailureDisposition.RETRYABLE:
-                delay = self.backoff_policy.delay_seconds(
-                    job.attempt_count,
-                    random_source=self.random_source,
+                delay = _retry_delay(
+                    self.backoff_policy, failure, job.attempt_count,
+                    self.random_source,
                 )
             scheduled = self.repository.schedule_failure(
                 job.workflow_job_id,
@@ -232,9 +233,9 @@ class PatchGenerationWorker:
             failure = self.failure_classifier(exc)
             delay = 0
             if failure.disposition is FailureDisposition.RETRYABLE:
-                delay = self.backoff_policy.delay_seconds(
-                    job.attempt_count,
-                    random_source=self.random_source,
+                delay = _retry_delay(
+                    self.backoff_policy, failure, job.attempt_count,
+                    self.random_source,
                 )
             scheduled = self.repository.schedule_failure(
                 job.workflow_job_id,
@@ -335,9 +336,9 @@ class PatchValidationWorker:
             failure = self.failure_classifier(exc)
             delay = 0
             if failure.disposition is FailureDisposition.RETRYABLE:
-                delay = self.backoff_policy.delay_seconds(
-                    job.attempt_count,
-                    random_source=self.random_source,
+                delay = _retry_delay(
+                    self.backoff_policy, failure, job.attempt_count,
+                    self.random_source,
                 )
             scheduled = self.repository.schedule_failure(
                 job.workflow_job_id,
@@ -417,8 +418,9 @@ class GitHubPullRequestWorker:
             failure = classify_github_failure(exc)
             delay = 0
             if failure.disposition is FailureDisposition.RETRYABLE:
-                delay = self.backoff_policy.delay_seconds(
-                    job.attempt_count, random_source=self.random_source
+                delay = _retry_delay(
+                    self.backoff_policy, failure, job.attempt_count,
+                    self.random_source,
                 )
             scheduled = self.repository.schedule_failure(
                 job.workflow_job_id,
@@ -433,8 +435,14 @@ def classify_failure(error):
     """Map operational exceptions to the explicit workflow taxonomy."""
     message = str(error).strip() or error.__class__.__name__
     class_name = error.__class__.__name__.lower()
-    status_code = getattr(error, "status_code", None)
-    if status_code == 429 or "resourceexhausted" in class_name:
+    status_code = _provider_status_code(error, message)
+    normalized_message = message.lower().replace("_", "")
+    if (
+        status_code == 429
+        or "resourceexhausted" in class_name
+        or "resourceexhausted" in normalized_message
+        or "quota exceeded" in normalized_message
+    ):
         code = FailureCode.RATE_LIMITED
     elif isinstance(error, TimeoutError) or "deadline" in class_name:
         code = FailureCode.PROVIDER_TIMEOUT
@@ -442,7 +450,15 @@ def classify_failure(error):
         code = FailureCode.NETWORK_ERROR
     else:
         code = FailureCode.MODEL_CONTRACT_INVALID
-    return JobFailure(code=code, message=message)
+    return JobFailure(
+        code=code,
+        message=message,
+        retry_after_seconds=(
+            _provider_retry_after_seconds(error, message)
+            if code is FailureCode.RATE_LIMITED
+            else None
+        ),
+    )
 
 
 def classify_patch_failure(error):
@@ -488,6 +504,39 @@ def _usage_snapshot(orchestrator):
         int(usage.get("input_tokens", 0) or 0),
         int(usage.get("output_tokens", 0) or 0),
     )
+
+
+def _retry_delay(policy, failure, attempt_count, random_source):
+    return policy.delay_seconds(
+        attempt_count,
+        random_source=random_source,
+        minimum_seconds=failure.retry_after_seconds or 0,
+    )
+
+
+def _provider_status_code(error, message):
+    for attribute in ("status_code", "code"):
+        value = getattr(error, attribute, None)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+    match = re.search(r"(?:^|\D)(429)(?:\D|$)", message)
+    return int(match.group(1)) if match else None
+
+
+def _provider_retry_after_seconds(error, message):
+    for attribute in ("retry_after_seconds", "retry_after"):
+        value = getattr(error, attribute, None)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return min(86400.0, max(0.0, float(value)))
+    patterns = (
+        r"retry\s+in\s+([0-9]+(?:\.[0-9]+)?)s",
+        r"retryDelay['\"\s:]+([0-9]+(?:\.[0-9]+)?)s",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, message, flags=re.IGNORECASE)
+        if match:
+            return min(86400.0, float(match.group(1)))
+    return None
 
 
 class _LeaseHeartbeat:

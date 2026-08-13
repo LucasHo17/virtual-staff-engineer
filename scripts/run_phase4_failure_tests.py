@@ -9,6 +9,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 FAILURE_TEST_MODULES = (
+    "tests.unit.test_analysis_worker",
     "tests.unit.test_job_retry",
     "tests.unit.test_patch_worker",
     "tests.unit.test_patch_validation_worker",

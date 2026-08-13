@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+import math
 from typing import Optional
 
 
@@ -151,6 +152,7 @@ class JobFailure:
     code: FailureCode
     message: str
     disposition: Optional[FailureDisposition] = None
+    retry_after_seconds: Optional[float] = None
 
     def __post_init__(self):
         try:
@@ -169,6 +171,23 @@ class JobFailure:
             )
         if not isinstance(self.message, str) or not self.message.strip():
             raise ValueError("failure message must be a non-empty string.")
+        if self.retry_after_seconds is not None and (
+            isinstance(self.retry_after_seconds, bool)
+            or not isinstance(self.retry_after_seconds, (int, float))
+            or not math.isfinite(self.retry_after_seconds)
+            or self.retry_after_seconds < 0
+            or self.retry_after_seconds > 86400
+        ):
+            raise ValueError(
+                "retry_after_seconds must be from 0 to 86400."
+            )
+        if (
+            self.retry_after_seconds is not None
+            and disposition is not FailureDisposition.RETRYABLE
+        ):
+            raise ValueError(
+                "retry_after_seconds requires a retryable failure."
+            )
         object.__setattr__(self, "code", code)
         object.__setattr__(self, "disposition", disposition)
 

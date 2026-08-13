@@ -20,17 +20,29 @@ class ExponentialBackoffPolicy:
         if not 0 <= self.jitter_ratio <= 1:
             raise ValueError("jitter_ratio must be between 0 and 1.")
 
-    def delay_seconds(self, attempt_count, random_source=None):
+    def delay_seconds(
+        self, attempt_count, random_source=None, minimum_seconds=0
+    ):
         if (
             isinstance(attempt_count, bool)
             or not isinstance(attempt_count, int)
             or attempt_count < 1
         ):
             raise ValueError("attempt_count must be a positive integer.")
+        if (
+            isinstance(minimum_seconds, bool)
+            or not isinstance(minimum_seconds, (int, float))
+            or minimum_seconds < 0
+            or minimum_seconds > 86400
+        ):
+            raise ValueError("minimum_seconds must be from 0 to 86400.")
         capped = min(
             self.maximum_seconds,
             self.base_seconds * (2 ** (attempt_count - 1)),
         )
         source = random_source or random.SystemRandom()
+        if minimum_seconds > 0:
+            floor = max(capped, float(minimum_seconds))
+            return source.uniform(floor, floor + floor * self.jitter_ratio)
         jitter = capped * self.jitter_ratio
         return max(0.0, source.uniform(capped - jitter, capped + jitter))

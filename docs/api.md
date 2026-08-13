@@ -162,6 +162,11 @@ usage; and per-job stage timings. It stops before higher waves when the current
 wave exceeds `--max-failure-rate` (default 20%). The workload never approves a
 patch or invokes GitHub.
 
+Gemini `429 RESOURCE_EXHAUSTED` responses are classified as retryable
+`rate_limited` failures. Workers respect the provider retry hint as a minimum
+delay, retain bounded exponential backoff and jitter, and persist the scheduled
+availability time before releasing the lease.
+
 Run controlled failure behavior without adding production fault switches:
 
 ```bash

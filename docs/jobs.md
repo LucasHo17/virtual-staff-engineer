@@ -152,6 +152,15 @@ up to a five-minute cap. The ±20% jitter prevents many failed jobs from
 retrying at the same instant. The attempt budget remains authoritative: a
 retryable failure becomes terminal when no attempt remains.
 
+Provider rate-limit responses are detected from SDK status/code attributes and
+standard `429`, `RESOURCE_EXHAUSTED`, and quota message shapes. When Gemini
+returns a retry hint, the worker uses it as a hard minimum before jitter rather
+than retrying early. Positive-only jitter above that minimum prevents many
+quota-limited jobs from retrying simultaneously. For example, `retry in 24.6s`
+with the default jitter produces a delay from 24.6 to 29.52 seconds. The durable
+`available_at` timestamp stores the resulting wait;
+the in-memory hint does not need a new database column.
+
 `AnalysisWorker.run_once` performs one safe polling cycle:
 
 ```text

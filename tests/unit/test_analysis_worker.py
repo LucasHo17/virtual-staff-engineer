@@ -179,6 +179,42 @@ class AnalysisWorkerTests(unittest.TestCase):
         self.assertEqual(failure.code.value, "model_contract_invalid")
         self.assertEqual(failure.disposition.value, "permanent")
 
+    def test_gemini_quota_message_is_retryable_and_respects_retry_delay(self):
+        error = RuntimeError(
+            "429 RESOURCE_EXHAUSTED. Quota exceeded. "
+            "Please retry in 24.6s. retryDelay: 24s"
+        )
+        repository = FakeRepository(_job(attempt_count=1))
+        worker = AnalysisWorker(
+            "worker-1",
+            FakeOrchestrator(error=error),
+            repository,
+            lease_seconds=3,
+            backoff_policy=ExponentialBackoffPolicy(
+                base_seconds=5,
+                maximum_seconds=60,
+                jitter_ratio=0,
+            ),
+        )
+
+        execution = worker.run_once()
+
+        failure = repository.failures[0][2]
+        self.assertEqual(failure.code.value, "rate_limited")
+        self.assertEqual(failure.retry_after_seconds, 24.6)
+        self.assertEqual(repository.failures[0][3], 24.6)
+        self.assertEqual(execution.job.status, JobState.RETRY_SCHEDULED)
+
+    def test_gemini_sdk_code_attribute_is_classified_as_rate_limit(self):
+        error = RuntimeError("provider rejected request")
+        error.code = 429
+        error.retry_after = 12
+
+        failure = classify_failure(error)
+
+        self.assertEqual(failure.code.value, "rate_limited")
+        self.assertEqual(failure.retry_after_seconds, 12.0)
+
 
 if __name__ == "__main__":
     unittest.main()
