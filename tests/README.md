@@ -145,6 +145,10 @@ submission, conflicting key rejection, priority ordering, concurrent
 attempt exhaustion. Its concurrency tests use independent PostgreSQL
 connections and never call external model APIs.
 
+`integration/test_github_webhook_repository.py` verifies restart-safe delivery
+deduplication and rejects reuse of a GitHub delivery ID with different immutable
+metadata. It does not make GitHub or model API calls.
+
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project
 migrations applied.

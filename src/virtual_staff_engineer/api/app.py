@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 
-from fastapi import Depends, FastAPI, HTTPException, Query, status
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,7 +14,16 @@ from virtual_staff_engineer.api.models import (
     DecisionResponse,
     JobStatusResponse,
     JobSubmissionResponse,
+    GitHubWebhookResponse,
     ReviewResponse,
+)
+from virtual_staff_engineer.github import (
+    GitHubDeliveryConflictError,
+    GitHubWebhookDeliveryRepository,
+    GitHubWebhookSignatureError,
+    decode_webhook_payload,
+    parse_pull_request_delivery,
+    verify_webhook_signature,
 )
 from virtual_staff_engineer.jobs.lifecycle import TERMINAL_JOB_STATES
 from virtual_staff_engineer.jobs.repository import (
@@ -25,7 +34,12 @@ from virtual_staff_engineer.jobs.repository import (
 from virtual_staff_engineer.remediation.approval import HumanDecision
 
 
-def create_app(repository=None, authenticator=None):
+def create_app(
+    repository=None,
+    authenticator=None,
+    webhook_repository=None,
+    webhook_secret=None,
+):
     app = FastAPI(
         title="Virtual Staff Engineer API",
         version="0.1.0",
@@ -35,6 +49,14 @@ def create_app(repository=None, authenticator=None):
     )
     app.state.repository = repository or WorkflowJobRepository()
     app.state.authenticator = authenticator or ApiKeyAuthenticator()
+    app.state.webhook_repository = (
+        webhook_repository or GitHubWebhookDeliveryRepository()
+    )
+    app.state.github_webhook_secret = (
+        webhook_secret
+        if webhook_secret is not None
+        else os.getenv("GITHUB_WEBHOOK_SECRET")
+    )
     origins = tuple(
         value.strip()
         for value in os.getenv(
@@ -56,6 +78,71 @@ def create_app(repository=None, authenticator=None):
     @app.get("/health")
     def health():
         return {"status": "ok"}
+
+    @app.post(
+        "/webhooks/github",
+        response_model=GitHubWebhookResponse,
+        status_code=status.HTTP_202_ACCEPTED,
+    )
+    async def github_webhook(request: Request):
+        secret = app.state.github_webhook_secret
+        if not secret:
+            raise HTTPException(
+                status_code=503,
+                detail="GitHub webhook secret is not configured.",
+            )
+        delivery_id = _required_webhook_header(
+            request, "X-GitHub-Delivery", 100
+        )
+        event_name = _required_webhook_header(
+            request, "X-GitHub-Event", 100
+        )
+        signature = request.headers.get("X-Hub-Signature-256")
+        raw_body = await request.body()
+        if len(raw_body) > 2_000_000:
+            raise HTTPException(
+                status_code=413,
+                detail="GitHub webhook body exceeds the 2 MB limit.",
+            )
+        try:
+            verify_webhook_signature(raw_body, signature, secret)
+        except GitHubWebhookSignatureError as exc:
+            raise HTTPException(status_code=401, detail=str(exc)) from exc
+        try:
+            payload = decode_webhook_payload(raw_body)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+        if event_name == "ping":
+            return GitHubWebhookResponse(
+                status="pong",
+                delivery_id=delivery_id,
+                event=event_name,
+            )
+        try:
+            delivery = parse_pull_request_delivery(
+                delivery_id, event_name, payload, raw_body
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if delivery is None:
+            action = payload.get("action")
+            return GitHubWebhookResponse(
+                status="ignored",
+                delivery_id=delivery_id,
+                event=event_name,
+                action=action if isinstance(action, str) else None,
+            )
+        try:
+            result = app.state.webhook_repository.record(delivery)
+        except GitHubDeliveryConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return GitHubWebhookResponse(
+            status="accepted" if result.created else "duplicate",
+            delivery_id=delivery.delivery_id,
+            event=delivery.event_name,
+            action=delivery.action,
+        )
 
     @app.post(
         "/analysis-runs",
@@ -194,6 +281,19 @@ def create_app(repository=None, authenticator=None):
         return StreamingResponse(stream(), media_type="text/event-stream")
 
     return app
+
+
+def _required_webhook_header(request, name, max_length):
+    value = request.headers.get(name)
+    if not isinstance(value, str) or not value.strip():
+        raise HTTPException(status_code=400, detail=f"{name} is required.")
+    normalized = value.strip()
+    if len(normalized) > max_length:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{name} exceeds {max_length} characters.",
+        )
+    return normalized
 
 
 def _status_response(observation):

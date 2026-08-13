@@ -89,3 +89,10 @@ class DecisionResponse(BaseModel):
     workflow_job_id: str
     status: str
     created: bool
+
+
+class GitHubWebhookResponse(BaseModel):
+    status: Literal["accepted", "duplicate", "ignored", "pong"]
+    delivery_id: str
+    event: str
+    action: Optional[str] = None

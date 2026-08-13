@@ -13,6 +13,10 @@ analysis, validated remediation, authenticated approval, and retry-safe GitHub
 pull-request creation. Production deployment and a live repository acceptance
 run remain explicit follow-up work rather than unmeasured architecture changes.
 
+**Phase 5 GitHub App integration is in progress.** Its first boundary accepts
+signed GitHub `pull_request` webhooks and durably deduplicates delivery IDs; it
+does not yet fetch PR files or enqueue an analysis from the webhook.
+
 Implemented:
 
 - PostgreSQL with `pgvector`
@@ -50,6 +54,8 @@ Implemented:
   throughput, retry, and failure-injection measurements
 - Configurable concurrent analysis workers with a shared model-request limiter
   and durable provider rate-limit recovery
+- HMAC-verified GitHub webhook ingestion with event filtering and persistent
+  delivery-ID deduplication
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction

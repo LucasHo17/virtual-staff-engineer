@@ -86,6 +86,25 @@ does not persist them in browser storage.
 | `GET /jobs/{id}/events` | viewer | Safe SSE workflow transitions |
 | `GET /jobs/{id}/review` | viewer | Exact validated patch review package |
 | `POST /jobs/{id}/decision` | reviewer | Authenticated approve/reject |
+| `POST /webhooks/github` | GitHub HMAC | Verify and record supported PR webhook deliveries |
+
+## GitHub webhook boundary
+
+Set `GITHUB_WEBHOOK_SECRET` to an independent random secret and apply migration
+`013_github_webhook_deliveries.sql`. GitHub calls `POST /webhooks/github` with
+`X-Hub-Signature-256`, `X-GitHub-Delivery`, and `X-GitHub-Event`; API keys are
+not used for this machine-to-machine endpoint.
+
+The endpoint verifies the HMAC against the exact raw request bytes before JSON
+parsing. It responds to `ping`, ignores unrelated events and unsupported PR
+actions, and durably records `opened`, `reopened`, `synchronize`, and
+`ready_for_review` deliveries. Repeated delivery IDs with identical immutable
+metadata return `duplicate`; reuse with different metadata returns `409`.
+
+Only repository/PR identity, installation ID, head SHA, action, delivery ID, and
+a SHA-256 payload digest are stored. Raw payloads are not retained. This Phase 5
+Step 1 endpoint deliberately does not fetch PR files, call Gemini, or create an
+analysis job.
 
 SSE includes only durable state, checkpoint, attempt, failure code, and time.
 It never publishes prompts, hidden reasoning, or chain-of-thought.

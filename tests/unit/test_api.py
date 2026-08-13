@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 import os
 import unittest
 from datetime import datetime, timezone
@@ -84,9 +87,20 @@ class FakeRepository:
         return HumanDecisionResult(approved, True)
 
 
+class FakeWebhookRepository:
+    def __init__(self):
+        self.deliveries = {}
+
+    def record(self, delivery):
+        created = delivery.delivery_id not in self.deliveries
+        self.deliveries.setdefault(delivery.delivery_id, delivery)
+        return SimpleNamespace(delivery=delivery, created=created)
+
+
 class ApiTests(unittest.TestCase):
     def setUp(self):
         self.repository = FakeRepository()
+        self.webhook_repository = FakeWebhookRepository()
         app = create_app(
             repository=self.repository,
             authenticator=ApiKeyAuthenticator(
@@ -95,6 +109,8 @@ class ApiTests(unittest.TestCase):
                 viewer_subject="alice",
                 reviewer_subject="bob",
             ),
+            webhook_repository=self.webhook_repository,
+            webhook_secret="webhook-secret",
         )
         self.client = TestClient(app)
 
@@ -177,6 +193,82 @@ class ApiTests(unittest.TestCase):
         self.assertIn('"status": "completed"', response.text)
         self.assertNotIn("reasoning", response.text)
 
+    def test_signed_pull_request_webhook_is_deduplicated_without_api_key(self):
+        raw_body = json.dumps(_pull_request_payload()).encode("utf-8")
+        headers = _webhook_headers(raw_body, delivery_id="delivery-1")
+
+        accepted = self.client.post(
+            "/webhooks/github", content=raw_body, headers=headers
+        )
+        duplicate = self.client.post(
+            "/webhooks/github", content=raw_body, headers=headers
+        )
+
+        self.assertEqual(accepted.status_code, 202)
+        self.assertEqual(accepted.json()["status"], "accepted")
+        self.assertEqual(duplicate.json()["status"], "duplicate")
+        self.assertEqual(len(self.webhook_repository.deliveries), 1)
+        delivery = self.webhook_repository.deliveries["delivery-1"]
+        self.assertEqual(delivery.repository_owner, "example")
+        self.assertEqual(delivery.repository_name, "demo")
+        self.assertEqual(delivery.pull_request_number, 7)
+
+    def test_webhook_rejects_missing_or_invalid_signature(self):
+        raw_body = json.dumps(_pull_request_payload()).encode("utf-8")
+        missing = _webhook_headers(raw_body)
+        missing.pop("X-Hub-Signature-256")
+        invalid = _webhook_headers(raw_body)
+        invalid["X-Hub-Signature-256"] = "sha256=" + "0" * 64
+
+        self.assertEqual(
+            self.client.post(
+                "/webhooks/github", content=raw_body, headers=missing
+            ).status_code,
+            401,
+        )
+        self.assertEqual(
+            self.client.post(
+                "/webhooks/github", content=raw_body, headers=invalid
+            ).status_code,
+            401,
+        )
+        self.assertFalse(self.webhook_repository.deliveries)
+
+    def test_webhook_pongs_and_ignores_unneeded_events_and_actions(self):
+        ping_body = b'{"zen":"Keep it logically awesome."}'
+        ping = self.client.post(
+            "/webhooks/github",
+            content=ping_body,
+            headers=_webhook_headers(ping_body, event="ping"),
+        )
+        closed_payload = _pull_request_payload(action="closed")
+        closed_body = json.dumps(closed_payload).encode("utf-8")
+        ignored = self.client.post(
+            "/webhooks/github",
+            content=closed_body,
+            headers=_webhook_headers(
+                closed_body, delivery_id="delivery-closed"
+            ),
+        )
+
+        self.assertEqual(ping.json()["status"], "pong")
+        self.assertEqual(ignored.json()["status"], "ignored")
+        self.assertFalse(self.webhook_repository.deliveries)
+
+    def test_supported_webhook_requires_pr_identity_fields(self):
+        payload = _pull_request_payload()
+        del payload["installation"]
+        raw_body = json.dumps(payload).encode("utf-8")
+
+        response = self.client.post(
+            "/webhooks/github",
+            content=raw_body,
+            headers=_webhook_headers(raw_body),
+        )
+
+        self.assertEqual(response.status_code, 422)
+        self.assertFalse(self.webhook_repository.deliveries)
+
 
 def _job():
     now = datetime.now(timezone.utc)
@@ -204,6 +296,33 @@ def _job():
         created_at=now,
         updated_at=now,
     )
+
+
+def _pull_request_payload(action="opened"):
+    return {
+        "action": action,
+        "installation": {"id": 1234},
+        "repository": {
+            "name": "demo",
+            "owner": {"login": "example"},
+        },
+        "pull_request": {
+            "number": 7,
+            "head": {"sha": "a" * 40},
+        },
+    }
+
+
+def _webhook_headers(raw_body, delivery_id="delivery-1", event="pull_request"):
+    signature = hmac.new(
+        b"webhook-secret", raw_body, hashlib.sha256
+    ).hexdigest()
+    return {
+        "Content-Type": "application/json",
+        "X-GitHub-Delivery": delivery_id,
+        "X-GitHub-Event": event,
+        "X-Hub-Signature-256": "sha256=" + signature,
+    }
 
 
 if __name__ == "__main__":
