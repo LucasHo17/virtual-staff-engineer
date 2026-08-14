@@ -310,7 +310,10 @@ class PatchValidationWorker:
             proposal = self.repository.begin_patch_validation(
                 job.workflow_job_id, job.lease_token
             )
-            current_source = self.source_provider.load(proposal.source_path)
+            current_source = self.source_provider.load(
+                proposal.source_path,
+                revision=proposal.source_revision,
+            )
             heartbeat = _LeaseHeartbeat(
                 repository=self.repository,
                 workflow_job_id=job.workflow_job_id,

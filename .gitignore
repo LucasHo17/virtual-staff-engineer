@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !frontend/.env.example
+*.pem
 
 # Python virtual environments
 venv/

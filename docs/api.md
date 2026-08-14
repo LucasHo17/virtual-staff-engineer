@@ -86,6 +86,7 @@ does not persist them in browser storage.
 | `GET /jobs/{id}/events` | viewer | Safe SSE workflow transitions |
 | `GET /jobs/{id}/review` | viewer | Exact validated patch review package |
 | `POST /jobs/{id}/decision` | reviewer | Authenticated approve/reject |
+| `GET /github/pull-requests` | viewer | Recent webhook deliveries grouped with per-file jobs |
 | `POST /webhooks/github` | GitHub HMAC | Verify and record supported PR webhook deliveries |
 
 ## GitHub webhook boundary
@@ -103,8 +104,9 @@ metadata return `duplicate`; reuse with different metadata returns `409`.
 
 Only repository/PR identity, installation ID, head SHA, action, delivery ID, and
 a SHA-256 payload digest are stored. Raw payloads are not retained. This Phase 5
-Step 1 endpoint deliberately does not fetch PR files, call Gemini, or create an
-analysis job.
+endpoint deliberately does not fetch PR files or call Gemini. A separately
+leased worker consumes the durable receipt, downloads an immutable PR snapshot,
+and submits idempotent per-file analysis jobs after HTTP has returned.
 
 SSE includes only durable state, checkpoint, attempt, failure code, and time.
 It never publishes prompts, hidden reasoning, or chain-of-thought.
@@ -131,6 +133,19 @@ calls, and an estimated analysis cost when model prices are configured. Patch
 generation token cost is not yet persisted and is therefore not included.
 If either price variable is absent, estimated cost is reported as `null`, not
 as a misleading zero. Explicit zero rates may be used for a free-tier run.
+
+## GitHub dashboard
+
+The dashboard's GitHub pull-request feed reads `GET /github/pull-requests`.
+Each delivery shows repository and PR identity, the immutable head SHA,
+changed/analyzed/skipped file counts, and one selectable workflow job per
+analyzable file. Selecting a job opens the existing status, cited evidence,
+validated patch, and approval experience. `GET /jobs/{id}` includes optional
+GitHub provenance and exposes the created remediation PR URL after the
+idempotent GitHub mutation stage completes.
+
+The feed is read-only. Refreshing it cannot fetch source again, call the model,
+or mutate GitHub; it only reads durable Step 4 records.
 
 ## Reproducible live workload
 

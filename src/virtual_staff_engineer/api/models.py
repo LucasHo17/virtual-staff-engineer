@@ -35,6 +35,18 @@ class StageTimingResponse(BaseModel):
     duration_ms: float
 
 
+class GitHubJobContextResponse(BaseModel):
+    delivery_id: str
+    repository_owner: str
+    repository_name: str
+    pull_request_number: int
+    pull_request_title: Optional[str]
+    pull_request_url: Optional[str]
+    head_sha: str
+    source_path: str
+    created_pull_request_url: Optional[str]
+
+
 class JobStatusResponse(BaseModel):
     workflow_job_id: str
     analysis_run_id: str
@@ -56,6 +68,35 @@ class JobStatusResponse(BaseModel):
     tool_call_count: int
     retry_count: int
     estimated_analysis_cost_usd: Optional[float]
+    origin: Literal["manual", "github"] = "manual"
+    github: Optional[GitHubJobContextResponse] = None
+
+
+class GitHubJobSummaryResponse(BaseModel):
+    workflow_job_id: str
+    source_path: str
+    status: str
+    checkpoint: str
+    failure_code: Optional[str]
+    created_pull_request_url: Optional[str]
+
+
+class GitHubPullRequestSummaryResponse(BaseModel):
+    delivery_id: str
+    repository_owner: str
+    repository_name: str
+    pull_request_number: int
+    pull_request_title: Optional[str]
+    pull_request_url: Optional[str]
+    head_sha: str
+    base_sha: Optional[str]
+    status: str
+    changed_file_count: Optional[int]
+    analyzable_file_count: Optional[int]
+    skipped_file_count: Optional[int]
+    received_at: datetime
+    completed_at: Optional[datetime]
+    jobs: List[GitHubJobSummaryResponse]
 
 
 class ReviewRuleResponse(BaseModel):

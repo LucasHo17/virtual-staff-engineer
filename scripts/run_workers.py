@@ -8,7 +8,12 @@ from pathlib import Path
 from virtual_staff_engineer.analysis.gemini import GeminiReasoner
 from virtual_staff_engineer.analysis.orchestrator import BoundedAnalysisOrchestrator
 from virtual_staff_engineer.analysis.retrieval_tool import HybridRetrievalTool
-from virtual_staff_engineer.github import GitHubClient
+from virtual_staff_engineer.github import (
+    GitHubAppClient,
+    GitHubClient,
+    GitHubWebhookDeliveryRepository,
+    GitHubWebhookIngestionWorker,
+)
 from virtual_staff_engineer.jobs import (
     AnalysisWorker,
     GitHubPullRequestWorker,
@@ -21,6 +26,8 @@ from virtual_staff_engineer.remediation import (
     DeterministicPatchValidator,
     FilesystemSourceProvider,
     GeminiPatchGenerator,
+    GitHubSnapshotSourceProvider,
+    RoutedSourceProvider,
 )
 from virtual_staff_engineer.providers import ModelRequestRateLimiter
 
@@ -85,13 +92,36 @@ def build_runtime(arguments):
         if arguments.model_requests_per_minute is not None
         else None
     )
-    source = FilesystemSourceProvider(Path(arguments.repository_root))
+    source = RoutedSourceProvider(
+        FilesystemSourceProvider(Path(arguments.repository_root)),
+        GitHubSnapshotSourceProvider(),
+    )
     prefix = "vse-" + socket.gethostname()
     common = {
         "repository": repository,
         "lease_seconds": arguments.lease_seconds,
     }
     workers = []
+    app_id = os.getenv("GITHUB_APP_ID")
+    private_key_path = os.getenv("GITHUB_APP_PRIVATE_KEY_PATH")
+    if bool(app_id) != bool(private_key_path):
+        raise RuntimeError(
+            "Configure both GITHUB_APP_ID and GITHUB_APP_PRIVATE_KEY_PATH."
+        )
+    if app_id and private_key_path:
+        workers.append(
+            (
+                "github_ingestion",
+                GitHubWebhookIngestionWorker(
+                    prefix + "-github-ingestion",
+                    GitHubAppClient(),
+                    GitHubWebhookDeliveryRepository(),
+                    repository,
+                    model_name=os.getenv("GEMINI_REASONING_MODEL", ""),
+                    lease_seconds=max(300, arguments.lease_seconds),
+                ),
+            )
+        )
     for index in range(arguments.analysis_concurrency):
         reasoner = GeminiReasoner(request_limiter=request_limiter)
         retrieval = HybridRetrievalTool(
@@ -163,19 +193,24 @@ def main():
     while True:
         executions = runtime.run_cycle()
         for item in executions:
-            job = item.execution.job
-            print(
-                json.dumps(
-                    {
-                        "event": "worker_cycle_completed",
-                        "stage": item.stage,
-                        "workflow_job_id": job.workflow_job_id,
-                        "status": job.status.value,
-                        "failure_code": job.failure_code,
-                    }
-                ),
-                flush=True,
-            )
+            if item.stage == "github_ingestion":
+                payload = {
+                    "event": "worker_cycle_completed",
+                    "stage": item.stage,
+                    "delivery_id": item.execution.delivery_id,
+                    "status": item.execution.status,
+                    "workflow_job_ids": item.execution.workflow_job_ids,
+                }
+            else:
+                job = item.execution.job
+                payload = {
+                    "event": "worker_cycle_completed",
+                    "stage": item.stage,
+                    "workflow_job_id": job.workflow_job_id,
+                    "status": job.status.value,
+                    "failure_code": job.failure_code,
+                }
+            print(json.dumps(payload), flush=True)
         if arguments.once:
             return
         if not executions:

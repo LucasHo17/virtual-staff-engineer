@@ -90,11 +90,19 @@ class FakeRepository:
 class FakeWebhookRepository:
     def __init__(self):
         self.deliveries = {}
+        self.job_context = None
+        self.pull_requests = ()
 
     def record(self, delivery):
         created = delivery.delivery_id not in self.deliveries
         self.deliveries.setdefault(delivery.delivery_id, delivery)
         return SimpleNamespace(delivery=delivery, created=created)
+
+    def get_job_context(self, workflow_job_id):
+        return self.job_context
+
+    def list_pull_requests(self, limit=20):
+        return self.pull_requests[:limit]
 
 
 class ApiTests(unittest.TestCase):
@@ -148,6 +156,62 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.json()["retry_count"], 0)
         self.assertIsNone(response.json()["estimated_analysis_cost_usd"])
         self.assertNotIn("reasoning", response.json())
+        self.assertEqual(response.json()["origin"], "manual")
+
+    def test_github_job_status_and_pull_request_feed_expose_provenance(self):
+        context = SimpleNamespace(
+            delivery_id="delivery-1",
+            repository_owner="example",
+            repository_name="demo",
+            pull_request_number=7,
+            pull_request_title="Secure token logging",
+            pull_request_url="https://github.com/example/demo/pull/7",
+            head_sha="a" * 40,
+            source_path="app.py",
+            created_pull_request_url=None,
+        )
+        job = SimpleNamespace(
+            workflow_job_id="job-1",
+            source_path="app.py",
+            status="completed",
+            checkpoint="analysis_completed",
+            failure_code=None,
+            created_pull_request_url=None,
+        )
+        pull_request = SimpleNamespace(
+            delivery_id="delivery-1",
+            repository_owner="example",
+            repository_name="demo",
+            pull_request_number=7,
+            pull_request_title="Secure token logging",
+            pull_request_url="https://github.com/example/demo/pull/7",
+            head_sha="a" * 40,
+            base_sha="b" * 40,
+            status="completed",
+            changed_file_count=1,
+            analyzable_file_count=1,
+            skipped_file_count=0,
+            received_at=self.repository.job.created_at,
+            completed_at=self.repository.job.completed_at,
+            jobs=(job,),
+        )
+        self.webhook_repository.job_context = context
+        self.webhook_repository.pull_requests = (pull_request,)
+
+        status_response = self.client.get(
+            "/jobs/job-1", headers={"X-API-Key": "viewer-secret"}
+        )
+        feed_response = self.client.get(
+            "/github/pull-requests",
+            headers={"X-API-Key": "viewer-secret"},
+        )
+
+        self.assertEqual(status_response.json()["origin"], "github")
+        self.assertEqual(
+            status_response.json()["github"]["repository_name"], "demo"
+        )
+        self.assertEqual(feed_response.status_code, 200)
+        self.assertEqual(feed_response.json()[0]["jobs"][0]["source_path"], "app.py")
 
     def test_cost_is_estimated_only_when_both_rates_are_configured(self):
         with patch.dict(

@@ -15,6 +15,7 @@ from virtual_staff_engineer.api.models import (
     JobStatusResponse,
     JobSubmissionResponse,
     GitHubWebhookResponse,
+    GitHubPullRequestSummaryResponse,
     ReviewResponse,
 )
 from virtual_staff_engineer.github import (
@@ -185,7 +186,34 @@ def create_app(
         observation = app.state.repository.observe(workflow_job_id)
         if observation is None:
             raise HTTPException(status_code=404, detail="Job not found.")
-        return _status_response(observation)
+        context_getter = getattr(
+            app.state.webhook_repository, "get_job_context", None
+        )
+        context = (
+            context_getter(workflow_job_id) if context_getter else None
+        )
+        return _status_response(observation, context)
+
+    @app.get(
+        "/github/pull-requests",
+        response_model=list[GitHubPullRequestSummaryResponse],
+    )
+    def github_pull_requests(
+        limit: int = Query(default=20, ge=1, le=100),
+        _principal=Depends(principal),
+    ):
+        list_method = getattr(
+            app.state.webhook_repository, "list_pull_requests", None
+        )
+        if list_method is None:
+            return []
+        return [
+            {
+                **vars(item),
+                "jobs": [vars(job) for job in item.jobs],
+            }
+            for item in list_method(limit=limit)
+        ]
 
     @app.get("/jobs/{workflow_job_id}/review", response_model=ReviewResponse)
     def review(workflow_job_id: str, _principal=Depends(principal)):
@@ -296,7 +324,7 @@ def _required_webhook_header(request, name, max_length):
     return normalized
 
 
-def _status_response(observation):
+def _status_response(observation, github_context=None):
     job = observation.job
     return JobStatusResponse(
         workflow_job_id=job.workflow_job_id,
@@ -319,6 +347,8 @@ def _status_response(observation):
         tool_call_count=observation.tool_call_count,
         retry_count=observation.retry_count,
         estimated_analysis_cost_usd=_estimated_cost(observation),
+        origin="github" if github_context is not None else "manual",
+        github=vars(github_context) if github_context is not None else None,
     )
 
 

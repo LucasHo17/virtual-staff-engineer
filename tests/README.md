@@ -147,7 +147,8 @@ connections and never call external model APIs.
 
 `integration/test_github_webhook_repository.py` verifies restart-safe delivery
 deduplication and rejects reuse of a GitHub delivery ID with different immutable
-metadata. It does not make GitHub or model API calls.
+metadata. It also verifies that an exact PR-head source snapshot can be persisted
+and read for later patch generation. It does not make GitHub or model API calls.
 
 The integration tests use `TEST_DATABASE_URL` when configured and otherwise
 fall back to `DATABASE_URL`. The target database must have the project

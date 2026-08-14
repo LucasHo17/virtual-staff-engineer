@@ -14,6 +14,45 @@ type Job = {
   automated_processing_ms: number | null;
   human_wait_ms: number | null;
   end_to_end_ms: number | null;
+  origin: "manual" | "github";
+  github: GitHubContext | null;
+};
+
+type GitHubContext = {
+  delivery_id: string;
+  repository_owner: string;
+  repository_name: string;
+  pull_request_number: number;
+  pull_request_title: string | null;
+  pull_request_url: string | null;
+  head_sha: string;
+  source_path: string;
+  created_pull_request_url: string | null;
+};
+
+type GitHubJob = {
+  workflow_job_id: string;
+  source_path: string;
+  status: string;
+  checkpoint: string;
+  failure_code: string | null;
+  created_pull_request_url: string | null;
+};
+
+type GitHubPullRequest = {
+  delivery_id: string;
+  repository_owner: string;
+  repository_name: string;
+  pull_request_number: number;
+  pull_request_title: string | null;
+  pull_request_url: string | null;
+  head_sha: string;
+  status: string;
+  changed_file_count: number | null;
+  analyzable_file_count: number | null;
+  skipped_file_count: number | null;
+  received_at: string;
+  jobs: GitHubJob[];
 };
 
 type Review = {
@@ -36,6 +75,8 @@ export default function Dashboard() {
   const [job, setJob] = useState<Job | null>(null);
   const [review, setReview] = useState<Review | null>(null);
   const [notice, setNotice] = useState("");
+  const [pullRequests, setPullRequests] = useState<GitHubPullRequest[]>([]);
+  const [githubLoading, setGitHubLoading] = useState(false);
   const streamAbort = useRef<AbortController | null>(null);
 
   async function request(path: string, init?: RequestInit) {
@@ -89,6 +130,35 @@ export default function Dashboard() {
     }
   }
 
+  async function loadGitHubPullRequests() {
+    if (!apiKey) {
+      setNotice("Enter your API key before loading GitHub activity.");
+      return;
+    }
+    setGitHubLoading(true);
+    setNotice("");
+    try {
+      const response = await request("/github/pull-requests?limit=20");
+      setPullRequests(await response.json());
+    } catch (error) {
+      setNotice(message(error));
+    } finally {
+      setGitHubLoading(false);
+    }
+  }
+
+  async function selectGitHubJob(id: string) {
+    setJobId(id);
+    setReview(null);
+    setNotice("");
+    try {
+      await refresh(id);
+      void watch(id);
+    } catch (error) {
+      setNotice(message(error));
+    }
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setNotice("");
@@ -120,6 +190,7 @@ export default function Dashboard() {
       });
       setNotice(`Patch ${decision}.`);
       await refresh(jobId);
+      await loadGitHubPullRequests();
       void watch(jobId);
     } catch (error) {
       setNotice(message(error));
@@ -133,7 +204,7 @@ export default function Dashboard() {
       <header>
         <div className="eyebrow">Evidence-backed code governance</div>
         <h1>Virtual Staff Engineer</h1>
-        <p>Submit a change, inspect cited violations, and approve only validated patches.</p>
+        <p>Review manual changes or GitHub pull requests, inspect cited violations, and approve only validated patches.</p>
       </header>
 
       <section className="grid">
@@ -159,12 +230,47 @@ export default function Dashboard() {
               <Metric label="End to end" value={job.end_to_end_ms} />
             </div>
             <div className="job-id">Job {job.workflow_job_id}</div>
+            {job.github && <div className="github-origin">
+              <div className="label">GitHub source</div>
+              <a href={job.github.pull_request_url ?? undefined} target="_blank" rel="noreferrer">
+                {job.github.repository_owner}/{job.github.repository_name} #{job.github.pull_request_number}
+              </a>
+              <span>{job.github.source_path} · {job.github.head_sha.slice(0, 8)}</span>
+              {job.github.created_pull_request_url && <a className="result-link" href={job.github.created_pull_request_url} target="_blank" rel="noreferrer">Open created remediation PR →</a>}
+            </div>}
             {job.error_message && <div className="error">{job.failure_code}: {job.error_message}</div>}
           </>}
         </section>
       </section>
 
       {notice && <div className="notice">{notice}</div>}
+
+      <section className="github-feed panel">
+        <div className="feed-heading">
+          <div className="panel-title"><span>GH</span><div><div className="label">Webhook activity</div><h2>GitHub pull requests</h2></div></div>
+          <button className="secondary compact" type="button" onClick={loadGitHubPullRequests} disabled={githubLoading}>{githubLoading ? "Loading…" : "Refresh"}</button>
+        </div>
+        {pullRequests.length === 0 ? <div className="feed-empty">Enter the same API key above and refresh to see pull requests received by the GitHub App.</div> :
+          <div className="pr-list">{pullRequests.map((pullRequest) => <article className="pr-card" key={pullRequest.delivery_id}>
+            <div className="pr-summary">
+              <div>
+                <div className="repo-name">{pullRequest.repository_owner}/{pullRequest.repository_name}</div>
+                <h3>{pullRequest.pull_request_title ?? `Pull request #${pullRequest.pull_request_number}`}</h3>
+                <div className="pr-meta">#{pullRequest.pull_request_number} · head {pullRequest.head_sha.slice(0, 8)} · {new Date(pullRequest.received_at).toLocaleString()}</div>
+              </div>
+              <div className="pr-links">
+                <span className={`badge ${pullRequest.status}`}>{pullRequest.status.replaceAll("_", " ")}</span>
+                {pullRequest.pull_request_url && <a href={pullRequest.pull_request_url} target="_blank" rel="noreferrer">Open source PR ↗</a>}
+              </div>
+            </div>
+            <div className="file-counts"><span>{pullRequest.changed_file_count ?? "—"} changed</span><span>{pullRequest.analyzable_file_count ?? "—"} analyzed</span><span>{pullRequest.skipped_file_count ?? "—"} skipped</span></div>
+            {pullRequest.jobs.length === 0 ? <div className="job-empty">Ingestion has not created file jobs yet. Refresh shortly.</div> :
+              <div className="github-jobs">{pullRequest.jobs.map((item) => <button type="button" className={`github-job ${jobId === item.workflow_job_id ? "selected" : ""}`} key={item.workflow_job_id} onClick={() => selectGitHubJob(item.workflow_job_id)}>
+                <span><strong>{item.source_path}</strong><small>{item.checkpoint.replaceAll("_", " ")}</small></span>
+                <span className="job-state">{item.status.replaceAll("_", " ")} →</span>
+              </button>)}</div>}
+          </article>)}</div>}
+      </section>
 
       {review && <section className="review panel">
         <div className="panel-title"><span>03</span><h2>Review validated patch</h2></div>

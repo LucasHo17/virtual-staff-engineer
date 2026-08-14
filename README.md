@@ -13,9 +13,13 @@ analysis, validated remediation, authenticated approval, and retry-safe GitHub
 pull-request creation. Production deployment and a live repository acceptance
 run remain explicit follow-up work rather than unmeasured architecture changes.
 
-**Phase 5 GitHub App integration is in progress.** Its first boundary accepts
-signed GitHub `pull_request` webhooks and durably deduplicates delivery IDs; it
-does not yet fetch PR files or enqueue an analysis from the webhook.
+**Phase 5 GitHub App integration is in progress.** Signed GitHub
+`pull_request` webhooks are durably deduplicated, and the read-only App adapter
+can exchange an RS256 App JWT for a scoped installation token and download a
+stable, paginated PR snapshot. A leased ingestion worker now converts accepted
+deliveries into idempotent per-file analysis jobs without blocking webhook HTTP.
+The dashboard groups those deliveries by pull request, exposes per-file jobs and
+provenance, and links both the source PR and any created remediation PR.
 
 Implemented:
 
@@ -56,6 +60,12 @@ Implemented:
   and durable provider rate-limit recovery
 - HMAC-verified GitHub webhook ingestion with event filtering and persistent
   delivery-ID deduplication
+- Read-only GitHub App authentication, cached installation tokens, paginated PR
+  file retrieval, head-SHA consistency checks, and normalized analysis diffs
+- Durable webhook ingestion leases, immutable GitHub source snapshots, and
+  automatic per-file workflow submission keyed by repository, PR, head, and path
+- Authenticated GitHub activity feed with PR/file grouping, job selection,
+  evidence review, approval controls, and remediation-PR result links
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction

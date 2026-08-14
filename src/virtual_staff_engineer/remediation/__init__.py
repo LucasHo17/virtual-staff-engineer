@@ -24,6 +24,8 @@ from virtual_staff_engineer.remediation.gemini import GeminiPatchGenerator
 from virtual_staff_engineer.remediation.source import (
     FilesystemSourceProvider,
     GitSourceProvider,
+    GitHubSnapshotSourceProvider,
+    RoutedSourceProvider,
 )
 from virtual_staff_engineer.remediation.validation import (
     DeterministicPatchValidator,
@@ -38,6 +40,8 @@ __all__ = [
     "ApprovalRule",
     "GeneratedPatch",
     "GitSourceProvider",
+    "GitHubSnapshotSourceProvider",
+    "RoutedSourceProvider",
     "HumanDecision",
     "HumanDecisionResult",
     "GeminiPatchGenerator",

@@ -48,8 +48,10 @@ class FakeRepository:
 class FakeSourceProvider:
     def __init__(self, content):
         self.content = content
+        self.loads = []
 
-    def load(self, source_path):
+    def load(self, source_path, revision=None):
+        self.loads.append((source_path, revision))
         return SourceSnapshot(source_path, self.content)
 
 
