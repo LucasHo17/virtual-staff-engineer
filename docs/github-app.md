@@ -152,6 +152,14 @@ loads its status, evidence, validation checks, and approval controls. Source PR
 links and, after approved mutation, the created remediation PR link are shown
 directly in the workflow view.
 
-No new migration or GitHub permission is required for Step 5. The new API is a
-read-only projection over existing webhook, job, snapshot, and PR-operation
-tables.
+The original Step 5 feed required no new GitHub permission. Lifecycle/archive
+tracking adds migration `015`; it still needs only the existing read-level Pull
+requests webhook permission.
+
+### Lifecycle history and archive
+
+Migration `015_github_pr_lifecycle.sql` adds immutable open/reopen/update/close
+events plus a current-state row for each PR. The dashboard groups repeated
+deliveries, exposes Open, Archive, and All history views, distinguishes merged
+from closed PRs, and pages results ten PRs at a time. Historical analyses remain
+available after merge or close; they move to Archive rather than being deleted.

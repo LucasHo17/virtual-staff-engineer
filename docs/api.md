@@ -86,7 +86,7 @@ does not persist them in browser storage.
 | `GET /jobs/{id}/events` | viewer | Safe SSE workflow transitions |
 | `GET /jobs/{id}/review` | viewer | Exact validated patch review package |
 | `POST /jobs/{id}/decision` | reviewer | Authenticated approve/reject |
-| `GET /github/pull-requests` | viewer | Recent webhook deliveries grouped with per-file jobs |
+| `GET /github/pull-requests` | viewer | Paginated PR lifecycle/history grouped with per-file jobs |
 | `POST /webhooks/github` | GitHub HMAC | Verify and record supported PR webhook deliveries |
 
 ## GitHub webhook boundary
@@ -137,15 +137,20 @@ as a misleading zero. Explicit zero rates may be used for a free-tier run.
 ## GitHub dashboard
 
 The dashboard's GitHub pull-request feed reads `GET /github/pull-requests`.
-Each delivery shows repository and PR identity, the immutable head SHA,
-changed/analyzed/skipped file counts, and one selectable workflow job per
-analyzable file. Selecting a job opens the existing status, cited evidence,
-validated patch, and approval experience. `GET /jobs/{id}` includes optional
-GitHub provenance and exposes the created remediation PR URL after the
-idempotent GitHub mutation stage completes.
+Server-side `view`, `state`, `page`, and `page_size` parameters support active,
+archive, and full-history navigation without loading the entire audit trail.
+Repeated webhook deliveries are grouped under one PR while their per-head file
+jobs remain selectable. Selecting a job opens status, cited evidence, validated
+patch, and approval. `GET /jobs/{id}` includes optional GitHub provenance and
+the created remediation PR URL after idempotent mutation completes.
 
 The feed is read-only. Refreshing it cannot fetch source again, call the model,
 or mutate GitHub; it only reads durable Step 4 records.
+
+Migration `015_github_pr_lifecycle.sql` stores immutable lifecycle events and a
+current-state projection. GitHub `closed` events map to `merged` only when the
+payload's `pull_request.merged` value is true; otherwise they remain `closed`.
+Out-of-order events cannot replace a newer GitHub `updated_at` state.
 
 ## Reproducible live workload
 

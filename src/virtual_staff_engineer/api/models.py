@@ -79,10 +79,12 @@ class GitHubJobSummaryResponse(BaseModel):
     checkpoint: str
     failure_code: Optional[str]
     created_pull_request_url: Optional[str]
+    head_sha: str
+    received_at: datetime
 
 
 class GitHubPullRequestSummaryResponse(BaseModel):
-    delivery_id: str
+    latest_delivery_id: Optional[str]
     repository_owner: str
     repository_name: str
     pull_request_number: int
@@ -96,7 +98,17 @@ class GitHubPullRequestSummaryResponse(BaseModel):
     skipped_file_count: Optional[int]
     received_at: datetime
     completed_at: Optional[datetime]
+    lifecycle_state: Literal["open", "closed", "merged"]
+    github_updated_at: datetime
     jobs: List[GitHubJobSummaryResponse]
+
+
+class GitHubPullRequestPageResponse(BaseModel):
+    items: List[GitHubPullRequestSummaryResponse]
+    page: int
+    page_size: int
+    total: int
+    total_pages: int
 
 
 class ReviewRuleResponse(BaseModel):

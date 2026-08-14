@@ -7,6 +7,7 @@ from virtual_staff_engineer.github import (
     GitHubWebhookSignatureError,
     decode_webhook_payload,
     parse_pull_request_delivery,
+    parse_pull_request_lifecycle_update,
     verify_webhook_signature,
 )
 
@@ -49,6 +50,24 @@ class GitHubWebhookTests(unittest.TestCase):
         self.assertEqual(
             delivery.payload_sha256, hashlib.sha256(body).hexdigest()
         )
+
+    def test_lifecycle_parser_distinguishes_merged_from_closed(self):
+        base = {
+            "installation": {"id": 42},
+            "repository": {"name": "repo", "owner": {"login": "owner"}},
+            "pull_request": {
+                "number": 9, "title": "Change", "merged": True,
+                "html_url": "https://github.com/owner/repo/pull/9",
+                "updated_at": "2026-08-15T00:00:00Z",
+                "head": {"sha": "b" * 40},
+            },
+        }
+        payload = {**base, "action": "closed"}
+        body = json.dumps(payload).encode("utf-8")
+        update = parse_pull_request_lifecycle_update(
+            "closed-delivery", "pull_request", payload, body
+        )
+        self.assertEqual(update.lifecycle_state, "merged")
 
 
 if __name__ == "__main__":

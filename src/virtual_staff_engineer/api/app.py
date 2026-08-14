@@ -16,6 +16,7 @@ from virtual_staff_engineer.api.models import (
     JobSubmissionResponse,
     GitHubWebhookResponse,
     GitHubPullRequestSummaryResponse,
+    GitHubPullRequestPageResponse,
     ReviewResponse,
 )
 from virtual_staff_engineer.github import (
@@ -24,6 +25,7 @@ from virtual_staff_engineer.github import (
     GitHubWebhookSignatureError,
     decode_webhook_payload,
     parse_pull_request_delivery,
+    parse_pull_request_lifecycle_update,
     verify_webhook_signature,
 )
 from virtual_staff_engineer.jobs.lifecycle import TERMINAL_JOB_STATES
@@ -121,12 +123,28 @@ def create_app(
                 event=event_name,
             )
         try:
+            lifecycle = parse_pull_request_lifecycle_update(
+                delivery_id, event_name, payload, raw_body
+            )
+            lifecycle_result = (
+                app.state.webhook_repository.record_lifecycle(lifecycle)
+                if lifecycle is not None else None
+            )
             delivery = parse_pull_request_delivery(
                 delivery_id, event_name, payload, raw_body
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         if delivery is None:
+            if lifecycle_result is not None:
+                return GitHubWebhookResponse(
+                    status=(
+                        "accepted" if lifecycle_result.created else "duplicate"
+                    ),
+                    delivery_id=delivery_id,
+                    event=event_name,
+                    action=lifecycle.action,
+                )
             action = payload.get("action")
             return GitHubWebhookResponse(
                 status="ignored",
@@ -196,24 +214,56 @@ def create_app(
 
     @app.get(
         "/github/pull-requests",
-        response_model=list[GitHubPullRequestSummaryResponse],
+        response_model=GitHubPullRequestPageResponse,
     )
     def github_pull_requests(
-        limit: int = Query(default=20, ge=1, le=100),
+        view: str = Query(default="active"),
+        state: str = Query(default="all"),
+        page: int = Query(default=1, ge=1),
+        page_size: int = Query(default=10, ge=1, le=100),
         _principal=Depends(principal),
     ):
         list_method = getattr(
             app.state.webhook_repository, "list_pull_requests", None
         )
         if list_method is None:
-            return []
-        return [
+            return {
+                "items": [], "page": page, "page_size": page_size,
+                "total": 0, "total_pages": 0,
+            }
+        if view not in {"active", "archive", "all"}:
+            raise HTTPException(status_code=422, detail="Invalid view.")
+        if state not in {"all", "open", "closed", "merged"}:
+            raise HTTPException(status_code=422, detail="Invalid state.")
+        states = {
+            "active": ("open",),
+            "archive": ("closed", "merged"),
+            "all": ("open", "closed", "merged"),
+        }[view]
+        if state != "all":
+            if state not in states:
+                return {
+                    "items": [], "page": page, "page_size": page_size,
+                    "total": 0, "total_pages": 0,
+                }
+            states = (state,)
+        result = list_method(states=states, page=page, page_size=page_size)
+        items = [
             {
                 **vars(item),
                 "jobs": [vars(job) for job in item.jobs],
             }
-            for item in list_method(limit=limit)
+            for item in result.items
         ]
+        total_pages = (
+            (result.total + result.page_size - 1) // result.page_size
+            if result.total else 0
+        )
+        return {
+            "items": items, "page": result.page,
+            "page_size": result.page_size, "total": result.total,
+            "total_pages": total_pages,
+        }
 
     @app.get("/jobs/{workflow_job_id}/review", response_model=ReviewResponse)
     def review(workflow_job_id: str, _principal=Depends(principal)):

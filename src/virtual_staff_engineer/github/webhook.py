@@ -2,11 +2,13 @@ import hashlib
 import hmac
 import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 
 SUPPORTED_PULL_REQUEST_ACTIONS = frozenset(
     {"opened", "reopened", "synchronize", "ready_for_review"}
 )
+LIFECYCLE_PULL_REQUEST_ACTIONS = SUPPORTED_PULL_REQUEST_ACTIONS | {"closed"}
 
 
 class GitHubWebhookSignatureError(ValueError):
@@ -49,6 +51,40 @@ class GitHubPullRequestDelivery:
             raise ValueError("head_sha must be a 40- or 64-character hex SHA.")
         if len(self.payload_sha256) != 64 or not _is_hex(self.payload_sha256):
             raise ValueError("payload_sha256 must be a SHA-256 hex digest.")
+
+
+@dataclass(frozen=True)
+class GitHubPullRequestLifecycleUpdate:
+    delivery_id: str
+    repository_owner: str
+    repository_name: str
+    pull_request_number: int
+    action: str
+    lifecycle_state: str
+    title: str
+    pull_request_url: str
+    head_sha: str
+    github_updated_at: datetime
+    payload_sha256: str
+
+    def __post_init__(self):
+        for name in (
+            "delivery_id", "repository_owner", "repository_name", "action",
+            "lifecycle_state", "title", "pull_request_url", "payload_sha256",
+        ):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{name} must be a non-empty string.")
+        if self.action not in LIFECYCLE_PULL_REQUEST_ACTIONS:
+            raise ValueError("action is not a tracked pull-request action.")
+        if self.lifecycle_state not in {"open", "closed", "merged"}:
+            raise ValueError("lifecycle_state is invalid.")
+        if self.pull_request_number < 1:
+            raise ValueError("pull_request_number must be positive.")
+        if not _is_hex_sha(self.head_sha):
+            raise ValueError("head_sha must be a 40- or 64-character hex SHA.")
+        if self.github_updated_at.tzinfo is None:
+            raise ValueError("github_updated_at must be timezone-aware.")
 
 
 def verify_webhook_signature(raw_body, signature, secret):
@@ -108,6 +144,45 @@ def parse_pull_request_delivery(delivery_id, event_name, payload, raw_body):
         head_sha=head_sha,
         payload_sha256=hashlib.sha256(raw_body).hexdigest(),
     )
+
+
+def parse_pull_request_lifecycle_update(
+    delivery_id, event_name, payload, raw_body
+):
+    if event_name != "pull_request":
+        return None
+    action = payload.get("action")
+    if action not in LIFECYCLE_PULL_REQUEST_ACTIONS:
+        return None
+    try:
+        repository = payload["repository"]
+        pull_request = payload["pull_request"]
+        updated_at = pull_request["updated_at"]
+        parsed_updated_at = datetime.fromisoformat(
+            updated_at.replace("Z", "+00:00")
+        ).astimezone(timezone.utc)
+        state = (
+            "merged" if action == "closed" and pull_request["merged"]
+            else "closed" if action == "closed"
+            else "open"
+        )
+        return GitHubPullRequestLifecycleUpdate(
+            delivery_id=delivery_id,
+            repository_owner=repository["owner"]["login"],
+            repository_name=repository["name"],
+            pull_request_number=pull_request["number"],
+            action=action,
+            lifecycle_state=state,
+            title=pull_request["title"],
+            pull_request_url=pull_request["html_url"],
+            head_sha=pull_request["head"]["sha"],
+            github_updated_at=parsed_updated_at,
+            payload_sha256=hashlib.sha256(raw_body).hexdigest(),
+        )
+    except (KeyError, TypeError, ValueError, AttributeError) as exc:
+        raise ValueError(
+            "Tracked pull_request payload lacks valid lifecycle fields."
+        ) from exc
 
 
 def _is_hex_sha(value):

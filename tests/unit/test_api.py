@@ -92,17 +92,31 @@ class FakeWebhookRepository:
         self.deliveries = {}
         self.job_context = None
         self.pull_requests = ()
+        self.lifecycle_updates = {}
 
     def record(self, delivery):
         created = delivery.delivery_id not in self.deliveries
         self.deliveries.setdefault(delivery.delivery_id, delivery)
         return SimpleNamespace(delivery=delivery, created=created)
 
+    def record_lifecycle(self, update):
+        created = update.delivery_id not in self.lifecycle_updates
+        self.lifecycle_updates.setdefault(update.delivery_id, update)
+        return SimpleNamespace(update=update, created=created)
+
     def get_job_context(self, workflow_job_id):
         return self.job_context
 
-    def list_pull_requests(self, limit=20):
-        return self.pull_requests[:limit]
+    def list_pull_requests(self, states=("open",), page=1, page_size=10):
+        filtered = tuple(
+            item for item in self.pull_requests
+            if item.lifecycle_state in states
+        )
+        start = (page - 1) * page_size
+        return SimpleNamespace(
+            items=filtered[start:start + page_size], page=page,
+            page_size=page_size, total=len(filtered),
+        )
 
 
 class ApiTests(unittest.TestCase):
@@ -177,9 +191,11 @@ class ApiTests(unittest.TestCase):
             checkpoint="analysis_completed",
             failure_code=None,
             created_pull_request_url=None,
+            head_sha="a" * 40,
+            received_at=self.repository.job.created_at,
         )
         pull_request = SimpleNamespace(
-            delivery_id="delivery-1",
+            latest_delivery_id="delivery-1",
             repository_owner="example",
             repository_name="demo",
             pull_request_number=7,
@@ -193,6 +209,8 @@ class ApiTests(unittest.TestCase):
             skipped_file_count=0,
             received_at=self.repository.job.created_at,
             completed_at=self.repository.job.completed_at,
+            lifecycle_state="open",
+            github_updated_at=self.repository.job.updated_at,
             jobs=(job,),
         )
         self.webhook_repository.job_context = context
@@ -211,7 +229,26 @@ class ApiTests(unittest.TestCase):
             status_response.json()["github"]["repository_name"], "demo"
         )
         self.assertEqual(feed_response.status_code, 200)
-        self.assertEqual(feed_response.json()[0]["jobs"][0]["source_path"], "app.py")
+        self.assertEqual(
+            feed_response.json()["items"][0]["jobs"][0]["source_path"],
+            "app.py",
+        )
+
+    def test_closed_webhook_updates_lifecycle_without_creating_analysis(self):
+        payload = _pull_request_payload(action="closed", merged=True)
+        raw_body = json.dumps(payload).encode("utf-8")
+        response = self.client.post(
+            "/webhooks/github",
+            content=raw_body,
+            headers=_webhook_headers(raw_body, delivery_id="closed-1"),
+        )
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(response.json()["status"], "accepted")
+        self.assertEqual(
+            self.webhook_repository.lifecycle_updates["closed-1"].lifecycle_state,
+            "merged",
+        )
+        self.assertNotIn("closed-1", self.webhook_repository.deliveries)
 
     def test_cost_is_estimated_only_when_both_rates_are_configured(self):
         with patch.dict(
@@ -305,8 +342,8 @@ class ApiTests(unittest.TestCase):
             content=ping_body,
             headers=_webhook_headers(ping_body, event="ping"),
         )
-        closed_payload = _pull_request_payload(action="closed")
-        closed_body = json.dumps(closed_payload).encode("utf-8")
+        ignored_payload = _pull_request_payload(action="edited")
+        closed_body = json.dumps(ignored_payload).encode("utf-8")
         ignored = self.client.post(
             "/webhooks/github",
             content=closed_body,
@@ -362,7 +399,7 @@ def _job():
     )
 
 
-def _pull_request_payload(action="opened"):
+def _pull_request_payload(action="opened", merged=False):
     return {
         "action": action,
         "installation": {"id": 1234},
@@ -372,6 +409,10 @@ def _pull_request_payload(action="opened"):
         },
         "pull_request": {
             "number": 7,
+            "title": "Test pull request",
+            "html_url": "https://github.com/example/demo/pull/7",
+            "updated_at": "2026-08-15T00:00:00Z",
+            "merged": merged,
             "head": {"sha": "a" * 40},
         },
     }

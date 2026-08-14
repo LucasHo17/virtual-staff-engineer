@@ -66,6 +66,8 @@ Implemented:
   automatic per-file workflow submission keyed by repository, PR, head, and path
 - Authenticated GitHub activity feed with PR/file grouping, job selection,
   evidence review, approval controls, and remediation-PR result links
+- Durable PR lifecycle tracking with open/merged/closed filters, paginated
+  active and archive views, and grouped per-head analysis history
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction

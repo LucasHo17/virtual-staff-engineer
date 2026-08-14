@@ -6,7 +6,10 @@ from typing import Optional, Tuple
 
 from virtual_staff_engineer.database.connection import connect
 from virtual_staff_engineer.github.app_client import GitHubPullRequestSnapshot
-from virtual_staff_engineer.github.webhook import GitHubPullRequestDelivery
+from virtual_staff_engineer.github.webhook import (
+    GitHubPullRequestDelivery,
+    GitHubPullRequestLifecycleUpdate,
+)
 from virtual_staff_engineer.jobs.lifecycle import FailureDisposition, JobFailure
 
 
@@ -17,6 +20,12 @@ class GitHubDeliveryConflictError(ValueError):
 @dataclass(frozen=True)
 class GitHubDeliveryRecordResult:
     delivery: GitHubPullRequestDelivery
+    created: bool
+
+
+@dataclass(frozen=True)
+class GitHubLifecycleRecordResult:
+    update: GitHubPullRequestLifecycleUpdate
     created: bool
 
 
@@ -39,11 +48,13 @@ class GitHubJobSummary:
     checkpoint: str
     failure_code: Optional[str]
     created_pull_request_url: Optional[str]
+    head_sha: str
+    received_at: datetime
 
 
 @dataclass(frozen=True)
 class GitHubPullRequestSummary:
-    delivery_id: str
+    latest_delivery_id: Optional[str]
     repository_owner: str
     repository_name: str
     pull_request_number: int
@@ -57,7 +68,17 @@ class GitHubPullRequestSummary:
     skipped_file_count: Optional[int]
     received_at: datetime
     completed_at: Optional[datetime]
+    lifecycle_state: str
+    github_updated_at: datetime
     jobs: Tuple[GitHubJobSummary, ...]
+
+
+@dataclass(frozen=True)
+class GitHubPullRequestPage:
+    items: Tuple[GitHubPullRequestSummary, ...]
+    page: int
+    page_size: int
+    total: int
 
 
 @dataclass(frozen=True)
@@ -147,91 +168,211 @@ class GitHubWebhookDeliveryRepository:
             conn.commit()
         return GitHubDeliveryRecordResult(delivery, created)
 
-    def list_pull_requests(self, limit=20):
-        if isinstance(limit, bool) or not isinstance(limit, int):
-            raise TypeError("limit must be an integer.")
-        if limit < 1 or limit > 100:
-            raise ValueError("limit must be between 1 and 100.")
+    def record_lifecycle(self, update):
+        if not isinstance(update, GitHubPullRequestLifecycleUpdate):
+            raise TypeError(
+                "update must be a GitHubPullRequestLifecycleUpdate."
+            )
+        values = (
+            update.delivery_id,
+            update.repository_owner,
+            update.repository_name,
+            update.pull_request_number,
+            update.action,
+            update.lifecycle_state,
+            update.title,
+            update.pull_request_url,
+            update.head_sha.lower(),
+            update.github_updated_at,
+            update.payload_sha256,
+        )
         with connect(self.database_url) as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT delivery_id,
-                           repository_owner,
-                           repository_name,
-                           pull_request_number,
-                           pull_request_title,
-                           pull_request_url,
-                           head_sha,
-                           base_sha,
-                           status,
-                           changed_file_count,
-                           analyzable_file_count,
-                           skipped_file_count,
-                           received_at,
-                           completed_at
-                    FROM github_webhook_deliveries
-                    ORDER BY received_at DESC
-                    LIMIT %s;
+                    INSERT INTO github_pull_request_lifecycle_events (
+                        delivery_id, repository_owner, repository_name,
+                        pull_request_number, action, lifecycle_state, title,
+                        pull_request_url, head_sha, github_updated_at,
+                        payload_sha256
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (delivery_id) DO NOTHING
+                    RETURNING delivery_id;
                     """,
-                    (limit,),
+                    values,
                 )
-                deliveries = cur.fetchall()
-                if not deliveries:
-                    return ()
-                delivery_ids = [row[0] for row in deliveries]
+                created = cur.fetchone() is not None
+                if not created:
+                    cur.execute(
+                        """
+                        SELECT delivery_id, repository_owner, repository_name,
+                               pull_request_number, action, lifecycle_state,
+                               title, pull_request_url, head_sha,
+                               github_updated_at, payload_sha256
+                        FROM github_pull_request_lifecycle_events
+                        WHERE delivery_id = %s;
+                        """,
+                        (update.delivery_id,),
+                    )
+                    if cur.fetchone() != values:
+                        raise GitHubDeliveryConflictError(
+                            "GitHub lifecycle delivery ID was reused with "
+                            "different immutable metadata."
+                        )
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO github_pull_requests (
+                            repository_owner, repository_name,
+                            pull_request_number, title, pull_request_url,
+                            lifecycle_state, head_sha, github_updated_at,
+                            last_delivery_id
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (
+                            repository_owner, repository_name,
+                            pull_request_number
+                        ) DO UPDATE
+                        SET title = EXCLUDED.title,
+                            pull_request_url = EXCLUDED.pull_request_url,
+                            lifecycle_state = EXCLUDED.lifecycle_state,
+                            head_sha = EXCLUDED.head_sha,
+                            github_updated_at = EXCLUDED.github_updated_at,
+                            last_delivery_id = EXCLUDED.last_delivery_id,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE github_pull_requests.github_updated_at
+                              <= EXCLUDED.github_updated_at;
+                        """,
+                        (
+                            update.repository_owner,
+                            update.repository_name,
+                            update.pull_request_number,
+                            update.title,
+                            update.pull_request_url,
+                            update.lifecycle_state,
+                            update.head_sha.lower(),
+                            update.github_updated_at,
+                            update.delivery_id,
+                        ),
+                    )
+            conn.commit()
+        return GitHubLifecycleRecordResult(update, created)
+
+    def list_pull_requests(self, states=("open",), page=1, page_size=10):
+        allowed = {"open", "closed", "merged"}
+        states = tuple(states)
+        if not states or any(state not in allowed for state in states):
+            raise ValueError("states must contain open, closed, or merged.")
+        for value, name, maximum in (
+            (page, "page", 1000000), (page_size, "page_size", 100)
+        ):
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise TypeError(f"{name} must be an integer.")
+            if value < 1 or value > maximum:
+                raise ValueError(f"{name} is outside its allowed range.")
+        offset = (page - 1) * page_size
+        with connect(self.database_url) as conn:
+            with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT link.delivery_id,
+                    SELECT COUNT(*) FROM github_pull_requests
+                    WHERE lifecycle_state = ANY(%s::varchar[]);
+                    """,
+                    (list(states),),
+                )
+                total = cur.fetchone()[0]
+                cur.execute(
+                    """
+                    SELECT pr.repository_owner, pr.repository_name,
+                           pr.pull_request_number, pr.title,
+                           pr.pull_request_url, pr.head_sha,
+                           delivery.base_sha, delivery.status,
+                           delivery.changed_file_count,
+                           delivery.analyzable_file_count,
+                           delivery.skipped_file_count,
+                           delivery.received_at, delivery.completed_at,
+                           pr.lifecycle_state, pr.github_updated_at,
+                           delivery.delivery_id
+                    FROM github_pull_requests AS pr
+                    LEFT JOIN LATERAL (
+                        SELECT item.* FROM github_webhook_deliveries AS item
+                        WHERE item.repository_owner = pr.repository_owner
+                          AND item.repository_name = pr.repository_name
+                          AND item.pull_request_number = pr.pull_request_number
+                        ORDER BY item.received_at DESC LIMIT 1
+                    ) AS delivery ON TRUE
+                    WHERE pr.lifecycle_state = ANY(%s::varchar[])
+                    ORDER BY pr.github_updated_at DESC,
+                             pr.repository_owner, pr.repository_name,
+                             pr.pull_request_number
+                    LIMIT %s OFFSET %s;
+                    """,
+                    (list(states), page_size, offset),
+                )
+                pull_requests = cur.fetchall()
+                if not pull_requests:
+                    return GitHubPullRequestPage((), page, page_size, total)
+                keys = [(row[0], row[1], row[2]) for row in pull_requests]
+                owners = [key[0] for key in keys]
+                names = [key[1] for key in keys]
+                numbers = [key[2] for key in keys]
+                cur.execute(
+                    """
+                    SELECT delivery.repository_owner,
+                           delivery.repository_name,
+                           delivery.pull_request_number,
                            link.workflow_job_id,
                            link.source_path,
                            job.status,
                            job.checkpoint,
                            job.failure_code,
-                           operation.pr_url
+                           operation.pr_url,
+                           delivery.head_sha,
+                           delivery.received_at
                     FROM github_webhook_delivery_jobs AS link
+                    JOIN github_webhook_deliveries AS delivery
+                      ON delivery.delivery_id = link.delivery_id
+                    JOIN UNNEST(
+                        %s::varchar[], %s::varchar[], %s::integer[]
+                    ) AS selected(owner, name, number)
+                      ON selected.owner = delivery.repository_owner
+                     AND selected.name = delivery.repository_name
+                     AND selected.number = delivery.pull_request_number
                     JOIN workflow_jobs AS job
                       ON job.workflow_job_id = link.workflow_job_id
                     LEFT JOIN github_pr_operations AS operation
                       ON operation.workflow_job_id = link.workflow_job_id
-                    WHERE link.delivery_id = ANY(%s::varchar[])
-                    ORDER BY link.delivery_id, link.source_path;
+                    ORDER BY delivery.received_at DESC, link.source_path;
                     """,
-                    (delivery_ids,),
+                    (owners, names, numbers),
                 )
                 job_rows = cur.fetchall()
-        jobs_by_delivery = {delivery_id: [] for delivery_id in delivery_ids}
+        jobs_by_pr = {key: [] for key in keys}
         for row in job_rows:
-            jobs_by_delivery[row[0]].append(
+            jobs_by_pr[(row[0], row[1], row[2])].append(
                 GitHubJobSummary(
-                    workflow_job_id=str(row[1]),
-                    source_path=row[2],
-                    status=row[3],
-                    checkpoint=row[4],
-                    failure_code=row[5],
-                    created_pull_request_url=row[6],
+                    workflow_job_id=str(row[3]), source_path=row[4],
+                    status=row[5], checkpoint=row[6], failure_code=row[7],
+                    created_pull_request_url=row[8], head_sha=row[9],
+                    received_at=row[10],
                 )
             )
-        return tuple(
+        items = tuple(
             GitHubPullRequestSummary(
-                delivery_id=row[0],
-                repository_owner=row[1],
-                repository_name=row[2],
-                pull_request_number=row[3],
-                pull_request_title=row[4],
-                pull_request_url=row[5],
-                head_sha=row[6],
-                base_sha=row[7],
-                status=row[8],
-                changed_file_count=row[9],
-                analyzable_file_count=row[10],
-                skipped_file_count=row[11],
-                received_at=row[12],
-                completed_at=row[13],
-                jobs=tuple(jobs_by_delivery[row[0]]),
+                repository_owner=row[0], repository_name=row[1],
+                pull_request_number=row[2], pull_request_title=row[3],
+                pull_request_url=row[4], head_sha=row[5], base_sha=row[6],
+                status=row[7] or "pending", changed_file_count=row[8],
+                analyzable_file_count=row[9], skipped_file_count=row[10],
+                received_at=row[11] or row[14], completed_at=row[12],
+                lifecycle_state=row[13], github_updated_at=row[14],
+                latest_delivery_id=row[15],
+                jobs=tuple(jobs_by_pr[(row[0], row[1], row[2])]),
             )
-            for row in deliveries
+            for row in pull_requests
         )
+        return GitHubPullRequestPage(items, page, page_size, total)
 
     def get_job_context(self, workflow_job_id):
         with connect(self.database_url) as conn:
