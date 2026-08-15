@@ -76,6 +76,11 @@ npm run dev
 Open `http://localhost:3000`. API keys are held only in page memory; the MVP
 does not persist them in browser storage.
 
+GitHub activity is the dashboard's primary workspace. Manual diff/design
+submission remains available in a collapsed **Manual analysis** developer-tool
+section for debugging and standalone inputs; both paths use the same durable
+workflow backend.
+
 ## Endpoints
 
 | Endpoint | Role | Purpose |

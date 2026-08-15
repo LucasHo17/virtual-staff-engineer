@@ -233,43 +233,12 @@ export default function Dashboard() {
       <header>
         <div className="eyebrow">Evidence-backed code governance</div>
         <h1>Virtual Staff Engineer</h1>
-        <p>Review manual changes or GitHub pull requests, inspect cited violations, and approve only validated patches.</p>
+        <p>Monitor GitHub pull requests, inspect cited violations, and approve only validated patches.</p>
       </header>
 
-      <section className="grid">
-        <form className="panel submit" onSubmit={submit}>
-          <div className="panel-title"><span>01</span><h2>Submit review</h2></div>
-          <label>API key<input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} required /></label>
-          <div className="row">
-            <label>Input type<select value={inputType} onChange={(e) => setInputType(e.target.value)}><option value="code_diff">Code diff</option><option value="design_document">Design document</option></select></label>
-            <label>Source path<input value={sourcePath} onChange={(e) => setSourcePath(e.target.value)} /></label>
-          </div>
-          <label>Change<textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder={"+ logger.info(request.token)"} required /></label>
-          <button type="submit">Analyze change <span>→</span></button>
-        </form>
-
-        <section className="panel status">
-          <div className="panel-title"><span>02</span><h2>Workflow status</h2></div>
-          {!job ? <div className="empty">Submit a review to start a durable workflow.</div> : <>
-            <div className="status-line"><span className={`dot ${terminal.has(job.status) ? "done" : "active"}`} /><strong>{job.status.replaceAll("_", " ")}</strong><small>{job.checkpoint.replaceAll("_", " ")}</small></div>
-            <div className="metrics">
-              <Metric label="Queue" value={job.queue_wait_ms} />
-              <Metric label="Automated" value={job.automated_processing_ms} />
-              <Metric label="Human wait" value={job.human_wait_ms} />
-              <Metric label="End to end" value={job.end_to_end_ms} />
-            </div>
-            <div className="job-id">Job {job.workflow_job_id}</div>
-            {job.github && <div className="github-origin">
-              <div className="label">GitHub source</div>
-              <a href={job.github.pull_request_url ?? undefined} target="_blank" rel="noreferrer">
-                {job.github.repository_owner}/{job.github.repository_name} #{job.github.pull_request_number}
-              </a>
-              <span>{job.github.source_path} · {job.github.head_sha.slice(0, 8)}</span>
-              {job.github.created_pull_request_url && <a className="result-link" href={job.github.created_pull_request_url} target="_blank" rel="noreferrer">Open created remediation PR →</a>}
-            </div>}
-            {job.error_message && <div className="error">{job.failure_code}: {job.error_message}</div>}
-          </>}
-        </section>
+      <section className="access-bar panel">
+        <div><div className="label">Dashboard access</div><strong>Use a viewer key to inspect or a reviewer key to approve.</strong></div>
+        <label>API key<input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Enter dashboard API key" /></label>
       </section>
 
       {notice && <div className="notice">{notice}</div>}
@@ -308,6 +277,29 @@ export default function Dashboard() {
         <div className="pagination"><span>{githubTotal} pull request{githubTotal === 1 ? "" : "s"}</span><div><button type="button" className="secondary compact" disabled={githubPage <= 1 || githubLoading} onClick={() => loadGitHubPullRequests(githubPage - 1)}>← Previous</button><span>Page {githubPage} of {Math.max(githubTotalPages, 1)}</span><button type="button" className="secondary compact" disabled={githubPage >= githubTotalPages || githubLoading} onClick={() => loadGitHubPullRequests(githubPage + 1)}>Next →</button></div></div>
       </section>
 
+      {job && <section className="panel status job-status">
+        <div className="panel-title"><span>02</span><h2>Workflow status</h2></div>
+        <div className="status-layout">
+          <div>
+            <div className="status-line"><span className={`dot ${terminal.has(job.status) ? "done" : "active"}`} /><strong>{job.status.replaceAll("_", " ")}</strong><small>{job.checkpoint.replaceAll("_", " ")}</small></div>
+            <div className="job-id">Job {job.workflow_job_id}</div>
+            {job.github && <div className="github-origin">
+              <div className="label">GitHub source</div>
+              <a href={job.github.pull_request_url ?? undefined} target="_blank" rel="noreferrer">{job.github.repository_owner}/{job.github.repository_name} #{job.github.pull_request_number}</a>
+              <span>{job.github.source_path} · {job.github.head_sha.slice(0, 8)}</span>
+              {job.github.created_pull_request_url && <a className="result-link" href={job.github.created_pull_request_url} target="_blank" rel="noreferrer">Open created remediation PR →</a>}
+            </div>}
+          </div>
+          <div className="metrics">
+            <Metric label="Queue" value={job.queue_wait_ms} />
+            <Metric label="Automated" value={job.automated_processing_ms} />
+            <Metric label="Human wait" value={job.human_wait_ms} />
+            <Metric label="End to end" value={job.end_to_end_ms} />
+          </div>
+        </div>
+        {job.error_message && <div className="error">{job.failure_code}: {job.error_message}</div>}
+      </section>}
+
       {review && <section className="review panel">
         <div className="panel-title"><span>03</span><h2>Review validated patch</h2></div>
         <div className="review-grid">
@@ -317,6 +309,18 @@ export default function Dashboard() {
         <pre>{review.unified_diff}</pre>
         <div className="actions"><button className="secondary" onClick={() => decide("rejected")}>Reject</button><button onClick={() => decide("approved")}>Approve patch <span>→</span></button></div>
       </section>}
+
+      <details className="manual-tools panel">
+        <summary><div><div className="label">Optional developer tool</div><h2>Manual analysis</h2><p>Test a pasted diff or standalone design document without opening a GitHub PR.</p></div><span>＋</span></summary>
+        <form className="submit" onSubmit={submit}>
+          <div className="row">
+            <label>Input type<select value={inputType} onChange={(e) => setInputType(e.target.value)}><option value="code_diff">Code diff</option><option value="design_document">Design document</option></select></label>
+            <label>Source path<input value={sourcePath} onChange={(e) => setSourcePath(e.target.value)} /></label>
+          </div>
+          <label>Change<textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder={"+ logger.info(request.token)"} required /></label>
+          <button type="submit">Analyze manually <span>→</span></button>
+        </form>
+      </details>
     </main>
   );
 }

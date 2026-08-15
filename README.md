@@ -68,6 +68,8 @@ Implemented:
   evidence review, approval controls, and remediation-PR result links
 - Durable PR lifecycle tracking with open/merged/closed filters, paginated
   active and archive views, and grouped per-head analysis history
+- GitHub-first dashboard hierarchy with manual diff/design submission retained
+  as a collapsed developer and debugging tool
 
 The first measured Phase 2 baseline (`gemini-3.5-flash-lite`) had precision
 `1.00`, recall `0.60`, and F1 `0.75`. After deterministic excerpt construction
