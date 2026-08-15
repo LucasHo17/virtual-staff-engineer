@@ -4,9 +4,9 @@ services:
     environment:
       POSTGRES_DB: staff_engineer_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - vse_postgres_data:/var/lib/postgresql/data
     healthcheck:
